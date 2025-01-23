@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@meshsdk/core": "^1.8.12",
+    "axios": "^1.7.9"
+  }
+}
