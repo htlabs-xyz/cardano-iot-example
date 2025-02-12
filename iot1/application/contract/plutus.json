@@ -14,36 +14,45 @@
     {
       "title": "confirm_status.confirm_status.spend",
       "datum": {
-        "title": "_datum_otp",
+        "title": "datum_otp",
         "schema": {
           "$ref": "#/definitions/confirm_status~1Datum"
         }
       },
       "redeemer": {
-        "title": "_redeemer",
+        "title": "redeemer",
         "schema": {
-          "$ref": "#/definitions/Redeemer"
+          "$ref": "#/definitions/confirm_status~1Redeemer"
         }
       },
-      "compiledCode": "587601010032323232323225333002323232323253330073370e900118041baa0011323232324a2a66601466e1d2000300b375400a2a66601a60186ea80145261616300d300e002300c001300937540022c6014601600460120026012004600e00260086ea8004526136565734aae7555cf2ab9f5742ae89",
-      "hash": "f68690fd92364733805ce5ef2e5ceea5406c05f4ba74af278eaecf6c"
+      "parameters": [
+        {
+          "title": "value",
+          "schema": {
+            "$ref": "#/definitions/Int"
+          }
+        }
+      ],
+      "compiledCode": "59011b01010032323232323223225333004323232323253330093370e900118051baa0011323232323232533300f300300115333012301137540102a0042c2a66601e66e1d200200115333012301137540102a0042c2c601e6ea801c54ccc034c004c038dd500109929998071991191980080080191299980a8008a5013253330133371e6eb8c05c008010528899801801800980b8009bac301230133013301330133013301330133013301037540126eb8c048c040dd50008a999807180118079baa00714a2266e24dd69809180998081baa00100c14a06022601e6ea800858dc3a4000601e6020004601c00260166ea800458c030c034008c02c004c02c008c024004c018dd50008a4c26cac6eb40055cd2ab9d5573caae7d5d0aba201",
+      "hash": "31481d6bf42319ecaa5848235fa3fccd4f786720c45b35f3a49fc2f9"
     },
     {
       "title": "confirm_status.confirm_status.else",
-      "compiledCode": "587601010032323232323225333002323232323253330073370e900118041baa0011323232324a2a66601466e1d2000300b375400a2a66601a60186ea80145261616300d300e002300c001300937540022c6014601600460120026012004600e00260086ea8004526136565734aae7555cf2ab9f5742ae89",
-      "hash": "f68690fd92364733805ce5ef2e5ceea5406c05f4ba74af278eaecf6c"
+      "parameters": [
+        {
+          "title": "value",
+          "schema": {
+            "$ref": "#/definitions/Int"
+          }
+        }
+      ],
+      "compiledCode": "59011b01010032323232323223225333004323232323253330093370e900118051baa0011323232323232533300f300300115333012301137540102a0042c2a66601e66e1d200200115333012301137540102a0042c2c601e6ea801c54ccc034c004c038dd500109929998071991191980080080191299980a8008a5013253330133371e6eb8c05c008010528899801801800980b8009bac301230133013301330133013301330133013301037540126eb8c048c040dd50008a999807180118079baa00714a2266e24dd69809180998081baa00100c14a06022601e6ea800858dc3a4000601e6020004601c00260166ea800458c030c034008c02c004c02c008c024004c018dd50008a4c26cac6eb40055cd2ab9d5573caae7d5d0aba201",
+      "hash": "31481d6bf42319ecaa5848235fa3fccd4f786720c45b35f3a49fc2f9"
     }
   ],
   "definitions": {
-    "Redeemer": {
-      "title": "Redeemer",
-      "anyOf": [
-        {
-          "dataType": "constructor",
-          "index": 0,
-          "fields": []
-        }
-      ]
+    "Int": {
+      "dataType": "integer"
     },
     "VerificationKeyHash": {
       "title": "VerificationKeyHash",
@@ -60,8 +69,29 @@
             {
               "title": "owner",
               "$ref": "#/definitions/VerificationKeyHash"
+            },
+            {
+              "title": "value",
+              "$ref": "#/definitions/Int"
             }
           ]
+        }
+      ]
+    },
+    "confirm_status/Redeemer": {
+      "title": "Redeemer",
+      "anyOf": [
+        {
+          "title": "Update",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "Withdraw",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
         }
       ]
     }
