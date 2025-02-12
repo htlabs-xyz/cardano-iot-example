@@ -1,6 +1,6 @@
-use aiken/collection/list
 use aiken/crypto.{VerificationKeyHash}
 use cardano/transaction.{OutputReference, Transaction}
+use cardano/tx
 
 pub type Datum {
   owner: VerificationKeyHash,
@@ -12,16 +12,18 @@ pub type Redeemer =
 
 validator confirm_status {
   spend(
-    _datum_otp: Option<Datum>,
+    datum_otp: Option<Datum>,
     _redeemer: Redeemer,
     _output_reference: OutputReference,
-    _transaction: Transaction,
+    transaction: Transaction,
   ) {
-    True
+    expect Some(datum) = datum_otp
+    let Transaction { extra_signatories, .. } = transaction
+
+    tx.verify_signature(extra_signatories, datum.owner)
   }
 
   else(_) {
     fail
   }
 }
-
