@@ -22,13 +22,33 @@ describe("Marketplace", function () {
     jest.setTimeout(60000);
 
     test("Temperature", async function () {
+        return;
+        const confirmStatusContract: ConfirmStatusContract = new ConfirmStatusContract({
+            wallet: wallet,
+        });
+        const unsignedTx: string = await confirmStatusContract.confirm({
+            title: "Temperature",
+            value: 50000000,
+        });
+
+        const signedTx = await wallet.signTx(unsignedTx, true);
+        const txHash = await wallet.submitTx(signedTx);
+        console.log("https://preprod.cexplorer.io/tx/" + txHash);
+        txHashTemp = txHash;
+        blockfrostProvider.onTxConfirmed(txHash, () => {
+            expect(txHash.length).toBe(64);
+        });
+    });
+
+
+    test("Withdraw", async function () {
         // return;
         const confirmStatusContract: ConfirmStatusContract = new ConfirmStatusContract({
             wallet: wallet,
         });
-        const unsignedTx: string = await confirmStatusContract.confirmStatus({
+        const unsignedTx: string = await confirmStatusContract.withdraw({
             title: "Temperature",
-            value: "100 Celsius",
+            value: 40000000,
         });
 
         const signedTx = await wallet.signTx(unsignedTx, true);

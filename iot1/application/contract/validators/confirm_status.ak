@@ -1,5 +1,5 @@
 use aiken/crypto.{VerificationKeyHash}
-use cardano/transaction.{OutputReference, Transaction}
+use cardano/transaction.{InlineDatum, OutputReference, Transaction, find_input}
 use cardano/tx
 
 pub type Datum {
@@ -12,21 +12,23 @@ pub type Redeemer {
   Withdraw
 }
 
-validator confirm_status(value: Int) {
+validator confirm_status {
   spend(
     datum_otp: Option<Datum>,
     redeemer: Redeemer,
-    _output_reference: OutputReference,
+    output_reference: OutputReference,
     transaction: Transaction,
   ) {
-    expect Some(datum) = datum_otp
-    let Transaction { extra_signatories, .. } = transaction
-
-    when tx.verify_signature(extra_signatories, datum.owner) is {
+    expect Some(datum_input) = datum_otp
+    let Transaction { inputs, extra_signatories, .. } = transaction
+    expect Some(input) = find_input(inputs, output_reference)
+    expect InlineDatum(datum_output_inline) = input.output.datum
+    expect datum_output: Datum = datum_output_inline
+    when tx.verify_signature(extra_signatories, datum_input.owner) is {
       True ->
         when redeemer is {
           Update -> True
-          Withdraw -> value >= datum.value
+          Withdraw -> datum_output.value >= datum_input.value
         }
 
       False -> False
