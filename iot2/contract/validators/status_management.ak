@@ -44,30 +44,29 @@ validator status_management {
       Status ->
         when datum_input.is_locked == 0 is {
           True -> and {
-              check_output_utxo(utxo_output),
+              check_output_utxo(utxo_output, 1),
               or {
                 owner_sign,
                 authority_sign,
               },
               change_owner,
               change_authority,
-              datum_output.is_locked == 1,
+              datum_output.is_locked == datum_input.is_locked,
             }
           False -> and {
-              check_output_utxo(utxo_output),
+              check_output_utxo(utxo_output, 0),
               or {
                 owner_sign,
                 authority_sign,
               },
               change_owner,
               change_authority,
-              datum_output.is_locked == 0,
+              datum_output.is_locked == datum_input.is_locked,
             }
         }
       Authorize -> and {
           owner_sign,
           change_owner,
-          check_output_utxo(utxo_output),
         }
     }
   }
@@ -78,10 +77,15 @@ validator status_management {
 }
 
 // check the output utxos containing the  token
-pub fn check_output_utxo(output: Output) -> Bool {
+pub fn check_output_utxo(output: Output, is_lock: Int) -> Bool {
+  expect InlineDatum(data) = output.datum
+  expect datum: Datum = data
   let output_value =
     output.value
       |> without_lovelace()
       |> flatten()
-  list.length(output_value) == 1
+  and {
+    datum.is_locked == is_lock,
+    list.length(output_value) == 1,
+  }
 }

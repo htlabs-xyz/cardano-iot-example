@@ -21,7 +21,7 @@ export class MeshAdapter {
         });
         this.confirmStatusCompileCode = this.readValidator(
             blueprint as Plutus,
-            "confirm_status.confirm_status.spend",
+            "status_management.status_management.spend",
         );
 
         this.confirmStatusScriptCbor = applyParamsToScript(this.confirmStatusCompileCode, []);
