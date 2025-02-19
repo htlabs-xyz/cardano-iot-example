@@ -1,0 +1,239 @@
+{
+  "preamble": {
+    "title": "htlabs/contract",
+    "description": "Aiken contracts for project 'htlabs/contract'",
+    "version": "0.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.0+be31a7c"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "mint.mint.mint",
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/mint~1MintRedeemer"
+        }
+      },
+      "parameters": [
+        {
+          "title": "platform",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        },
+        {
+          "title": "platform_fee",
+          "schema": {
+            "$ref": "#/definitions/Int"
+          }
+        },
+        {
+          "title": "store_payment_credential",
+          "schema": {
+            "$ref": "#/definitions/ScriptHash"
+          }
+        },
+        {
+          "title": "store_stake_credential",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        },
+        {
+          "title": "issuer",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        }
+      ],
+      "compiledCode": "58af0101003232323232322322322322322322533300c32323232325332330123001301337540042646464a66602a60080022a666030602e6ea8018540085854ccc054cdc3a40040022a666030602e6ea8018540085858c054dd50028a9998099801180a1baa00414a22944dd7180b180a1baa002370e90000b180a180a80118098009809801180880098071baa00114984d958dd70009bae001375c0026eb4004dd7000ab9a5573aaae7955cfaba15745",
+      "hash": "2679aff4a384d632746eb61837c32590e21d88baec2b05d4d2039df6"
+    },
+    {
+      "title": "mint.mint.else",
+      "parameters": [
+        {
+          "title": "platform",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        },
+        {
+          "title": "platform_fee",
+          "schema": {
+            "$ref": "#/definitions/Int"
+          }
+        },
+        {
+          "title": "store_payment_credential",
+          "schema": {
+            "$ref": "#/definitions/ScriptHash"
+          }
+        },
+        {
+          "title": "store_stake_credential",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        },
+        {
+          "title": "issuer",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        }
+      ],
+      "compiledCode": "58af0101003232323232322322322322322322533300c32323232325332330123001301337540042646464a66602a60080022a666030602e6ea8018540085854ccc054cdc3a40040022a666030602e6ea8018540085858c054dd50028a9998099801180a1baa00414a22944dd7180b180a1baa002370e90000b180a180a80118098009809801180880098071baa00114984d958dd70009bae001375c0026eb4004dd7000ab9a5573aaae7955cfaba15745",
+      "hash": "2679aff4a384d632746eb61837c32590e21d88baec2b05d4d2039df6"
+    },
+    {
+      "title": "store.store.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/types~1cip68~1CIP68"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/store~1StoreRedeemer"
+        }
+      },
+      "parameters": [
+        {
+          "title": "platform",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        },
+        {
+          "title": "platform_fee",
+          "schema": {
+            "$ref": "#/definitions/Int"
+          }
+        },
+        {
+          "title": "issuer",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        }
+      ],
+      "compiledCode": "58f0010100323232323232232232232253330083232323232533300d3370e900118071baa00113232323232325333013300300115333016301537540102a0042c2a66602666e1d200200115333016301537540102a0042c2c60266ea801c54ccc044c004c048dd50010991919191919299980b9803980c1baa00c14a22944dd6180d180d980d980d980d980d980d8011bac3019001301930190023758602e00260286ea8024c054c04cdd50010b1b8748000c04cc050008c048004c03cdd50008b1808180880118078009807801180680098051baa00114984d958dd70009bad001375c002ae6955ceaab9e5573eae855d11",
+      "hash": "f0ebe6b65f818409cc8aa7e3c1cdef58264b4439b3ca419a2f6dbbc1"
+    },
+    {
+      "title": "store.store.else",
+      "parameters": [
+        {
+          "title": "platform",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        },
+        {
+          "title": "platform_fee",
+          "schema": {
+            "$ref": "#/definitions/Int"
+          }
+        },
+        {
+          "title": "issuer",
+          "schema": {
+            "$ref": "#/definitions/VerificationKeyHash"
+          }
+        }
+      ],
+      "compiledCode": "58f0010100323232323232232232232253330083232323232533300d3370e900118071baa00113232323232325333013300300115333016301537540102a0042c2a66602666e1d200200115333016301537540102a0042c2c60266ea801c54ccc044c004c048dd50010991919191919299980b9803980c1baa00c14a22944dd6180d180d980d980d980d980d980d8011bac3019001301930190023758602e00260286ea8024c054c04cdd50010b1b8748000c04cc050008c048004c03cdd50008b1808180880118078009807801180680098051baa00114984d958dd70009bad001375c002ae6955ceaab9e5573eae855d11",
+      "hash": "f0ebe6b65f818409cc8aa7e3c1cdef58264b4439b3ca419a2f6dbbc1"
+    }
+  ],
+  "definitions": {
+    "Data": {
+      "title": "Data",
+      "description": "Any Plutus data."
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "Pairs$Data_Data": {
+      "title": "Pairs<Data, Data>",
+      "dataType": "map",
+      "keys": {
+        "$ref": "#/definitions/Data"
+      },
+      "values": {
+        "$ref": "#/definitions/Data"
+      }
+    },
+    "ScriptHash": {
+      "title": "ScriptHash",
+      "dataType": "bytes"
+    },
+    "VerificationKeyHash": {
+      "title": "VerificationKeyHash",
+      "dataType": "bytes"
+    },
+    "mint/MintRedeemer": {
+      "title": "MintRedeemer",
+      "anyOf": [
+        {
+          "title": "Mint",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "Burn",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        }
+      ]
+    },
+    "store/StoreRedeemer": {
+      "title": "StoreRedeemer",
+      "anyOf": [
+        {
+          "title": "Update",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "Remove",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        }
+      ]
+    },
+    "types/cip68/CIP68": {
+      "title": "CIP68",
+      "description": "The generic CIP68 metadatum type as defined in the CIP at\n https://cips.cardano.org/cips/cip68/.",
+      "anyOf": [
+        {
+          "title": "CIP68",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "metadata",
+              "$ref": "#/definitions/Pairs$Data_Data"
+            },
+            {
+              "title": "version",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
