@@ -18,21 +18,14 @@ import plutus from '../plutus.json';
 import { blockfrostProvider } from './common';
 
 export class MeshAdapter {
+  protected fetcher: IFetcher;
   protected meshTxBuilder: MeshTxBuilder;
   protected wallet: MeshWallet | BrowserWallet;
-  protected fetcher: IFetcher;
-  protected pubKeyExchange: string;
-  protected pubKeyIssuer: string;
-  protected mintCompileCode: string;
-  protected storeCompileCode: string;
-  protected storeScriptCbor: string;
-  protected storeScript: PlutusScript;
-  public storeAddress: string;
-  protected storeScriptHash: string;
-  protected mintScriptCbor: string;
-  protected mintScript: PlutusScript;
-
-  public policyId: string;
+  protected decentralizeIdentityCompileCode: string;
+  protected decentralizeIdentityScriptCbor: string;
+  protected decentralizeIdentityScript: PlutusScript;
+  protected decentralizeIdentityAddress: string;
+  protected decentralizeIdentityScriptHash: string;
 
   constructor({ wallet = null! }: { wallet?: MeshWallet }) {
     this.wallet = wallet;
@@ -41,64 +34,37 @@ export class MeshAdapter {
       fetcher: this.fetcher,
       evaluator: blockfrostProvider,
     });
-    this.initialize();
-  }
-
-  private async initialize() {
-    this.pubKeyIssuer = deserializeAddress(
-      await this.wallet.getChangeAddress(),
-    ).pubKeyHash;
-    this.pubKeyExchange = deserializeAddress(
-      'addr_test1qptfdrrlhjx5j3v9779q5gh9svzw40nzl74u0q4npxvjrxde20fdxw39qjk6nususjj4m5j9n8xdlptqqk3rlp69qv4q8v6ahk',
-    ).pubKeyHash;
-    this.mintCompileCode = this.readValidator(
+    this.decentralizeIdentityCompileCode = this.readValidator(
       plutus as Plutus,
-      'mint.mint.mint',
-    );
-    this.storeCompileCode = this.readValidator(
-      plutus as Plutus,
-      'store.store.spend',
+      'decentralize_identity.decentralize_identity.spend'
     );
 
-    this.storeScriptCbor = applyParamsToScript(this.storeCompileCode, [
-      this.pubKeyExchange,
-      BigInt(1),
-      this.pubKeyIssuer,
-    ]);
-
-    this.storeScript = {
-      code: this.storeScriptCbor,
+    this.decentralizeIdentityScriptCbor = applyParamsToScript(
+      this.decentralizeIdentityCompileCode,
+      [],
+    );
+    this.decentralizeIdentityScript = {
+      code: this.decentralizeIdentityScriptCbor,
       version: 'V3',
     };
 
-    this.storeAddress = serializeAddressObj(
+    this.decentralizeIdentityAddress = serializeAddressObj(
       scriptAddress(
         deserializeAddress(
-          serializePlutusScript(this.storeScript, undefined, 0, false).address,
+          serializePlutusScript(
+            this.decentralizeIdentityScript,
+            undefined,
+            0,
+            false,
+          ).address,
         ).scriptHash,
-        deserializeAddress(
-          'addr_test1qptfdrrlhjx5j3v9779q5gh9svzw40nzl74u0q4npxvjrxde20fdxw39qjk6nususjj4m5j9n8xdlptqqk3rlp69qv4q8v6ahk',
-        ).stakeCredentialHash,
-        false,
       ),
       0,
     );
 
-    this.storeScriptHash = deserializeAddress(this.storeAddress).scriptHash;
-    this.mintScriptCbor = applyParamsToScript(this.mintCompileCode, [
-      this.pubKeyExchange,
-      BigInt(1),
-      this.storeScriptHash,
-      deserializeAddress(
-        'addr_test1qptfdrrlhjx5j3v9779q5gh9svzw40nzl74u0q4npxvjrxde20fdxw39qjk6nususjj4m5j9n8xdlptqqk3rlp69qv4q8v6ahk',
-      ).stakeCredentialHash,
-      this.pubKeyIssuer,
-    ]);
-    this.mintScript = {
-      code: this.mintScriptCbor,
-      version: 'V3',
-    };
-    this.policyId = resolveScriptHash(this.mintScriptCbor, 'V3');
+    this.decentralizeIdentityScriptHash = deserializeAddress(
+      this.decentralizeIdentityAddress,
+    ).scriptHash;
   }
 
   protected getWalletForTx = async (): Promise<{
