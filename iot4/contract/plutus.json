@@ -1,0 +1,87 @@
+{
+  "preamble": {
+    "title": "htlabs/contract",
+    "description": "Aiken contracts for project 'htlabs/contract'",
+    "version": "0.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.0+be31a7c"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "decentralize_identity.decentralize_identity.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/types~1cip68~1CIP68"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/Void"
+        }
+      },
+      "compiledCode": "587601010032323232323225333002323232323253330073370e900118041baa0011323232324a2a66601466e1d2000300b375400a2a66601a60186ea80145261616300d300e002300c001300937540022c6014601600460120026012004600e00260086ea8004526136565734aae7555cf2ab9f5742ae89",
+      "hash": "f68690fd92364733805ce5ef2e5ceea5406c05f4ba74af278eaecf6c"
+    },
+    {
+      "title": "decentralize_identity.decentralize_identity.else",
+      "compiledCode": "587601010032323232323225333002323232323253330073370e900118041baa0011323232324a2a66601466e1d2000300b375400a2a66601a60186ea80145261616300d300e002300c001300937540022c6014601600460120026012004600e00260086ea8004526136565734aae7555cf2ab9f5742ae89",
+      "hash": "f68690fd92364733805ce5ef2e5ceea5406c05f4ba74af278eaecf6c"
+    }
+  ],
+  "definitions": {
+    "Data": {
+      "title": "Data",
+      "description": "Any Plutus data."
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "Pairs$Data_Data": {
+      "title": "Pairs<Data, Data>",
+      "dataType": "map",
+      "keys": {
+        "$ref": "#/definitions/Data"
+      },
+      "values": {
+        "$ref": "#/definitions/Data"
+      }
+    },
+    "Void": {
+      "title": "Unit",
+      "anyOf": [
+        {
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        }
+      ]
+    },
+    "types/cip68/CIP68": {
+      "title": "CIP68",
+      "description": "The generic CIP68 metadatum type as defined in the CIP at\n https://cips.cardano.org/cips/cip68/.",
+      "anyOf": [
+        {
+          "title": "CIP68",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "metadata",
+              "$ref": "#/definitions/Pairs$Data_Data"
+            },
+            {
+              "title": "version",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

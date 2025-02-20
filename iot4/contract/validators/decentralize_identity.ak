@@ -1,4 +1,7 @@
-
+use cardano/transaction.{
+  InlineDatum, Output, OutputReference, Transaction, find_input,
+}
+use types/cip68.{CIP68}
 
 validator decentralize_identity {
   spend(
@@ -7,7 +10,7 @@ validator decentralize_identity {
     output_reference: OutputReference,
     transaction: Transaction,
   ) {
-    todo
+    True
   }
 
   else(_) {

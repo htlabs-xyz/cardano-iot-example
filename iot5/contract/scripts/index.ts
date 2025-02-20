@@ -124,14 +124,7 @@ export class SupplyChainManagementContract extends MeshAdapter {
     return await unsignedTx.complete();
   };
 
-  /**
-   * @method Burn
-   * @description Burn Asset (NFT/Token) with CIP68
-   * @param assetName - string
-   * @param quantity - string
-   *
-   * @returns unsignedTx
-   */
+  
   burn = async (params: { assetName: string; quantity: string; txHash?: string }[]) => {
     const { utxos, walletAddress, collateral } = await this.getWalletForTx();
     const unsignedTx = this.meshTxBuilder;
@@ -205,14 +198,6 @@ export class SupplyChainManagementContract extends MeshAdapter {
     return await unsignedTx.complete();
   };
 
-  /**
-   * @method Update
-   * @description Update Asset (NFT/Token) with CIP68
-   * @param assetName - string
-   * @param metadata - Record<string, string>
-   * @param txHash - string
-   * @returns
-   */
   update = async (params: { assetName: string; metadata: Record<string, string>; txHash?: string }[]) => {
     const { utxos, walletAddress, collateral } = await this.getWalletForTx();
     const unsignedTx = this.meshTxBuilder;
