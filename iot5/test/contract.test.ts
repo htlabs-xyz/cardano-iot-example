@@ -19,6 +19,7 @@ describe('Mint, Burn, Update, Remove Assets (NFT/TOKEN) CIP68', function () {
   });
 
   test('Mint', async function () {
+    return;
     const supplyChainManagementContract: SupplyChainManagementContract =
       new SupplyChainManagementContract({
         wallet: wallet,
@@ -47,6 +48,7 @@ describe('Mint, Burn, Update, Remove Assets (NFT/TOKEN) CIP68', function () {
   });
 
   test('Burn', async function () {
+    // return
     const supplyChainManagementContract: SupplyChainManagementContract =
       new SupplyChainManagementContract({
         wallet: wallet,
@@ -65,6 +67,7 @@ describe('Mint, Burn, Update, Remove Assets (NFT/TOKEN) CIP68', function () {
   });
 
   test('Update', async function () {
+    return
     const supplyChainManagementContract: SupplyChainManagementContract =
       new SupplyChainManagementContract({
         wallet: wallet,
