@@ -22,7 +22,8 @@ describe("Marketplace", function () {
     jest.setTimeout(60000);
 
     test("Temperature", async function () {
-        return;
+        // return;
+        console.log(await wallet.getChangeAddress())
         const confirmStatusContract: ConfirmStatusContract = new ConfirmStatusContract({
             wallet: wallet,
         });
@@ -42,7 +43,7 @@ describe("Marketplace", function () {
 
 
     test("Withdraw", async function () {
-        // return;
+        return;
         const confirmStatusContract: ConfirmStatusContract = new ConfirmStatusContract({
             wallet: wallet,
         });

@@ -19,15 +19,16 @@ describe("Marketplace", function () {
             },
         });
     });
-    jest.setTimeout(60000);
 
     test("Write", async function () {
-        console.log(await wallet.getChangeAddress())
         const confirmStatusContract: SupplyChainManagementContract = new SupplyChainManagementContract({
             wallet: wallet,
         });
         const unsignedTx: string = await confirmStatusContract.write({
-            assetName: "Nguyễn Duy Khánh",metadata: {name: "Nguyễn Duy Khánh"}
+            assetName: "Nguyễn Duy Khánh",
+            metadata: {
+                name: "Nguyễn Duy Khánh"
+            }
         });
 
         const signedTx = await wallet.signTx(unsignedTx, true);
@@ -37,6 +38,15 @@ describe("Marketplace", function () {
         blockfrostProvider.onTxConfirmed(txHash, () => {
             expect(txHash.length).toBe(64);
         });
+    });
+
+    test("Read", async function () {
+        const confirmStatusContract: SupplyChainManagementContract = new SupplyChainManagementContract({
+            wallet: wallet,
+        });
+        const metadata = await confirmStatusContract.read({assetName: "Nguyễn Duy Khánh"});
+
+        console.log(metadata)
     });
     
 });
