@@ -2,12 +2,13 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { MeshTxBuilder, MeshWallet } from '@meshsdk/core';
 import { blockfrostProvider } from '../contract/scripts/common';
-
-import { ConfirmStatusContract } from 'contract/scripts';
+import { ConfirmStatusContract } from '../contract/scripts';
 
 describe('Marketplace', function () {
   let txHashTemp: string;
   let wallet: MeshWallet;
+  const mnemonic =
+    'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon beef crack';
   beforeEach(async function () {
     wallet = new MeshWallet({
       networkId: 0,
@@ -15,21 +16,35 @@ describe('Marketplace', function () {
       submitter: blockfrostProvider,
       key: {
         type: 'mnemonic',
-        words: process.env.APP_WALLET?.split(' ') || [],
+        words: mnemonic?.split(' ') || [],
       },
     });
+    // console.log('wallet', wallet);
   });
   jest.setTimeout(60000);
 
   test('Temperature', async function () {
-    return;
+    //return;
+
+    // wallet = new MeshWallet({
+    //   networkId: 0,
+    //   fetcher: blockfrostProvider,
+    //   submitter: blockfrostProvider,
+    //   key: {
+    //     type: 'mnemonic',
+    //     words: mnemonic?.split(' ') || [],
+    //   },
+    // });
+    // console.log('wallet', wallet);
+    var addr = await wallet.getChangeAddress();
+    console.log('addr:', addr);
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
         wallet: wallet,
       });
     const unsignedTx: string = await confirmStatusContract.confirm({
       title: 'Temperature',
-      value: 50000000,
+      value: 20000000,
     });
 
     const signedTx = await wallet.signTx(unsignedTx, true);
@@ -42,7 +57,7 @@ describe('Marketplace', function () {
   });
 
   test('Withdraw', async function () {
-    // return;
+    return;
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
         wallet: wallet,
