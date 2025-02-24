@@ -17,7 +17,10 @@ import { isEmpty, isNil } from 'lodash';
 import { getPkHash, datumToJson } from './common';
 
 export class SupplyChainManagementContract extends MeshAdapter {
-  read = async ({ policyId,assetName }: {policyId: string, assetName: string }) => {
+  read = async ({  assetName }: { assetName: string }) => {
+    const { utxos, collateral, walletAddress } = await this.getWalletForTx();
+    const forgingScript = ForgeScript.withOneSignature(walletAddress);
+    const policyId = resolveScriptHash(forgingScript);
     const utxo = await this.getAddressUTXOAsset(
       this.decentralizeIdentityAddress,
       policyId + stringToHex(assetName),
@@ -50,7 +53,10 @@ export class SupplyChainManagementContract extends MeshAdapter {
         .mint('1', policyId, stringToHex(assetName))
         .mintingScript(forgingScript)
         .txOut(this.decentralizeIdentityAddress, [
-          { unit: policyId + stringToHex(assetName), quantity: String(1) },
+          {
+            unit: policyId + stringToHex(assetName),
+            quantity: String(1)
+          },
         ])
         .txOutInlineDatumValue(metadataToCip68(metadata));
     } else {
@@ -58,7 +64,7 @@ export class SupplyChainManagementContract extends MeshAdapter {
         .spendingPlutusScriptV3()
         .txIn(utxo.input.txHash, utxo.input.outputIndex)
         .txInInlineDatumPresent()
-        .txInRedeemerValue(conStr0([]))
+        .txInRedeemerValue(mConStr0([]))
         .txInScript(this.decentralizeIdentityScriptCbor)
         .txOut(this.decentralizeIdentityAddress, [
           {
