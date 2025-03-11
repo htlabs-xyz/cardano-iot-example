@@ -21,6 +21,7 @@ async function bootstrap() {
           const constraints = Object.values(error.constraints ?? {});
           return [...acc, ...constraints];
         }, [] as string[]);
+        //console.log("ƯUUWUUWUWU")
         return new BadRequestException(messages);
       },
     }),
