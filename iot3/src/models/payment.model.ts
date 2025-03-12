@@ -31,8 +31,6 @@ export class ProductOrderModel {
     order_at: Date;
 }
 
-
-
 export class BillModel {
     @ApiProperty({ description: 'Product' })
     bill_order_product: ProductOrderModel;
