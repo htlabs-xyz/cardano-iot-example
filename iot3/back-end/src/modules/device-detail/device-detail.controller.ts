@@ -27,7 +27,7 @@ import { DeviceDetailsModel } from '../../models/device-details.model';
 export class DeviceDetailsController {
     constructor(private readonly deviceDetailsService: DeviceDetailsService) { }
 
-    @ApiOkResponse({ type: [DeviceDetailsModel] })
+    @ApiOkResponse({ type: DeviceDetailsModel })
     @Get(':device_id')
     async findOne(@Param('device_id') device_id: number) {
         const device = await this.deviceDetailsService.getDetailsDevice(device_id);
