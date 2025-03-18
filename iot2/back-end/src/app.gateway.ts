@@ -19,6 +19,7 @@ import AuthorizeRequestModel from './models/authorize-request.model';
 
 //QUY ĐỊNH: tiền tố on: event listener in client from server
 //          tiền tố new: event sender from client to server
+@UseInterceptors(ResponseWsInterceptor)
 @UsePipes(new SocketValidationPipe({ transform: true }))
 @WebSocketGateway({
     cors: { origin: '*' },
@@ -50,16 +51,14 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.clients = this.clients.filter(id => id !== client.id);
     }
 
-    @UseInterceptors(ResponseWsInterceptor)
-    @ErrorEventName('onUpdatedLockStatus')
+    @ErrorEventName('onError')
     @SubscribeMessage("newLockStatus")
     async handleUpdateNewLockStatus(@MessageBody() payload: LockRequestModel) {
         var res = await this.appService.updateStatusDevice(payload);
         this.server.emit('onUpdatedLockStatus', res);
     }
 
-    @UseInterceptors(ResponseWsInterceptor)
-    @ErrorEventName('onAuthorize')
+    @ErrorEventName('onError')
     @SubscribeMessage("newAuthorize")
     async handleUpdateNewAuthorize(@MessageBody() payload: AuthorizeRequestModel) {
         var res = await this.appService.authorize(payload);

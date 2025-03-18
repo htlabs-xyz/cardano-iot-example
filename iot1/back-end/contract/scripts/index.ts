@@ -11,18 +11,18 @@ import {
 import { MeshAdapter } from "./mesh";
 
 export class ConfirmStatusContract extends MeshAdapter {
-    confirm = async({title, value}: {title: string, value: number})=> {
+    confirm = async ({ title, value }: { title: string, value: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-         const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
+        const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
         const forgingScript = ForgeScript.withOneSignature(walletAddress);
         const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
-        const unsignedTx =  this.meshTxBuilder
+        const unsignedTx = this.meshTxBuilder
         if (!utxo) {
             unsignedTx
                 .mint("1", policyId, stringToHex(title))
                 .mintingScript(forgingScript)
-                .txOut(this.confirmStatusAddress,  [{
+                .txOut(this.confirmStatusAddress, [{
                     unit: policyId + stringToHex(title),
                     quantity: String(1),
                 }])
@@ -34,7 +34,7 @@ export class ConfirmStatusContract extends MeshAdapter {
                 .txInInlineDatumPresent()
                 .txInRedeemerValue(mConStr0([]))
                 .txInScript(this.confirmStatusScriptCbor)
-                .txOut(this.confirmStatusAddress,  [{
+                .txOut(this.confirmStatusAddress, [{
                     unit: policyId + stringToHex(title),
                     quantity: String(1),
                 }])
@@ -55,13 +55,13 @@ export class ConfirmStatusContract extends MeshAdapter {
         return await unsignedTx.complete();
     }
 
-    withdraw = async({title, value}: {title: string, value: number})=> {
+    withdraw = async ({ title, value }: { title: string, value: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-         const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
+        const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
         const forgingScript = ForgeScript.withOneSignature(walletAddress);
         const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
-        const unsignedTx =  this.meshTxBuilder
+        const unsignedTx = this.meshTxBuilder
         if (!utxo) {
             throw new Error("UTxO not found");
         } else {
@@ -71,7 +71,7 @@ export class ConfirmStatusContract extends MeshAdapter {
                 .txInInlineDatumPresent()
                 .txInRedeemerValue(mConStr1([]))
                 .txInScript(this.confirmStatusScriptCbor)
-                .txOut(walletAddress,  [{
+                .txOut(walletAddress, [{
                     unit: policyId + stringToHex(title),
                     quantity: String(1),
                 }])

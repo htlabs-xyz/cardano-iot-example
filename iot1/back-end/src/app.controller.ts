@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put } from '@nestjs/common';
 import { AppService } from './app.service';
 import TemperatureModel from './models/temperature.model';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -18,5 +18,16 @@ export class AppController {
   @Post()
   submitTemperature(@Body() temperatureModel: TemperatureModel) {
     return this.appService.submitTemperature(temperatureModel);
+  }
+
+  @ApiOperation({ summary: 'Used to be update base temperature' })
+  @ApiResponse({
+    status: 201,
+    description: 'Base template updated',
+    type: ApiResponseModel<string>,
+  })
+  @Put()
+  updateBaseTemperature(@Body() temperatureModel: TemperatureModel) {
+    return this.appService.updateBaseTemperature(temperatureModel);
   }
 }

@@ -43,4 +43,28 @@ export class AppService {
       tx_ref: 'https://preprod.cexplorer.io/tx/' + txHash,
     };
   }
+
+  async updateBaseTemperature(temperature: TemperatureModel) {
+    const confirmStatusContract: ConfirmStatusContract =
+      new ConfirmStatusContract({
+        wallet: this.wallet,
+      });
+    const unsignedTx: string = await confirmStatusContract.withdraw({
+      title: 'Temperature',
+      value: temperature.heat,
+    });
+
+    const signedTx = await this.wallet.signTx(unsignedTx, true);
+    const txHash = await this.wallet.submitTx(signedTx);
+    console.log('https://preprod.cexplorer.io/tx/' + txHash);
+    this.txHashTemp = txHash;
+    blockfrostProvider.onTxConfirmed(txHash, () => {
+      expect(txHash.length).toBe(64);
+    });
+
+    return {
+      tx_hash: this.txHashTemp,
+      tx_ref: 'https://preprod.cexplorer.io/tx/' + txHash,
+    };
+  }
 }

@@ -44,7 +44,7 @@ describe('Marketplace', function () {
       });
     const unsignedTx: string = await confirmStatusContract.confirm({
       title: 'Temperature',
-      value: 20000000,
+      value: 4000000,
     });
 
     const signedTx = await wallet.signTx(unsignedTx, true);
