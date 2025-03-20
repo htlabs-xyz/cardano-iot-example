@@ -23,7 +23,7 @@ describe('Marketplace', function () {
   jest.setTimeout(60000);
 
   test('Lock', async function () {
-    //return;
+    return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });
@@ -43,7 +43,7 @@ describe('Marketplace', function () {
   });
 
   test('Un Lock', async function () {
-    return;
+    //return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });
@@ -51,7 +51,7 @@ describe('Marketplace', function () {
     const unsignedTx: string = await confirmStatusContract.unLock({
       title: 'The Safe',
       authority:
-        'addr_test1qptfdrrlhjx5j3v9779q5gh9svzw40nzl74u0q4npxvjrxde20fdxw39qjk6nususjj4m5j9n8xdlptqqk3rlp69qv4q8v6ahk',
+        'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
       isLock: 0,
     });
 
@@ -72,7 +72,7 @@ describe('Marketplace', function () {
     const unsignedTx: string = await confirmStatusContract.authorize({
       title: 'The Safe',
       authority:
-        'addr_test1qptfdrrlhjx5j3v9779q5gh9svzw40nzl74u0q4npxvjrxde20fdxw39qjk6nususjj4m5j9n8xdlptqqk3rlp69qv4q8v6ahk',
+        'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
       isLock: 1,
     });
 

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/_header";
 import Footer from "@/components/layout/_footer";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,10 +28,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased `}>
-        <Header />
-        <main className=" max-w-6xl mx-auto">
+        {/* <Header /> */}
+        <main className=" max-w-7xl mx-auto py-3">
           {children}
         </main>
+        <Toaster />
         <Footer />
       </body>
     </html>

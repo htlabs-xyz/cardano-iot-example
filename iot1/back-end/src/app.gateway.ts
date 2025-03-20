@@ -14,8 +14,8 @@ import { SocketValidationPipe } from './gateway/socket.pipe';
 import { AppService } from './app.service';
 import { ResponseWsInterceptor } from './gateway/socket.interceptor';
 import { ErrorEventName } from './gateway/socket.decorator';
-import TemperatureModel from './models/temperature.model';
-;
+import { TemperatureRequestModel } from './models/temperature.model';
+
 
 //QUY ĐỊNH: tiền tố on: event listener in client from server
 //          tiền tố new: event sender from client to server
@@ -54,14 +54,14 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     @ErrorEventName('onError')
     @SubscribeMessage("newTemperature")
-    async handleSubmitNewTemperature(@MessageBody() payload: TemperatureModel) {
+    async handleSubmitNewTemperature(@MessageBody() payload: TemperatureRequestModel) {
         var res = await this.appService.submitTemperature(payload);
         this.server.emit('onUpdatedTemperature', res);
     }
 
     @ErrorEventName('onError')
     @SubscribeMessage("newBaseTemperature")
-    async handleUpdateBaseTemperature(@MessageBody() payload: TemperatureModel) {
+    async handleUpdateBaseTemperature(@MessageBody() payload: TemperatureRequestModel) {
         var res = await this.appService.updateBaseTemperature(payload);
         this.server.emit('onUpdatedBaseTemperature', res);
     }

@@ -21,6 +21,7 @@
     "build:contract": "aiken build"
   },
   "dependencies": {
+    "@blockfrost/blockfrost-js": "^6.0.0",
     "@meshsdk/core": "^1.8",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
