@@ -13,7 +13,7 @@ import { MeshAdapter } from "./mesh";
 export class ConfirmStatusContract extends MeshAdapter {
     confirm = async({title, value}: {title: string, value: number})=> {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-         const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
+        const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
         const forgingScript = ForgeScript.withOneSignature(walletAddress);
         const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
