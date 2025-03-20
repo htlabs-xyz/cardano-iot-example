@@ -63,16 +63,16 @@ export class AppController {
     return this.appService.submitTemperature(temperatureModel);
   }
 
-  @ApiOperation({ summary: 'Used to be update base temperature' })
-  @ApiResponse({
-    status: 201,
-    description: 'Base template updated',
-    type: ApiResponseModel<string>,
-  })
-  @Put()
-  updateBaseTemperature(@Body() temperatureModel: TemperatureRequestModel) {
-    return this.appService.updateBaseTemperature(temperatureModel);
-  }
+  // @ApiOperation({ summary: 'Used to be update base temperature' })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'Base template updated',
+  //   type: ApiResponseModel<string>,
+  // })
+  // @Put()
+  // updateBaseTemperature(@Body() temperatureModel: TemperatureRequestModel) {
+  //   return this.appService.updateBaseTemperature(temperatureModel);
+  // }
 
 
 }

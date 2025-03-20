@@ -34,8 +34,12 @@ describe('Marketplace', function () {
     //console.log("transaction:", transaction)
     const utxos = await Promise.all(transactions.map(async (x) => await API.txsUtxos(x.tx_hash)));
     console.log("utxos:", utxos)
-    const datums = utxos.map(utxo => utxo.outputs.map(x => x.inline_datum ?? deserializeDatum(x.inline_datum ?? "")))
-    console.log("datums:", datums)
+    const outputs = utxos.map(utxo => utxo.outputs[0]);
+    const datums = outputs.map(output => output.inline_datum)
+    console.log("datums: ", datums)
+    const datum_deserialize = datums.map(x => { if (x != null) return deserializeDatum(x ?? "") })
+    console.log("datum_deserialize:", datum_deserialize)
+    console.log("ouput:", datum_deserialize.map(x => { if (x != undefined && x.fields[1].int && x.fields[1].int != undefined) return x.fields[1].int }))
   });
 
   test('Temperature', async function () {

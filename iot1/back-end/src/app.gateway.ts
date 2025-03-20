@@ -59,10 +59,10 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.server.emit('onUpdatedTemperature', res);
     }
 
-    @ErrorEventName('onError')
-    @SubscribeMessage("newBaseTemperature")
-    async handleUpdateBaseTemperature(@MessageBody() payload: TemperatureRequestModel) {
-        var res = await this.appService.updateBaseTemperature(payload);
-        this.server.emit('onUpdatedBaseTemperature', res);
-    }
+    // @ErrorEventName('onError')
+    // @SubscribeMessage("newBaseTemperature")
+    // async handleUpdateBaseTemperature(@MessageBody() payload: TemperatureRequestModel) {
+    //     var res = await this.appService.updateBaseTemperature(payload);
+    //     this.server.emit('onUpdatedBaseTemperature', res);
+    // }
 }

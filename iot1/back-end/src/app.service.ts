@@ -29,7 +29,7 @@ export class AppService {
     });
   }
 
-  async updateBaseTemperature(temperature: TemperatureRequestModel) {
+  async submitTemperature(temperature: TemperatureRequestModel) {
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
         wallet: this.wallet,
@@ -55,30 +55,30 @@ export class AppService {
 
   }
 
-  async submitTemperature(temperature: TemperatureRequestModel) {
-    const confirmStatusContract: ConfirmStatusContract =
-      new ConfirmStatusContract({
-        wallet: this.wallet,
-      });
-    const unsignedTx: string = await confirmStatusContract.withdraw({
-      title: 'Temperature',
-      value: temperature.value,
-    });
+  // async submitTemperature(temperature: TemperatureRequestModel) {
+  //   const confirmStatusContract: ConfirmStatusContract =
+  //     new ConfirmStatusContract({
+  //       wallet: this.wallet,
+  //     });
+  //   const unsignedTx: string = await confirmStatusContract.withdraw({
+  //     title: 'Temperature',
+  //     value: temperature.value,
+  //   });
 
-    const signedTx = await this.wallet.signTx(unsignedTx, true);
-    const txHash = await this.wallet.submitTx(signedTx);
-    console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    this.txHashTemp = txHash;
-    blockfrostProvider.onTxConfirmed(txHash, () => {
-      expect(txHash.length).toBe(64);
-    });
+  //   const signedTx = await this.wallet.signTx(unsignedTx, true);
+  //   const txHash = await this.wallet.submitTx(signedTx);
+  //   console.log('https://preprod.cexplorer.io/tx/' + txHash);
+  //   this.txHashTemp = txHash;
+  //   blockfrostProvider.onTxConfirmed(txHash, () => {
+  //     expect(txHash.length).toBe(64);
+  //   });
 
-    var temperatureResponseModel = new TemperatureResponseModel();
-    temperatureResponseModel.value = temperature.value;
-    temperatureResponseModel.time = new Date();
-    temperatureResponseModel.tx_ref = 'https://preprod.cexplorer.io/tx/' + txHash
-    return temperatureResponseModel;
-  }
+  //   var temperatureResponseModel = new TemperatureResponseModel();
+  //   temperatureResponseModel.value = temperature.value;
+  //   temperatureResponseModel.time = new Date();
+  //   temperatureResponseModel.tx_ref = 'https://preprod.cexplorer.io/tx/' + txHash
+  //   return temperatureResponseModel;
+  // }
 
   async getAllTemperature(walletAddress: string) {
     if (walletAddress == "") walletAddress = await this.wallet.getChangeAddress();

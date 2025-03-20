@@ -37,7 +37,7 @@ async function bootstrap() {
   // Enable CORS for all origins
   app.enableCors({
     allowedHeaders: ['content-type'],
-    origin: 'http://localhost:3001',
+    origin: process.env.FRONT_END_HOST ?? "*",
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 3000);
