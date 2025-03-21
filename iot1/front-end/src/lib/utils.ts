@@ -1,12 +1,12 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { Temperature, TemperaturesByDevice, TemperatureUnit } from "../data/type/temperature.type";
+import { Temperature, TemperaturesByDevice } from "../data/type/temperature.type";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertApiResponse<T>(data: any): T {
   console.log("http data:", data)
   // if (typeof data.status !== 'boolean' ||
