@@ -4,9 +4,6 @@ import { IsBoolean, IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
 
 
 export default class LockRequestModel {
-  @ApiProperty({ description: 'Device information' })
-  device_info: LockDeviceModel;
-
   @ApiProperty({ description: 'Unlock request', example: true })
   @IsBoolean({ message: 'Status must be true/false (unlock/lock)' })
   is_unlock: boolean;

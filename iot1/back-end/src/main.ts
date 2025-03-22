@@ -1,12 +1,12 @@
-import { NestFactory, Reflector } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ResponseInterceptor } from './common/response.interceptor';
 import {
   BadRequestException,
   ValidationError,
   ValidationPipe,
 } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+import { ResponseInterceptor } from './common/response.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -37,7 +37,7 @@ async function bootstrap() {
   // Enable CORS for all origins
   app.enableCors({
     allowedHeaders: ['content-type'],
-    origin: process.env.FRONT_END_HOST ?? "*",
+    origin: process.env.FRONT_END_HOST ?? '*',
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 3000);

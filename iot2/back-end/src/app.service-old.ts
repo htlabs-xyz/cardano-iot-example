@@ -6,16 +6,23 @@ import { StatusManagement } from '../contract/scripts';
 import AuthorizeRequestModel from './models/authorize-request.model';
 
 @Injectable()
-export class AppService {
+export class AppServiceOLD {
   private wallet: MeshWallet;
   private txHashTemp: string;
   constructor() {
-
+    this.wallet = new MeshWallet({
+      networkId: 0,
+      fetcher: blockfrostProvider,
+      submitter: blockfrostProvider,
+      key: {
+        type: 'mnemonic',
+        words: process.env.SELLER?.split(' ') || [],
+      },
+    });
+    console.log("addr: ", this.wallet.getChangeAddress())
   }
 
   async updateStatusDevice(lockRequestModel: LockRequestModel) {
-    this.wallet = this.getWalletAdrressClient(lockRequestModel.unlocker_addr);
-
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: this.wallet,
     });
@@ -35,12 +42,24 @@ export class AppService {
         isLock: 1,
       });
     }
-    return unsignedTx;
+    const signedTx = await this.wallet.signTx(unsignedTx, true); // received from client
+
+    const txHash = await blockfrostProvider.submitTx(signedTx);
+    //const txHash = await this.wallet.submitTx(signedTx);
+
+    //console.log('https://preprod.cexplorer.io/tx/' + txHash);
+    this.txHashTemp = txHash;
+    blockfrostProvider.onTxConfirmed(txHash, () => {
+      expect(txHash.length).toBe(64);
+    });
+    return {
+      tx_hash: this.txHashTemp,
+      tx_ref: 'https://preprod.cexplorer.io/tx/' + txHash,
+    };
+
   }
 
-  async requestAuthorize(authorizeRequestModel: AuthorizeRequestModel) {
-    this.wallet = this.getWalletAdrressClient(authorizeRequestModel.authorizer_addr);
-
+  async authorize(authorizeRequestModel: AuthorizeRequestModel) {
     if (authorizeRequestModel.is_remove_authorize) authorizeRequestModel.licensee_addr = "";
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: this.wallet,
@@ -51,11 +70,7 @@ export class AppService {
       isLock: 1,
     });
 
-    return unsignedTx;
-
-  }
-
-  async submitTransaction(signedTx: string) {
+    const signedTx = await this.wallet.signTx(unsignedTx, true);
     const txHash = await this.wallet.submitTx(signedTx);
     //console.log('https://preprod.cexplorer.io/tx/' + txHash);
     this.txHashTemp = txHash;
@@ -66,18 +81,7 @@ export class AppService {
       tx_hash: this.txHashTemp,
       tx_ref: 'https://preprod.cexplorer.io/tx/' + txHash,
     };
-  }
 
-  getWalletAdrressClient(walletAddress: string) {
-    return new MeshWallet({
-      networkId: 0,
-      fetcher: blockfrostProvider,
-      submitter: blockfrostProvider,
-      key: {
-        type: 'address',
-        address: "",
-      },
-    });
   }
 
 

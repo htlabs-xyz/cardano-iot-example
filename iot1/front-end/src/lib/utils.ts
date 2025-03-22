@@ -1,6 +1,6 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-import { Temperature, TemperaturesByDevice, TemperatureUnit } from "../data/type/temperature.type";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { Temperature, TemperaturesByDevice } from "../types/temperature.type";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

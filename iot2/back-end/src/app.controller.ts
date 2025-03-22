@@ -16,14 +16,20 @@ export class AppController {
     description: 'Unlock status',
     type: ApiResponseModel<string>,
   })
-  @Patch('update-status')
-  updateStatusDevice(@Body() lockRequestModel: LockRequestModel) {
+  @Post('update-status')
+  requestUpdateStatusDevice(@Body() lockRequestModel: LockRequestModel) {
     return this.appService.updateStatusDevice(lockRequestModel);
   }
 
-  @ApiOperation({ summary: 'Used to authorize to other to access the lock device' })
+  @ApiOperation({ summary: 'Used to authorize or remove authorize to other to access the lock device' })
   @Post('authorize')
-  authorize(@Body() authorizeRequestModel: AuthorizeRequestModel) {
-    return this.appService.authorize(authorizeRequestModel);
+  requestAuthorize(@Body() authorizeRequestModel: AuthorizeRequestModel) {
+    return this.appService.requestAuthorize(authorizeRequestModel);
+  }
+
+  @ApiOperation({ summary: 'Used to submit transaction' })
+  @Post('submit-transaction')
+  submitTransaction(@Body() signedTx: string) {
+    return this.appService.submitTransaction(signedTx);
   }
 }

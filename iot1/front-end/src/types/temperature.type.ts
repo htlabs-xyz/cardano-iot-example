@@ -1,6 +1,6 @@
 import { Device } from "./device.type";
 
-export type Temperature = {
+export interface Temperature {
     device_address?: string;
     value?: number;
     unit?: TemperatureUnit;
@@ -17,4 +17,11 @@ export enum TemperatureUnit {
     CELSIUS = 0,
     FAHRENHEIT = 1,
     KELVIN = 2,
+}
+
+export interface TemperatureChartData extends Temperature {
+    id: number;
+    formattedDate: string;
+    formattedTime: string;
+    formattedValue: string;
 }

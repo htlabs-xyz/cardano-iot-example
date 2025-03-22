@@ -2,7 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import DeviceModel from './device.model';
 
 export default class SensorDeviceModel extends DeviceModel {
-  @ApiProperty({ description: 'The address of device', example: 'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh' })
+  @ApiProperty({
+    description: 'The address of device',
+    example:
+      'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
+  })
   device_address: string;
 
   @ApiProperty({ description: 'Sensor threshold', example: 30 })
