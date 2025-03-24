@@ -1,4 +1,4 @@
-import { applyParamsToScript, BrowserWallet, IFetcher, MeshTxBuilder, MeshWallet, PlutusScript, serializePlutusScript, UTxO } from "@meshsdk/core";
+import { applyParamsToScript, IFetcher, MeshTxBuilder, MeshWallet, PlutusScript, serializePlutusScript, UTxO } from "@meshsdk/core";
 import blueprint from "../plutus.json";
 import { blockfrostProvider, convertInlineDatum } from "./common";
 import { Plutus } from "./type";
@@ -11,7 +11,7 @@ export class MeshAdapter {
     protected confirmStatusScript: PlutusScript;
     protected confirmStatusScriptCbor: string;
     protected confirmStatusCompileCode: string;
-    
+
     constructor({ wallet = null! }: { wallet?: MeshWallet }) {
         this.wallet = wallet;
         this.fetcher = blockfrostProvider;
@@ -37,6 +37,7 @@ export class MeshAdapter {
             0,
             false,
         ).address;
+
     }
 
     protected getWalletForTx = async (): Promise<{

@@ -1,7 +1,7 @@
 
-import { ApiResponse } from "@/data/type/response.type";
+import { ApiResponse } from "@/types/response.type";
 import http from "@/lib/http";
-import { Device } from "../data/type/device.type";
+import { Device } from "../types/device.type";
 
 const deviceApiRequest = {
     getList: () => http.get<ApiResponse<Device[]>>('/temperature-sensor/devices'),
