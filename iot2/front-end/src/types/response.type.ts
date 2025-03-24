@@ -16,4 +16,10 @@ export type SubmitTxResponse = {
     tx_ref: string
 }
 
+export type SubmitTxRequest = {
+    user_addr: string,
+    signedTx: string,
+    data: any
+}
+
 

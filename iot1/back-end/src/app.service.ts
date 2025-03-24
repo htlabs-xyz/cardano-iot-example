@@ -66,17 +66,17 @@ export class AppService {
   }
 
   async getAllTemperature(walletAddress: string) {
-    const policyIdAndHexEncoded = `${process.env.NFT_POLICY_ID}${process.env.NFT_NAME_ENCODED}`;
+    const encodedAssetName = `${process.env.NFT_POLICY_ID}${process.env.NFT_NAME_ENCODED}`;
     const transactions = await this.API.assetsTransactions(
-      policyIdAndHexEncoded,
+      encodedAssetName,
     );
     //console.log("transaction:", transaction)
     const listTemperature: TemperatureResponseModel[] = [];
     for (const tx of transactions) {
       const utxo = await this.API.txsUtxos(tx.tx_hash);
-      const datum_hex = utxo.outputs[0].inline_datum;
-      if (datum_hex != null && datum_hex != undefined) {
-        const datum_deserialize = deserializeDatum(datum_hex);
+      const datum_hash = utxo.outputs[0].inline_datum;
+      if (datum_hash != null && datum_hash != undefined) {
+        const datum_deserialize = deserializeDatum(datum_hash);
         if (
           datum_deserialize &&
           datum_deserialize.fields &&

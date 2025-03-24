@@ -19,7 +19,10 @@ export default class DeviceModel {
   })
   protected device_location: string;
 
-  @ApiProperty({ description: 'Device type', example: 'Electric Locker device' })
+  @ApiProperty({
+    description: 'Device type',
+    example: 'Electric Locker device',
+  })
   protected device_type: number;
 
   @ApiProperty({ description: 'Device version', example: 'v1.0' })

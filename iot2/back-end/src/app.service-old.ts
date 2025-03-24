@@ -1,9 +1,9 @@
+import { MeshWallet } from '@meshsdk/core';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { MeshTxBuilder, MeshWallet } from '@meshsdk/core';
-import { blockfrostProvider } from '../contract/scripts/common';
-import LockRequestModel from './models/lock-request.model';
 import { StatusManagement } from '../contract/scripts';
+import { blockfrostProvider } from '../contract/scripts/common';
 import AuthorizeRequestModel from './models/authorize-request.model';
+import LockRequestModel from './models/lock-request.model';
 
 @Injectable()
 export class AppServiceOLD {
@@ -19,7 +19,7 @@ export class AppServiceOLD {
         words: process.env.SELLER?.split(' ') || [],
       },
     });
-    console.log("addr: ", this.wallet.getChangeAddress())
+    console.log('addr: ', this.wallet.getChangeAddress());
   }
 
   async updateStatusDevice(lockRequestModel: LockRequestModel) {
@@ -27,9 +27,13 @@ export class AppServiceOLD {
       wallet: this.wallet,
     });
 
-    var unsignedTx: string;
+    let unsignedTx: string;
     if (lockRequestModel.is_unlock) {
-      if (lockRequestModel.unlocker_addr.trim() == "") throw new HttpException("The address wallet of unlocker must be not null", HttpStatus.BAD_REQUEST)
+      if (lockRequestModel.unlocker_addr.trim() == '')
+        throw new HttpException(
+          'The address wallet of unlocker must be not null',
+          HttpStatus.BAD_REQUEST,
+        );
       unsignedTx = await confirmStatusContract.unLock({
         title: 'The Safe',
         authority: lockRequestModel.unlocker_addr,
@@ -56,11 +60,11 @@ export class AppServiceOLD {
       tx_hash: this.txHashTemp,
       tx_ref: 'https://preprod.cexplorer.io/tx/' + txHash,
     };
-
   }
 
   async authorize(authorizeRequestModel: AuthorizeRequestModel) {
-    if (authorizeRequestModel.is_remove_authorize) authorizeRequestModel.licensee_addr = "";
+    if (authorizeRequestModel.is_remove_authorize)
+      authorizeRequestModel.licensee_addr = '';
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: this.wallet,
     });
@@ -81,8 +85,5 @@ export class AppServiceOLD {
       tx_hash: this.txHashTemp,
       tx_ref: 'https://preprod.cexplorer.io/tx/' + txHash,
     };
-
   }
-
-
 }

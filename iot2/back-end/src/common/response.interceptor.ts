@@ -1,17 +1,17 @@
 import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
   CallHandler,
+  ExecutionContext,
   HttpException,
   HttpStatus,
+  Injectable,
+  NestInterceptor,
+  SetMetadata,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ApiProperty } from '@nestjs/swagger';
+import { format } from 'date-fns';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { format } from 'date-fns';
-import { Reflector } from '@nestjs/core';
-import { SetMetadata } from '@nestjs/common';
-import { ApiProperty } from '@nestjs/swagger';
 
 export const RESPONSE_MESSAGE_METADATA = 'responseMessage';
 
@@ -25,22 +25,24 @@ export class ApiResponseModel<T> {
   @ApiProperty({ example: 201 })
   statusCode: number;
 
-  @ApiProperty({ example: "/api/..." })
+  @ApiProperty({ example: '/api/...' })
   path: string;
 
-  @ApiProperty({ example: "success" })
+  @ApiProperty({ example: 'success' })
   message: string;
 
-  @ApiProperty({ example: "..." })
+  @ApiProperty({ example: '...' })
   data: T;
 
   @ApiProperty({ example: new Date() })
   timestamp: string;
-};
+}
 
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponseModel<T>> {
-  constructor(private reflector: Reflector) { }
+export class ResponseInterceptor<T>
+  implements NestInterceptor<T, ApiResponseModel<T>>
+{
+  constructor(private reflector: Reflector) {}
 
   intercept(
     context: ExecutionContext,
@@ -59,7 +61,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponseMod
     const response = ctx.getResponse();
     const request = ctx.getRequest();
 
-    var status =
+    let status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -68,14 +70,11 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponseMod
       exception instanceof HttpException ? exception.getResponse() : null;
 
     let topLevelMessage = exception.message || 'Unknown error';
-    let topLevelError = 'Internal Server Error';
     let data: any = [];
 
     if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-      const { statusCode, message, error } = exceptionResponse as any;
+      const { statusCode, message } = exceptionResponse as any;
       status = statusCode || status;
-      topLevelError = error || topLevelError;
-
       if (Array.isArray(message) && message.length > 0) {
         topLevelMessage = message[0] || topLevelMessage;
         data = message;
