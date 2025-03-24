@@ -18,6 +18,7 @@ export class MeshAdapter {
         this.meshTxBuilder = new MeshTxBuilder({
             fetcher: this.fetcher,
             evaluator: blockfrostProvider,
+            isHydra: false
         });
         this.confirmStatusCompileCode = this.readValidator(
             blueprint as Plutus,
