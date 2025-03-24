@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  iot1-frontend:
+  iot2-frontend:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "3002:3002"
     env_file:
       - .env
     environment:
