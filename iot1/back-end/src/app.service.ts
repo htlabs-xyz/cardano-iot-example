@@ -2,7 +2,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access*/
 /* eslint-disable  @typescript-eslint/await-thenable */
 import { BlockFrostAPI } from '@blockfrost/blockfrost-js';
-import { deserializeDatum, MeshWallet, UTxO } from '@meshsdk/core';
+import {
+  deserializeDatum,
+  ForgeScript,
+  MeshWallet,
+  resolveScriptHash,
+  stringToHex,
+  UTxO,
+} from '@meshsdk/core';
 import { Injectable } from '@nestjs/common';
 import { ConfirmStatusContract } from '../contract/scripts';
 import { blockfrostProvider } from '../contract/scripts/common';
@@ -14,6 +21,7 @@ import {
   TemperatureRequestModel,
   TemperatureResponseModel,
 } from './models/temperature.model';
+
 @Injectable()
 export class AppService {
   private wallet: MeshWallet;
@@ -66,10 +74,8 @@ export class AppService {
   }
 
   async getAllTemperature(walletAddress: string) {
-    const encodedAssetName = `${process.env.NFT_POLICY_ID}${process.env.NFT_NAME_ENCODED}`;
-    const transactions = await this.API.assetsTransactions(
-      encodedAssetName,
-    );
+    const encodedAssetName = this.getAssetEncoded(walletAddress);
+    const transactions = await this.API.assetsTransactions(encodedAssetName);
     //console.log("transaction:", transaction)
     const listTemperature: TemperatureResponseModel[] = [];
     for (const tx of transactions) {
@@ -95,7 +101,7 @@ export class AppService {
     const deviceResult = new DeviceResultResponseModel();
     deviceResult.device_info =
       allDeviceInfo.find((x) => x.device_address == walletAddress) ?? null;
-    deviceResult.temperatures = listTemperature;
+    deviceResult.temperatures = listTemperature.reverse();
     return deviceResult;
   }
 
@@ -174,5 +180,11 @@ export class AppService {
       allDeviceInfo.find((x) => x.device_address == walletAddress) ?? null;
     deviceResult.temperatures = listTemperature;
     return deviceResult;
+  }
+
+  getAssetEncoded(walletAddress: string) {
+    const forgingScript = ForgeScript.withOneSignature(walletAddress);
+    const policyId = resolveScriptHash(forgingScript);
+    return policyId + stringToHex('Temperature');
   }
 }

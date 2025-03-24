@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
 import {
   ArgumentMetadata,
   Injectable,
@@ -11,7 +10,8 @@ import { WsException } from '@nestjs/websockets';
 @Injectable()
 export class SocketValidationPipe
   extends ValidationPipe
-  implements PipeTransform {
+  implements PipeTransform
+{
   // Define exceptionFactory as a property, not a method
   exceptionFactory = (validateErrors: ValidationError[] = []) => {
     const messages = validateErrors.reduce((acc, error) => {
