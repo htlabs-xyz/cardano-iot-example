@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function assertApiResponse<T>(data: any): T {
   console.log("http data:", data)
   // if (typeof data.status !== 'boolean' ||
