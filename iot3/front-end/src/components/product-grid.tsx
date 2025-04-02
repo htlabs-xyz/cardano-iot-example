@@ -1,23 +1,28 @@
 "use client"
 
-import { useState } from "react"
 import { Search } from "lucide-react"
+import { useEffect, useState } from "react"
 
-import { Input } from "@/components/ui/input"
 import ProductCard from "@/components/product-card"
-import type { Machine } from "@/lib/data"
+import { Input } from "@/components/ui/input"
+import { Product } from "../types/product.type"
 
 interface ProductGridProps {
-    machine: Machine
-    onAddToCart: (productId: string) => void
+    products: Product[]
+    onAddToCart: (productId: number) => void
 }
 
-export default function ProductGrid({ machine, onAddToCart }: ProductGridProps) {
+export default function ProductGrid({ products, onAddToCart }: ProductGridProps) {
     const [searchQuery, setSearchQuery] = useState("")
+    const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
 
-    const filteredProducts = machine.products.filter((product) =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
+
+    useEffect(() => {
+        const filterList = products.filter((product) =>
+            product.product_name.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+        setFilteredProducts(filterList);
+    }, [products, searchQuery])
 
     return (
         <div className="space-y-4">
@@ -38,7 +43,7 @@ export default function ProductGrid({ machine, onAddToCart }: ProductGridProps) 
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {filteredProducts.map((product) => (
-                        <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+                        <ProductCard key={product.product_id} product={product} onAddToCart={onAddToCart} />
                     ))}
                 </div>
             )}

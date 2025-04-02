@@ -1,0 +1,116 @@
+{
+  "device_details": [
+    {
+      "device_id": 1,
+      "product_id": 1,
+      "product_quantity": 10,
+      "row": 0,
+      "column": 0
+    },
+    {
+      "device_id": 1,
+      "product_id": 2,
+      "product_quantity": 5,
+      "row": 0,
+      "column": 1
+    },
+    {
+      "device_id": 1,
+      "product_id": 3,
+      "product_quantity": 6,
+      "row": 0,
+      "column": 2
+    },
+    {
+      "device_id": 1,
+      "product_id": 4,
+      "product_quantity": 8,
+      "row": 1,
+      "column": 0
+    },
+    {
+      "device_id": 1,
+      "product_id": 5,
+      "product_quantity": 11,
+      "row": 1,
+      "column": 1
+    },
+    {
+      "device_id": 1,
+      "product_id": 6,
+      "product_quantity": 8,
+      "row": 1,
+      "column": 2
+    },
+    {
+      "device_id": 2,
+      "product_id": 7,
+      "product_quantity": 8,
+      "row": 0,
+      "column": 0
+    },
+    {
+      "device_id": 2,
+      "product_id": 8,
+      "product_quantity": 8,
+      "row": 0,
+      "column": 1
+    },
+    {
+      "device_id": 2,
+      "product_id": 9,
+      "product_quantity": 19,
+      "row": 0,
+      "column": 2
+    },
+    {
+      "device_id": 2,
+      "product_id": 10,
+      "product_quantity": 14,
+      "row": 1,
+      "column": 0
+    },
+    {
+      "device_id": 2,
+      "product_id": 11,
+      "product_quantity": 7,
+      "row": 1,
+      "column": 1
+    },
+    {
+      "device_id": 2,
+      "product_id": 12,
+      "product_quantity": 1,
+      "row": 1,
+      "column": 2
+    },
+    {
+      "device_id": 3,
+      "product_id": 13,
+      "product_quantity": 12,
+      "row": 0,
+      "column": 0
+    },
+    {
+      "device_id": 3,
+      "product_id": 14,
+      "product_quantity": 1,
+      "row": 0,
+      "column": 1
+    },
+    {
+      "device_id": 3,
+      "product_id": 15,
+      "product_quantity": 6,
+      "row": 0,
+      "column": 2
+    },
+    {
+      "device_id": 3,
+      "product_id": 16,
+      "product_quantity": 17,
+      "row": 0,
+      "column": 4
+    }
+  ]
+}

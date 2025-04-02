@@ -6,8 +6,8 @@ import { DevicesService } from './device.service';
 import { DevicesController } from './device.controller';
 
 @Module({
-    controllers: [DevicesController],
-    providers: [DevicesService],
-    imports: [TypeOrmModule.forFeature([DeviceEntity]), ConfigModule.forRoot()],
+  controllers: [DevicesController],
+  providers: [DevicesService],
+  imports: [TypeOrmModule.forFeature([DeviceEntity]), ConfigModule.forRoot()],
 })
-export class DevicesModule { }
+export class DevicesModule {}

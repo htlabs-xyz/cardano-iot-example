@@ -1,97 +1,135 @@
 "use client"
 
-import { useState } from "react"
-import { ShoppingCart } from "lucide-react"
+import { useEffect, useState } from "react"
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import CartPanel from "@/components/cart-panel"
 import ProductGrid from "@/components/product-grid"
-import CartDrawer from "@/components/cart-drawer"
-import { machines as initialMachines, type Machine, type Product } from "@/lib/data"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
+import deviceApiRequest from "../api/device.api"
+import productApiRequest from "../api/product.api"
+import { Device } from "../types/device.type"
+import { ProductOrderDetails } from "../types/order.type"
+import { Product } from "../types/product.type"
+import { SidebarInset, SidebarProvider } from "./ui/sidebar"
 
 export default function VendingMachineUI() {
     // Create a deep copy of machines to allow modifying stock
-    const [machines, setMachines] = useState<Machine[]>(JSON.parse(JSON.stringify(initialMachines)))
-    const [selectedMachineId, setSelectedMachineId] = useState<string>(machines[0].id)
-    const [cart, setCart] = useState<{ id: string; quantity: number }[]>([])
-    const [isCartOpen, setIsCartOpen] = useState(false)
+    const [vendingDevices, setVendingDevices] = useState<Device[]>([]);
+    const [selectedDevice, setSelectedDevice] = useState<Device | undefined>(undefined);
+    const [productData, setProductData] = useState<Product[]>([]);
 
-    // Get the currently selected machine
-    const selectedMachine = machines.find((m) => m.id === selectedMachineId) || machines[0]
+    const [cart, setCart] = useState<ProductOrderDetails[]>([])
 
-    // Function to get available stock (accounting for cart quantities)
-    const getAvailableStock = (productId: string) => {
-        const product = selectedMachine.products.find((p) => p.id === productId)
-        if (!product) return 0
-        return product.stock
-    }
 
-    const addToCart = (productId: string) => {
-        const product = selectedMachine.products.find((p) => p.id === productId)
+    useEffect(() => {
+        const fetchDevices = async () => {
+            try {
+                //setIsLoadingDevices(true);
+                const response = await deviceApiRequest.getList();
+                const devices = response.data ?? [];
+                setVendingDevices(devices);
+                if (devices.length > 0 && !selectedDevice) {
+                    setSelectedDevice(devices[0]); // Set default sensor
+                }
+                if (devices.length === 0) { throw new Error(); }
+            } catch {
+                toast("Error fetching data", {
+                    description: "Cannot get devices info",
+                    action: {
+                        label: "Retry",
+                        onClick: () => fetchDevices(),
+                    },
+                });
+            }
+        };
+        fetchDevices();
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        if (!vendingDevices.length || !selectedDevice) return;
+        const fetchData = async () => {
+            try {
+                const device = vendingDevices.find((s) => s.device_id === selectedDevice.device_id) || vendingDevices[0];
+                const dataApi = await productApiRequest.getListProductByDevice(device.device_id);
+                if (!dataApi || !dataApi.data || !dataApi.data.products) throw new Error();
+                const productList = dataApi.data.products;
+                setProductData(productList);
+
+            } catch (error) {
+                console.error("Failed to fetch temperature data:", error);
+                toast("Error", { description: "Failed to load temperature data" });
+            }
+        }
+        fetchData()
+    }, [vendingDevices, selectedDevice])
+
+    const addToCart = (productId: number) => {
+        const product = productData.find((p) => p.product_id === productId)
         if (!product) return
 
-        if (product.stock <= 0) {
-            return // The notification is now handled in the product card
+        if (product.product_quantity <= 0) {
+            return // The notification is handled in the product card
         }
 
         // Update the product stock
-        setMachines((prevMachines) => {
-            const newMachines = JSON.parse(JSON.stringify(prevMachines))
-            const machine = newMachines.find((m: Machine) => m.id === selectedMachineId)
-            if (machine) {
-                const productToUpdate = machine.products.find((p: Product) => p.id === productId)
-                if (productToUpdate) {
-                    productToUpdate.stock -= 1
+        setProductData((prevProducts) => {
+            return prevProducts.map(product => {
+                if (product.product_id === productId) {
+                    return {
+                        ...product,
+                        product_quantity: product.product_quantity - 1
+                    }
                 }
-            }
-            return newMachines
+                return product
+            })
         })
 
         // Update the cart
         setCart((prev) => {
-            const existingItem = prev.find((item) => item.id === productId)
+            const existingItem = prev.find((item) => item.product_id === productId)
             if (existingItem) {
-                return prev.map((item) => (item.id === productId ? { ...item, quantity: item.quantity + 1 } : item))
+                return prev.map((item) => (item.product_id === productId ? { ...item, quantity: item.quantity + 1 } : item))
             } else {
-                return [...prev, { id: productId, quantity: 1 }]
+                return [...prev, { product_id: productId, quantity: 1 }]
             }
         })
     }
 
-    const removeFromCart = (productId: string) => {
+    const removeFromCart = (productId: number) => {
         // Get the quantity being removed
-        const itemToRemove = cart.find((item) => item.id === productId)
+        const itemToRemove = cart.find((item) => item.product_id === productId)
         if (!itemToRemove) return
 
-        // Return the stock to the machine
-        setMachines((prevMachines) => {
-            const newMachines = JSON.parse(JSON.stringify(prevMachines))
-            const machine = newMachines.find((m: Machine) => m.id === selectedMachineId)
-            if (machine) {
-                const productToUpdate = machine.products.find((p: Product) => p.id === productId)
-                if (productToUpdate) {
-                    productToUpdate.stock += itemToRemove.quantity
+        // Return the stock to the product data
+        setProductData((prevProducts) => {
+            return prevProducts.map(product => {
+                if (product.product_id === productId) {
+                    return {
+                        ...product,
+                        product_quantity: product.product_quantity + itemToRemove.quantity
+                    }
                 }
-            }
-            return newMachines
+                return product
+            })
         })
 
         // Remove from cart
-        setCart((prev) => prev.filter((item) => item.id !== productId))
+        setCart((prev) => prev.filter((item) => item.product_id !== productId))
     }
 
-    const updateQuantity = (productId: string, newQuantity: number) => {
+    const updateQuantity = (productId: number, newQuantity: number) => {
         if (newQuantity <= 0) {
             removeFromCart(productId)
             return
         }
 
-        const currentItem = cart.find((item) => item.id === productId)
+        const currentItem = cart.find((item) => item.product_id === productId)
         if (!currentItem) return
 
-        const product = selectedMachine.products.find((p) => p.id === productId)
+        const product = productData.find((p) => p.product_id === productId)
         if (!product) return
 
         const currentQuantity = currentItem.quantity
@@ -99,144 +137,107 @@ export default function VendingMachineUI() {
 
         // Check if we have enough stock to increase
         if (quantityDifference > 0) {
-            const availableStock = getAvailableStock(productId)
-
-            if (availableStock < quantityDifference) {
+            if (product.product_quantity < quantityDifference) {
                 // Silently fail if not enough stock - disable the button instead
                 return
             }
 
             // Decrease the stock by the difference
-            setMachines((prevMachines) => {
-                const newMachines = JSON.parse(JSON.stringify(prevMachines))
-                const machine = newMachines.find((m: Machine) => m.id === selectedMachineId)
-                if (machine) {
-                    const productToUpdate = machine.products.find((p: Product) => p.id === productId)
-                    if (productToUpdate) {
-                        productToUpdate.stock -= quantityDifference
+            setProductData((prevProducts) => {
+                return prevProducts.map(p => {
+                    if (p.product_id === productId) {
+                        return {
+                            ...p,
+                            product_quantity: p.product_quantity - quantityDifference
+                        }
                     }
-                }
-                return newMachines
+                    return p
+                })
             })
         } else if (quantityDifference < 0) {
             // Increase the stock by the absolute difference
-            setMachines((prevMachines) => {
-                const newMachines = JSON.parse(JSON.stringify(prevMachines))
-                const machine = newMachines.find((m: Machine) => m.id === selectedMachineId)
-                if (machine) {
-                    const productToUpdate = machine.products.find((p: Product) => p.id === productId)
-                    if (productToUpdate) {
-                        productToUpdate.stock += Math.abs(quantityDifference)
+            setProductData((prevProducts) => {
+                return prevProducts.map(p => {
+                    if (p.product_id === productId) {
+                        return {
+                            ...p,
+                            product_quantity: p.product_quantity + Math.abs(quantityDifference)
+                        }
                     }
-                }
-                return newMachines
+                    return p
+                })
             })
         }
 
         // Update cart quantity
-        setCart((prev) => prev.map((item) => (item.id === productId ? { ...item, quantity: newQuantity } : item)))
+        setCart((prev) => prev.map((item) => (item.product_id === productId ? { ...item, quantity: newQuantity } : item)))
     }
 
-    // Handle machine change - return all cart items to stock
-    const handleMachineChange = (machineId: string) => {
-        // Return all cart items to their respective machines
-        setMachines((prevMachines) => {
-            const newMachines = JSON.parse(JSON.stringify(prevMachines))
+    // Handle device change - return all cart items to stock
+    const handleDeviceChange = (deviceIdString: string) => {
+        const deviceId = Number.parseInt(deviceIdString)
 
-            // Find the current machine and return items to stock
-            const currentMachine = newMachines.find((m: Machine) => m.id === selectedMachineId)
-            if (currentMachine) {
-                cart.forEach((item) => {
-                    const productToUpdate = currentMachine.products.find((p: Product) => p.id === item.id)
-                    if (productToUpdate) {
-                        productToUpdate.stock += item.quantity
-                    }
-                })
-            }
-
-            return newMachines
-        })
-
-        // Clear the cart and update selected machine
+        // Clear the cart and update selected device
         setCart([])
-        setSelectedMachineId(machineId)
+        const newDevice = vendingDevices.find((d) => d.device_id === deviceId)
+        setSelectedDevice(newDevice)
 
-        const newMachine = machines.find((m) => m.id === machineId)
-        if (newMachine) {
-            toast("Machine changed", {
-                description: `Switched to ${newMachine.name} at ${newMachine.location}.`
+        if (newDevice) {
+            toast("Device changed", {
+                description: `Switched to ${newDevice.device_name} at ${newDevice.device_location}.`
             })
         }
     }
 
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
-
     // Handle checkout - remove items from stock permanently
     const handleCheckout = () => {
+        if (cart.length === 0) {
+            toast("Empty cart", {
+                description: "Your cart is empty. Add some products before checking out.",
+            })
+            return
+        }
+
         // Clear the cart but don't return items to stock
         setCart([])
-        setIsCartOpen(false)
-
         toast("Purchase complete", {
-            description: "Thank you for your purchase!"
+            description: "Thank you for your purchase!",
         })
     }
 
     return (
-        <div className="space-y-6 min-h-screen pb-20">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="w-full sm:w-auto">
-                    <Select value={selectedMachineId} onValueChange={handleMachineChange}>
-                        <SelectTrigger className="w-full sm:w-[300px]">
+        <SidebarProvider>
+            <SidebarInset>
+                <div className="p-4 border-b sticky top-0 bg-background z-10">
+                    <h2 className="text-lg font-semibold flex items-center">
+                        IOT3 - Vending Machine
+                    </h2>
+                </div>
+                <div className="p-4">
+                    <Select value={selectedDevice?.device_id.toString()} onValueChange={handleDeviceChange}>
+                        <SelectTrigger className="w-full max-w-md mb-3">
                             <SelectValue placeholder="Select a machine" />
                         </SelectTrigger>
                         <SelectContent>
-                            {machines.map((machine) => (
-                                <SelectItem key={machine.id} value={machine.id}>
-                                    {machine.name} - {machine.location}
+                            {vendingDevices.map((machine) => (
+                                <SelectItem key={machine.device_id} value={machine.device_id.toString()}>
+                                    {machine.device_name} - {machine.device_location}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
+                    <ProductGrid products={productData} onAddToCart={addToCart} />
                 </div>
-
-                <Button variant="outline" className="w-full sm:w-auto" onClick={() => setIsCartOpen(true)}>
-                    <ShoppingCart className="mr-2 h-4 w-4" />
-                    Cart
-                    {totalItems > 0 && (
-                        <Badge variant="secondary" className="ml-2">
-                            {totalItems}
-                        </Badge>
-                    )}
-                </Button>
-            </div>
-
-            <ProductGrid machine={selectedMachine} onAddToCart={addToCart} />
-
-            <div className="fixed bottom-0 left-0 right-0 z-10">
-                <div className="bg-background border-t p-4 flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                        <ShoppingCart className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-sm font-medium">
-                            {totalItems === 0 ? "Your cart is empty" : `${totalItems} item${totalItems !== 1 ? "s" : ""} in cart`}
-                        </span>
-                    </div>
-                    <Button onClick={() => setIsCartOpen(true)} disabled={totalItems === 0}>
-                        View Cart
-                    </Button>
-                </div>
-            </div>
-
-            <CartDrawer
-                open={isCartOpen}
-                onClose={() => setIsCartOpen(false)}
+            </SidebarInset>
+            <CartPanel
                 cart={cart}
-                machine={selectedMachine}
+                device={selectedDevice}
+                products={productData}
                 onUpdateQuantity={updateQuantity}
                 onRemoveItem={removeFromCart}
                 onCheckout={handleCheckout}
             />
-        </div>
+        </SidebarProvider>
     )
 }
 

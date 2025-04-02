@@ -1,0 +1,31 @@
+{
+  "device": [
+    {
+      "device_id": 1,
+      "device_name": "Snack Station",
+      "wallet_address": "addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh",
+      "device_ip": "192.168.1.1",
+      "device_location": "Main Lobby",
+      "device_type": 1,
+      "device_version": 1
+    },
+    {
+      "device_id": 2,
+      "device_name": "Drink Depot",
+      "wallet_address": "addr_test1qq7atea9a03895x467lufqddes46jf63v98eh7kmg0mxvg2al42832fu44020sefy9538j2yq7s2temv20l4haxzkwxs5gfuav",
+      "device_ip": "192.168.1.2",
+      "device_location": "2nd Floor",
+      "device_type": 1,
+      "device_version": 1
+    },
+    {
+      "device_id": 3,
+      "device_name": "Fresh Eats",
+      "wallet_address": "addr_test1qr2v7n4a45xcxvfemnx5yqz7xcgx2z8zxh8xs8vl0xfckm2al42832fu44020sefy9538j2yq7s2temv20l4haxzkwxs4s927z",
+      "device_ip": "192.168.1.3",
+      "device_location": "Cafeteria",
+      "device_type": 1,
+      "device_version": 1
+    }
+  ]
+}

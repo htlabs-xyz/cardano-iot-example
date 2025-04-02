@@ -1,17 +1,18 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DevicesModule } from './modules/device/device.module';
-import { DeviceDetailsModule } from './modules/device-detail/device-detail.module';
-import { ProductsModule } from './modules/product/product.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import ProductEntity from './entities/product.entity';
-import DeviceEntity from './entities/device.entity';
 import DeviceDetailsEntity from './entities/device-detail.entity';
+import DeviceEntity from './entities/device.entity';
+import ProductEntity from './entities/product.entity';
+import { DevicesModule } from './modules/device/device.module';
+import { OrderModule } from './modules/order/order.module';
+import { ProductsModule } from './modules/product/product.module';
 
 if (!process.env.DB_PORT) {
   throw new Error('DB_PORT environment variable is required');
 }
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -24,10 +25,16 @@ if (!process.env.DB_PORT) {
       entities: [ProductEntity, DeviceEntity, DeviceDetailsEntity], // DS các entity sẽ ánh xạ
       synchronize: true, //tự tạo bảng từ entity
     }),
-    DeviceDetailsModule,
+    TypeOrmModule.forFeature([
+      ProductEntity,
+      DeviceDetailsEntity,
+      DeviceEntity,
+    ]),
+    OrderModule,
     DevicesModule,
-    ProductsModule],
+    ProductsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

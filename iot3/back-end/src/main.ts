@@ -2,7 +2,11 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/response.interceptor';
 
-import { BadRequestException, ValidationError, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  ValidationError,
+  ValidationPipe,
+} from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
@@ -30,6 +34,11 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  await app.listen(process.env.PORT ?? 3000);
+  app.enableCors({
+    allowedHeaders: ['content-type'],
+    origin: process.env.FRONT_END_HOST ?? '*',
+    credentials: true,
+  });
+  await app.listen(process.env.SERVER_PORT ?? 3004);
 }
 bootstrap();

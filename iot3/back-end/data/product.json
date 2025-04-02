@@ -1,0 +1,100 @@
+{
+  "product": [
+    {
+      "product_id": 1,
+      "product_name": "Potato Chips",
+      "product_price": 1.5,
+      "product_image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1iuYu-dW_WSYGZTxR5zdwdD-dVPFg_coExQ&s"
+    },
+    {
+      "product_id": 2,
+      "product_name": "Chocolate Bar",
+      "product_price": 2.0,
+      "product_image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4uDHblkcnYMfBpg0zeU3gm6H4jpg7K-6iMw&s"
+    },
+    {
+      "product_id": 3,
+      "product_name": "Granola Bar",
+      "product_price": 1.75,
+      "product_image": "https://product.hstatic.net/1000282430/product/granola-bar-chocolate-jsims-30g_6143f96e0000438fb0987e96a5fce3d7_master.jpg"
+    },
+    {
+      "product_id": 4,
+      "product_name": "Trail Mix",
+      "product_price": 2.5,
+      "product_image": "https://m.media-amazon.com/images/I/61MYSKUL-BL._SL1200_.jpg"
+    },
+    {
+      "product_id": 5,
+      "product_name": "Pretzels",
+      "product_price": 1.25,
+      "product_image": "https://m.media-amazon.com/images/I/61Ia1dC7m7L._SL1080_.jpg"
+    },
+    {
+      "product_id": 6,
+      "product_name": "Cookies",
+      "product_price": 1.75,
+      "product_image": "https://maytudong.com.vn/wp-content/uploads/may-dong-goi-banh-quy-single-cookie-packaging.jpg"
+    },
+    {
+      "product_id": 7,
+      "product_name": "Water Bottle",
+      "product_price": 1.0,
+      "product_image": "https://product.hstatic.net/1000282430/product/nuoc-suoi-lavie-500ml_d1a208860a124bea80ca6c1e20b4994f_7b105e5ad2604285888fae69160e45d6_master.jpg"
+    },
+    {
+      "product_id": 8,
+      "product_name": "Cola",
+      "product_price": 1.5,
+      "product_image": "https://www.lottemart.vn/media/catalog/product/cache/0x0/8/9/8935049501404-2.jpg.webp"
+    },
+    {
+      "product_id": 9,
+      "product_name": "Orange Juice",
+      "product_price": 2.0,
+      "product_image": "https://img.websosanh.vn/v2/users/root_product/images/nuoc-cam-co-tep-teppy-minute-m/VErIxTPVk7l_.jpg"
+    },
+    {
+      "product_id": 10,
+      "product_name": "Energy Drink",
+      "product_price": 2.75,
+      "product_image": "https://hongphatfood.com/wp-content/uploads/2020/02/red-bull-drink-soft-250ml1.jpg"
+    },
+    {
+      "product_id": 11,
+      "product_name": "Iced Tea",
+      "product_price": 1.75,
+      "product_image": "https://product.hstatic.net/200000559893/product/lipton_chanh_hoa_tan-2_fe3aa044293a4e55b7ad35fe5aa568c2.jpg"
+    },
+    {
+      "product_id": 12,
+      "product_name": "Sparkling Water",
+      "product_price": 1.5,
+      "product_image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRtXUdO6_4vLMNcLuym9FIYP6fUeS1YVEvJQ&s"
+    },
+    {
+      "product_id": 13,
+      "product_name": "Sandwich",
+      "product_price": 4.5,
+      "product_image": "https://www.ministop.vn/img/product/62b2c199387b1_1b4b46a732d80c0d549b9fc9e40e9a1a.jpg"
+    },
+    {
+      "product_id": 14,
+      "product_name": "Salad",
+      "product_price": 5.0,
+      "product_image": "https://gofoodmarket.vn/wp-content/uploads/2023/04/sot-salad-voi-kem-chua.jpg"
+    },
+    {
+      "product_id": 15,
+      "product_name": "Fruit Cup",
+      "product_price": 3.0,
+      "product_image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcThpYusoLXtK7QwIEyghbCibmLpRF8aTI6CLg&s"
+    },
+    {
+      "product_id": 16,
+      "product_name": "Yogurt",
+      "product_price": 2.0,
+      "product_image": "https://sieuthihoaba.com.vn/wp-content/uploads/2020/10/1559123457703_4991356.jpg"
+    }
+  ]
+}
