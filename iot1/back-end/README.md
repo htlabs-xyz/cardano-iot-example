@@ -3,7 +3,7 @@
 This project is an **IoT platform combined with Cardano blockchain** to track and store environmental data such as **temperature** and **humidity** from IoT devices.  
 The blockchain ensures transparency and immutability, while the IoT gateway and services provide real-time monitoring and analytics.
 
-![Diagram](./docs/images/temperature-diagram.png)
+![Diagram](./docs/images/iot1-diagram.png)
 
 *(The diagram above illustrates the overall flow of API and events. The sections below describe the corresponding APIs and events in detail.)*
 
@@ -101,7 +101,7 @@ In addition to API and events, the system includes a **Background Service** that
 - Validates data against tolerance thresholds.  
 - Stores verified records to the **Cardano blockchain** for transparency and audit.  
 
-![Background Service](./docs/images/background-service.png)
+![Background Service](./docs/images/iot1-example-cron-job.png)
 
 ---
 
