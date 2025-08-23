@@ -1,99 +1,144 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Smart Lock Service API (IoT2)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This project is an **IoT2 platform combining IoT devices and Cardano blockchain** to build a secure and transparent **smart lock system** (for safes, lockers, and cabinets).  
+The IoT layer manages lock/unlock operations in real-time, while Cardano blockchain provides tamper-proof storage for access rights, lock status history, and authorization records.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+![Diagram](./docs/images/iot2-diagram.png)
 
-## Description
+*(The diagram above illustrates the flow of lock/unlock operations and blockchain tracking. Below are the API and event details.)*
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## 1. Get Access Right & Return User Role
+**Method:** `GET /api/lock-device/get-access/{wallet_address}`
 
-```bash
-$ npm install
+- **Path param**
+  - `wallet_address` (string): Cardano wallet address of the user
+
+- **Response schema**
+```json
+{
+  "status": true,
+  "statusCode": 201,
+  "path": "/api/lock-device/get-access/{wallet_address}",
+  "message": "success",
+  "data": 0,   // 0 = owner, 1 = authorized user, -1 = no access
+  "timestamp": "2025-08-24T10:30:45Z"
+}
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 2. Get Current Lock Status
+**Method:** `GET /api/lock-device/lock-status`
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+- **Response schema**
+```json
+{
+  "status": true,
+  "statusCode": 201,
+  "path": "/api/lock-device/lock-status",
+  "message": "success",
+  "lock_status": true,   // true = locked, false = unlocked
+  "user_addr": "string", // Cardano wallet address of last user
+  "time": "2025-08-24T10:30:45.000Z",
+  "tx_ref": "string",    // Cardano explorer URL
+  "timestamp": "2025-08-24T10:30:45Z"
+}
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+## 3. Subscribe to Lock Status Updates
+**Method:** `Socket.io`  
 
-# e2e tests
-$ npm run test:e2e
+- **Path:** `ws://hostname` (default)  
+- **Event:** `onUpdatedLockStatus`
 
-# test coverage
-$ npm run test:cov
+- **Payload**
+```json
+{
+  "is_unlock": true,
+  "unlocker_addr": "string"
+}
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 4. Update Lock Status
+**Method:** `POST /api/lock-device/update-status`
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
+- **Request body**
+```json
+{
+  "is_unlock": true,
+  "unlocker_addr": "string", // Cardano wallet address
+  "time": "2025-08-24T10:30:45.000Z"
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- **Response body**
+```json
+{
+  "status": true,
+  "statusCode": 201,
+  "path": "/api/lock-device/update-status",
+  "message": "success",
+  "data": "string", // unsigned transaction hex
+  "timestamp": "2025-08-24T10:30:45Z"
+}
+```
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## 5. Authorize / Remove Authorize Unlocker
+**Method:** `POST /api/lock-device/authorize`
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- **Request body**
+```json
+{
+  "is_remove_authorize": false,
+  "authorizer_addr": "string", // Cardano wallet address of authorizer
+  "licensee_addr": "string",   // Cardano wallet address of licensee
+  "time": "2025-08-24T10:30:45.000Z"
+}
+```
 
-## Support
+- **Response body**
+```json
+{
+  "status": true,
+  "statusCode": 201,
+  "path": "/api/lock-device/authorize",
+  "message": "success",
+  "data": "string", // unsigned transaction hex
+  "timestamp": "2025-08-24T10:30:45Z"
+}
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## 6. Get Lock History
+**Method:** `GET /api/lock-device/history`
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- **Response schema**
+```json
+{
+  "status": true,
+  "statusCode": 201,
+  "path": "/api/lock-device/history",
+  "message": "success",
+  "data": [
+    {
+      "lock_status": true,
+      "user_addr": "string", // Cardano wallet address
+      "time": "2025-08-24T10:30:45.000Z",
+      "tx_ref": "string"     // Cardano explorer URL
+    }
+  ],
+  "timestamp": "2025-08-24T10:30:45Z"
+}
+```
+---
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+> 📌 This README provides both the visual overview and detailed API/event documentation for the IoT2 Smart Lock System integrated with Cardano blockchain.
