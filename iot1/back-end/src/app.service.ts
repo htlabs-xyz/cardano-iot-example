@@ -8,27 +8,35 @@ import {
   MeshWallet,
   resolveScriptHash,
   stringToHex,
-  UTxO,
 } from '@meshsdk/core';
 import { Injectable } from '@nestjs/common';
 import { ConfirmStatusContract } from '../contract/scripts';
 import { blockfrostProvider } from '../contract/scripts/common';
 import * as device_data from '../data/device.json';
 import { AppGateway } from './app.gateway';
+import { MemoryCacheService } from './memoryCache.service';
 import SensorDeviceModel from './models/sensor-device.model';
 import {
   DeviceResultResponseModel,
   TemperatureRequestModel,
   TemperatureResponseModel,
+  TemperatureUnit,
 } from './models/temperature.model';
 
 @Injectable()
 export class AppService {
   private wallet: MeshWallet;
-  private txHashTemp: string;
   private API: BlockFrostAPI;
+  private readonly CACHE_KEY = process.env.APP_CACHE_KEY || 'temperature_cache';
+  private readonly ALLOWED_TIME_OFFSET = parseInt(
+    process.env.ALLOWED_TIME_OFFSET || '3000',
+    10,
+  );
 
-  constructor(private readonly appGateway: AppGateway) {
+  constructor(
+    private readonly appGateway: AppGateway,
+    private readonly memoryCacheService: MemoryCacheService,
+  ) {
     this.wallet = new MeshWallet({
       networkId: 0,
       fetcher: blockfrostProvider,
@@ -43,7 +51,61 @@ export class AppService {
     });
   }
 
+  async updateTemperature() {
+    const existingTemperatures =
+      (await this.memoryCacheService.get<TemperatureRequestModel[]>(
+        this.CACHE_KEY,
+      )) || [];
+    if (existingTemperatures.length == 0) {
+      return;
+    }
+    await this.memoryCacheService.clear();
+    const temperatureMap = new Map<string, TemperatureRequestModel>();
+    for (const t of existingTemperatures) {
+      const cur = temperatureMap.get(t.device_address);
+      if (!cur || new Date(t.time).getTime() > new Date(cur.time).getTime()) {
+        temperatureMap.set(t.device_address, t);
+      }
+    }
+
+    const latestList = [...temperatureMap.values()];
+    const maxObj = latestList.reduce((max, cur) =>
+      new Date(cur.time).getTime() > new Date(max.time).getTime() ? cur : max,
+    );
+
+    const maxMs = new Date(maxObj.time).getTime();
+    let sum = 0;
+    let count = 0;
+    for (const [, temp] of temperatureMap) {
+      const tMs = new Date(temp.time).getTime();
+      if (maxMs - tMs <= this.ALLOWED_TIME_OFFSET) {
+        sum += temp.value;
+        count++;
+      }
+    }
+
+    const average = count ? sum / count : null;
+
+    if (average === null) return;
+    await this.submitTemperature({
+      device_address: maxObj.device_address,
+      time: maxObj.time,
+      value: average,
+      unit: TemperatureUnit.CELSIUS,
+    });
+  }
+
   async submitTemperature(temperature: TemperatureRequestModel) {
+    const existingTemperatures =
+      (await this.memoryCacheService.get<TemperatureRequestModel[]>(
+        this.CACHE_KEY,
+      )) || [];
+    const updateTemperatures = [...existingTemperatures, temperature];
+    await this.memoryCacheService.set(this.CACHE_KEY, updateTemperatures);
+    return 'Ok';
+  }
+
+  async saveTemperature(temperature: TemperatureRequestModel) {
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
         wallet: this.wallet,
@@ -56,7 +118,6 @@ export class AppService {
     const signedTx = await this.wallet.signTx(unsignedTx, true);
     const txHash = await this.wallet.submitTx(signedTx);
     console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    this.txHashTemp = txHash;
     blockfrostProvider.onTxConfirmed(txHash, () => {
       expect(txHash.length).toBe(64);
     });
@@ -126,7 +187,6 @@ export class AppService {
     const signedTx = await this.wallet.signTx(unsignedTx, true);
     const txHash = await this.wallet.submitTx(signedTx);
     console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    this.txHashTemp = txHash;
     blockfrostProvider.onTxConfirmed(txHash, () => {
       expect(txHash.length).toBe(64);
     });
@@ -150,36 +210,6 @@ export class AppService {
       temperatureResponseModel,
     );
     return temperatureResponseModel;
-  }
-
-  async getAllTemperatureOLD(walletAddress: string) {
-    if (walletAddress == '')
-      walletAddress = await this.wallet.getChangeAddress();
-    const listTemperature: TemperatureResponseModel[] = [];
-    const utxos: UTxO[] =
-      await blockfrostProvider.fetchAddressUTxOs(walletAddress);
-    for (const utxo of utxos) {
-      if (utxo.output.plutusData) {
-        const txInfor = await blockfrostProvider.fetchTxInfo(utxo.input.txHash);
-        const blockInfo = await blockfrostProvider.fetchBlockInfo(
-          txInfor.block,
-        );
-        const temperature = new TemperatureResponseModel();
-        temperature.value =
-          deserializeDatum(utxo.output.plutusData)?.fields?.[1]?.int ?? -1000;
-        temperature.tx_ref =
-          'https://preprod.cexplorer.io/tx/' + utxo.input.txHash;
-        temperature.time = new Date(blockInfo.time * 1000);
-        if (temperature.value != -1000) listTemperature.push(temperature);
-      }
-    }
-    const allDeviceInfo = await this.getListDeviceInfo();
-
-    const deviceResult = new DeviceResultResponseModel();
-    deviceResult.device_info =
-      allDeviceInfo.find((x) => x.device_address == walletAddress) ?? null;
-    deviceResult.temperatures = listTemperature;
-    return deviceResult;
   }
 
   getAssetEncoded(walletAddress: string) {
