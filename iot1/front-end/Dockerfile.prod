@@ -1,0 +1,53 @@
+# Production Dockerfile for Frontend
+FROM oven/bun:1 AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+WORKDIR /app
+
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile --production
+
+# Build the application
+FROM base AS builder
+WORKDIR /app
+
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
+
+COPY . .
+
+# Build Next.js application
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN bun run build
+
+# Production image
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy necessary files
+COPY --from=builder /app/public ./public
+
+# Set correct permissions for precompiled app
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Copy built application
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3001
+
+ENV PORT=3001
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./back-end/.env
+    volumes:
+      - ./back-end:/app
+      - /app/node_modules
+    networks:
+      - iot-network
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_ENDPOINT=http://localhost:3000
+      - NEXT_PUBLIC_WEBSOCKET=http://localhost:3000
+    env_file:
+      - ./front-end/.env
+    volumes:
+      - ./front-end:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - iot-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - iot-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+networks:
+  iot-network:
+    driver: bridge
+
+volumes:
+  redis_data:
