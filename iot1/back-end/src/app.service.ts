@@ -87,7 +87,7 @@ export class AppService {
     const average = count ? sum / count : null;
 
     if (average === null) return;
-    await this.submitTemperature({
+    await this.saveTemperature({
       device_address: maxObj.device_address,
       time: maxObj.time,
       value: average,

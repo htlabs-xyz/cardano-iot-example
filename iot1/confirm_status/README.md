@@ -1,99 +1,193 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Confirm Status Smart Contract
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A Cardano-based smart contract system for confirming and tracking status updates on the blockchain, particularly designed for IoT device status confirmation.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Overview
 
-## Description
+The Confirm Status contract allows authorized users to create and update status confirmations on the Cardano blockchain. Each status confirmation is represented by a unique NFT token that contains the status data and owner information.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Architecture
 
-## Project setup
+### Smart Contract (Aiken)
+- **Validator**: `confirm_status.ak` - Plutus V3 validator written in Aiken
+- **Purpose**: Validates spending transactions requiring owner signature verification
+- **Datum Structure**:
+  - `owner`: VerificationKeyHash of the authorized owner
+  - `value`: Integer representing the status value
 
+### Backend Service (NestJS)
+- **Framework**: NestJS with TypeScript
+- **Port**: 3000 (default)
+- **Purpose**: Provides API endpoints and transaction building capabilities
+
+### Blockchain Integration
+- **Network**: Cardano Preprod Testnet
+- **Library**: MeshSDK for transaction building and wallet integration
+- **Provider**: Blockfrost API for blockchain interactions
+
+## Features
+
+- **Status Confirmation**: Create blockchain-verified status updates
+- **NFT Representation**: Each status is represented by a unique NFT token
+- **Owner Verification**: Only authorized owners can update their status
+- **Immutable History**: All status changes are permanently recorded on blockchain
+- **Update Mechanism**: Existing status tokens can be updated while maintaining provenance
+
+## Smart Contract Details
+
+### Validator Logic
+The `confirm_status` validator ensures that:
+1. Only the owner (verified by signature) can spend UTXOs containing their status tokens
+2. Transactions must include the owner's signature in `extra_signatories`
+3. The datum contains valid owner and value information
+
+### Transaction Flow
+1. **First Status Creation**:
+   - Mint new NFT with title as asset name
+   - Lock NFT at contract address with owner datum
+   - Owner signature required
+
+2. **Status Update**:
+   - Spend existing UTXO containing status NFT
+   - Create new UTXO with updated value
+   - Owner signature required for spending
+
+## Installation
+
+### Prerequisites
+- Node.js (v18 or higher)
+- Bun package manager
+- Aiken compiler
+- Cardano wallet with testnet ADA
+- Blockfrost API key
+
+### Setup
+
+1. **Clone and install dependencies**:
 ```bash
-$ npm install
+cd confirm_status
+bun install
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+2. **Environment Configuration**:
+Create a `.env` file with:
+```env
+BLOCKFROST_API_KEY=your_blockfrost_api_key
+APP_WALLET=your_wallet_mnemonic_phrase
+PORT=3000
 ```
 
-## Run tests
-
+3. **Build the smart contract**:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+bun run build:contract
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+4. **Start the development server**:
 ```bash
-$ npm install -g mau
-$ mau deploy
+bun run start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Usage
 
-## Resources
+### API Integration
 
-Check out a few resources that may come in handy when working with NestJS:
+The `ConfirmStatusContract` class provides the main interface:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```typescript
+import { ConfirmStatusContract } from './contract/scripts';
 
-## Support
+const contract = new ConfirmStatusContract({ wallet });
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+// Confirm or update status
+const unsignedTx = await contract.confirmStatus({
+    title: "Temperature",
+    value: "25.5"
+});
 
-## Stay in touch
+// Sign and submit transaction
+const signedTx = await wallet.signTx(unsignedTx, true);
+const txHash = await wallet.submitTx(signedTx);
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Status Confirmation Process
+
+1. **Initialize Contract**: Create contract instance with wallet
+2. **Prepare Transaction**: Call `confirmStatus()` with title and value
+3. **Sign Transaction**: Use wallet to sign the unsigned transaction
+4. **Submit**: Submit signed transaction to network
+5. **Verify**: Check transaction confirmation on blockchain
+
+## Testing
+
+Run the test suite:
+```bash
+# Unit tests
+bun run test
+
+# Contract integration tests
+bun run test:e2e
+
+# Test with coverage
+bun run test:cov
+```
+
+The test suite includes:
+- Smart contract validation tests
+- Transaction building and signing tests
+- End-to-end workflow tests
+
+## Scripts
+
+- `bun run build` - Build the NestJS application
+- `bun run start:dev` - Start development server with hot reload
+- `bun run build:contract` - Compile Aiken smart contract
+- `bun run lint` - Run ESLint
+- `bun run format` - Format code with Prettier
+
+## Project Structure
+
+```
+confirm_status/
+├── contract/                 # Aiken smart contract
+│   ├── validators/
+│   │   └── confirm_status.ak # Main validator
+│   ├── scripts/             # TypeScript integration
+│   │   ├── index.ts         # Contract class
+│   │   ├── mesh.ts          # MeshSDK adapter
+│   │   └── common.ts        # Utilities
+│   └── plutus.json          # Compiled contract
+├── src/                     # NestJS backend
+│   ├── app.controller.ts
+│   ├── app.service.ts
+│   └── main.ts
+└── test/                    # Test files
+    └── contract.test.ts
+```
+
+## Dependencies
+
+### Core Dependencies
+- `@meshsdk/core` - Cardano transaction building
+- `@nestjs/core` - NestJS framework
+- `cbor` - CBOR encoding/decoding
+
+### Development Dependencies
+- `typescript` - TypeScript compiler
+- `jest` - Testing framework
+- `eslint` - Code linting
+- `prettier` - Code formatting
+
+## Network Configuration
+
+Currently configured for Cardano Preprod testnet:
+- Network ID: 0 (testnet)
+- Explorer: https://preprod.cexplorer.io/
+- Faucet: https://docs.cardano.org/cardano-testnet/tools/faucet
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED - Private project
+
+## Contributing
+
+This project is part of the Cardano IoT example implementation. For questions or contributions, please refer to the main project documentation.
