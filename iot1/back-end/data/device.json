@@ -2,6 +2,7 @@
   "devices": [
     {
       "device_address": "addr_test1qrr879mjnxd3gjqjdgjxkwzfcnvcgsve927scqk5fc3gfs2hs03pn7uhujentyhzq3ays72u4xtfrlahyjalujhxufsqdeezc0",
+      "device_address": "addr_test1qrr879mjnxd3gjqjdgjxkwzfcnvcgsve927scqk5fc3gfs2hs03pn7uhujentyhzq3ays72u4xtfrlahyjalujhxufsqdeezc0", 
       "device_threshold": 32,
       "device_battery": 100,
       "device_sampling_rate": 1,

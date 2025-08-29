@@ -14,6 +14,7 @@ describe('Marketplace', function () {
       networkId: 0,
       fetcher: blockfrostProvider,
       submitter: blockfrostProvider,
+
       key: {
         type: 'mnemonic',
         words: process.env.APP_WALLET?.split(' ') || [],
