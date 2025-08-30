@@ -16,27 +16,39 @@ import LockRequestModel, {
   LockStatusModel,
   SubmitTxModel,
 } from './models/lock-request.model';
+import { MeshAdapter } from 'contract/scripts/mesh';
 
-const CONTRACT_ADDRESS =
-  'addr_test1wp62wqa9kg3v23ulndcl7940d8lgq2k3qc9gpj9f77mzz4qgj350f';
 const WALLET_ADDRESS =
   'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh';
 @Injectable()
-export class AppService {
-  private wallet: MeshWallet;
+export class AppService extends MeshAdapter {
+  protected wallet: MeshWallet;
   private txHashTemp: string;
   private blockFrostAPI: BlockFrostAPI;
+  private policyId: string;
+  private lockName: string;
   constructor(private readonly appGateway: AppGateway) {
+    super({ wallet: undefined });
     this.blockFrostAPI = new BlockFrostAPI({
       projectId: process.env.BLOCKFROST_API_KEY ?? '',
     });
+    const forgingScript = ForgeScript.withOneSignature(
+      process.env.WALLET_ADDRESS_OWNER ?? '',
+    );
+    this.policyId = resolveScriptHash(forgingScript);
+    this.lockName = process.env.LOCK_NAME ?? '';
   }
 
   async getAccessLock(walletAddress: string) {
     const userPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
-    const contractAddr = CONTRACT_ADDRESS;
-    const utxos = await blockfrostProvider.fetchAddressUTxOs(contractAddr);
-    const datum = deserializeDatum(utxos[0].output.plutusData ?? '');
+    // const utxos = await blockfrostProvider.fetchAddressUTxOs(
+    //   this.confirmStatusAddress,
+    // );
+    const utxo = await this.getAddressUTXOAsset(
+      this.confirmStatusAddress,
+      this.policyId + stringToHex(this.lockName),
+    );
+    const datum = deserializeDatum(utxo.output.plutusData ?? '');
     if (userPaymentKeyHash == datum.fields[0].bytes) return 0;
     else if (userPaymentKeyHash == datum.fields[1].bytes) return 1;
     else return -1;
@@ -57,13 +69,13 @@ export class AppService {
           HttpStatus.BAD_REQUEST,
         );
       unsignedTx = await confirmStatusContract.unLock({
-        title: 'The Safe',
+        title: this.lockName,
         authority: lockRequestModel.unlocker_addr,
         isLock: 0,
       });
     } else {
       unsignedTx = await confirmStatusContract.lock({
-        title: 'The Safe',
+        title: this.lockName,
         authority: '',
         isLock: 1,
       });
@@ -95,9 +107,18 @@ export class AppService {
     const txHash = await this.wallet.submitTx(submitModel.signedTx);
     //console.log('https://preprod.cexplorer.io/tx/' + txHash);
     this.txHashTemp = txHash;
-    blockfrostProvider.onTxConfirmed(txHash, () => {
-      expect(txHash.length).toBe(64);
+
+    // Wait for transaction confirmation
+    await new Promise<void>((resolve, reject) => {
+      blockfrostProvider.onTxConfirmed(txHash, () => {
+        if (txHash.length === 64) {
+          resolve();
+        } else {
+          reject(new Error('Invalid transaction hash length'));
+        }
+      });
     });
+
     this.appGateway.server.emit('onUpdatedLockStatus', submitModel.data);
     return {
       tx_hash: this.txHashTemp,
@@ -106,17 +127,21 @@ export class AppService {
   }
 
   async getLockStatus() {
-    const contractAddr = CONTRACT_ADDRESS;
-    const utxos = await blockfrostProvider.fetchAddressUTxOs(contractAddr);
-    const transactionUtxos = await this.blockFrostAPI.txsUtxos(
-      utxos[0].input.txHash,
+    const utxo = await this.getAddressUTXOAsset(
+      this.confirmStatusAddress,
+      this.policyId + stringToHex(this.lockName),
     );
-    const datum = deserializeDatum(utxos[0].output.plutusData ?? '');
+    // const utxos = await blockfrostProvider.fetchAddressUTxOs(contractAddr);
+    const transactionUtxos = await this.blockFrostAPI.txsUtxos(
+      utxo.input.txHash,
+    );
+    const datum = deserializeDatum(utxo.output.plutusData ?? '');
+    console.log(datum);
     const lockStatus: LockStatusModel = {
       lock_status: datum.fields[2].int == 1,
       user_addr: transactionUtxos.outputs[1].address,
       time: new Date(),
-      tx_ref: 'https://preprod.cexplorer.io/tx/' + utxos[0].input.txHash,
+      tx_ref: 'https://preprod.cexplorer.io/tx/' + utxo.input.txHash,
     };
     return lockStatus;
   }
@@ -173,9 +198,18 @@ export class AppService {
     const txHash = await this.wallet.submitTx(signedTx);
     //console.log('https://preprod.cexplorer.io/tx/' + txHash);
     this.txHashTemp = txHash;
-    blockfrostProvider.onTxConfirmed(txHash, () => {
-      expect(txHash.length).toBe(64);
+
+    // Wait for transaction confirmation
+    await new Promise<void>((resolve, reject) => {
+      blockfrostProvider.onTxConfirmed(txHash, () => {
+        if (txHash.length === 64) {
+          resolve();
+        } else {
+          reject(new Error('Invalid transaction hash length'));
+        }
+      });
     });
+
     return {
       tx_hash: this.txHashTemp,
       tx_ref: 'https://preprod.cexplorer.io/tx/' + txHash,
