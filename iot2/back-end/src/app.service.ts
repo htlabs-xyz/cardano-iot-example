@@ -18,11 +18,10 @@ import LockRequestModel, {
 } from './models/lock-request.model';
 
 const CONTRACT_ADDRESS =
-  'addr_test1wp62wqa9kg3v23ulndcl7940d8lgq2k3qc9gpj9f77mzz4qgj350f';
-const WALLET_ADDRESS =
-  'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh';
+  process.env.CONTRACT_ADDRESS as string;
+const WALLET_ADDRESS =process.env.WALLET_ADDRESS_OWNER as string;
 @Injectable()
-export class AppService {
+export class AppService  {
   private wallet: MeshWallet;
   private txHashTemp: string;
   private blockFrostAPI: BlockFrostAPI;
@@ -157,7 +156,7 @@ export class AppService {
       submitter: blockfrostProvider,
       key: {
         type: 'mnemonic',
-        words: process.env.SELLER?.split(' ') || [],
+        words: process.env.OWNER?.split(' ') || [],
       },
     });
     const confirmStatusContract: StatusManagement = new StatusManagement({
