@@ -16,7 +16,7 @@ export class AppServiceOLD {
       submitter: blockfrostProvider,
       key: {
         type: 'mnemonic',
-        words: process.env.SELLER?.split(' ') || [],
+        words: process.env.OWNER?.split(' ') || [],
       },
     });
     console.log('addr: ', this.wallet.getChangeAddress());

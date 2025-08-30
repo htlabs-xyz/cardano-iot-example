@@ -8,14 +8,19 @@ import {
 import { MeshAdapter } from "./mesh";
 
 export class StatusManagement extends MeshAdapter {
-    lock = async ({ title, authority, isLock, }: { title: string, authority: string, isLock: number }) => {
+    /**
+     * 
+     * @param  
+     * @returns 
+     */
+    lock = async ({ title, authority, isLock, }: { title: string, authority?: string, isLock: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-        const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
-        const authorityPaymentKeyHash = deserializeAddress(authority || walletAddress).pubKeyHash;
-        const forgingScript = ForgeScript.withOneSignature(walletAddress);
-        //const policyId = resolveScriptHash(forgingScript);
-        const policyId = "a48dfba612b9f49bded45de5fb348b3c22aa7c65383217d1d9574a5b"
+        const ownerPaymentKeyHash = deserializeAddress(process.env.WALLET_ADDRESS_OWNER as string).pubKeyHash;
+        const authorityPaymentKeyHash = authority ? deserializeAddress(authority).pubKeyHash : "";
+        const forgingScript = ForgeScript.withOneSignature(process.env.WALLET_ADDRESS_OWNER as string);
+        const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
+
         const unsignedTx = this.meshTxBuilder
         if (!utxo) {
             unsignedTx
@@ -56,11 +61,10 @@ export class StatusManagement extends MeshAdapter {
 
     unLock = async ({ title, authority, isLock, }: { title: string, authority: string, isLock: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-        const ownerPaymentKeyHash = deserializeAddress(authority).pubKeyHash;
-        const authorityPaymentKeyHash = deserializeAddress(authority || walletAddress).pubKeyHash;
-        //const forgingScript = ForgeScript.withOneSignature(authority);
-        // const policyId = resolveScriptHash(forgingScript);
-        const policyId = "a48dfba612b9f49bded45de5fb348b3c22aa7c65383217d1d9574a5b"
+        const ownerPaymentKeyHash = deserializeAddress(process.env.WALLET_ADDRESS_OWNER as string).pubKeyHash;
+        const authorityPaymentKeyHash = authority ? deserializeAddress(authority).pubKeyHash : "";
+        const forgingScript = ForgeScript.withOneSignature(process.env.WALLET_ADDRESS_OWNER as string);
+        const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
         const unsignedTx = this.meshTxBuilder
         if (!utxo) {
@@ -97,7 +101,7 @@ export class StatusManagement extends MeshAdapter {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
         const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
         const authorityPaymentKeyHash = deserializeAddress(authority).pubKeyHash;
-        const forgingScript = ForgeScript.withOneSignature(walletAddress);
+        const forgingScript = ForgeScript.withOneSignature(process.env.WALLET_ADDRESS_OWNER as string);
         const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
         const unsignedTx = this.meshTxBuilder
@@ -130,6 +134,4 @@ export class StatusManagement extends MeshAdapter {
             .setNetwork("preprod");
         return await unsignedTx.complete();
     }
-
-
 }

@@ -4,7 +4,9 @@ import {
   deserializeDatum,
   ForgeScript,
   MeshWallet,
+  pubKeyAddress,
   resolveScriptHash,
+  serializeAddressObj,
   stringToHex,
 } from '@meshsdk/core';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
@@ -18,8 +20,6 @@ import LockRequestModel, {
 } from './models/lock-request.model';
 import { MeshAdapter } from 'contract/scripts/mesh';
 
-const WALLET_ADDRESS =
-  'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh';
 @Injectable()
 export class AppService extends MeshAdapter {
   protected wallet: MeshWallet;
@@ -27,6 +27,8 @@ export class AppService extends MeshAdapter {
   private blockFrostAPI: BlockFrostAPI;
   private policyId: string;
   private lockName: string;
+  private confirmStatusContract: StatusManagement;
+  private ownerWallet: MeshWallet;
   constructor(private readonly appGateway: AppGateway) {
     super({ wallet: undefined });
     this.blockFrostAPI = new BlockFrostAPI({
@@ -37,6 +39,18 @@ export class AppService extends MeshAdapter {
     );
     this.policyId = resolveScriptHash(forgingScript);
     this.lockName = process.env.LOCK_NAME ?? '';
+    this.ownerWallet = new MeshWallet({
+      networkId: 0,
+      fetcher: blockfrostProvider,
+      submitter: blockfrostProvider,
+      key: {
+        type: 'mnemonic',
+        words: process.env.OWNER?.split(' ') || [],
+      },
+    });
+    this.confirmStatusContract = new StatusManagement({
+      wallet: this.ownerWallet,
+    });
   }
 
   async getAccessLock(walletAddress: string) {
@@ -48,6 +62,31 @@ export class AppService extends MeshAdapter {
       this.confirmStatusAddress,
       this.policyId + stringToHex(this.lockName),
     );
+
+    // If new lock name
+    if (
+      (!utxo || utxo == null) &&
+      walletAddress == process.env.WALLET_ADDRESS_OWNER
+    ) {
+      const unsignedTx = await this.confirmStatusContract.lock({
+        title: this.lockName,
+        authority: '',
+        isLock: 1,
+      });
+      const signedTx = await this.ownerWallet.signTx(unsignedTx, true);
+      const txHash = await this.ownerWallet.submitTx(signedTx);
+      await new Promise<void>((resolve, reject) => {
+        blockfrostProvider.onTxConfirmed(txHash, () => {
+          if (txHash.length === 64) {
+            resolve();
+          } else {
+            reject(new Error('Invalid transaction hash length'));
+          }
+        });
+      });
+      return 0;
+    }
+
     const datum = deserializeDatum(utxo.output.plutusData ?? '');
     if (userPaymentKeyHash == datum.fields[0].bytes) return 0;
     else if (userPaymentKeyHash == datum.fields[1].bytes) return 1;
@@ -55,28 +94,44 @@ export class AppService extends MeshAdapter {
   }
 
   async updateStatusDevice(lockRequestModel: LockRequestModel) {
+    if (lockRequestModel.unlocker_addr.trim() == '')
+      throw new HttpException(
+        'The address wallet of unlocker must be not null',
+        HttpStatus.BAD_REQUEST,
+      );
     this.wallet = this.getWalletClient(lockRequestModel.unlocker_addr);
-
-    const confirmStatusContract: StatusManagement = new StatusManagement({
-      wallet: this.wallet,
-    });
-
+    const utxo = await this.getAddressUTXOAsset(
+      this.confirmStatusAddress,
+      this.policyId + stringToHex(this.lockName),
+    );
+    const datum = deserializeDatum(utxo.output.plutusData ?? '');
     let unsignedTx: string;
+    // nếu owner kí:
+    // + authorize rỗng: chưa ủy quyền cho ai -> truyền authorize rỗng
+    // + authorize có giá trị:  -> phải truyền đúng giá trị của authorize hiện tại ->
+    // nếu người được ủy quyền kí
+    // + truyền đúng authorize
+
+    //if owner
+    console.log(`datum: ${JSON.stringify(datum)}`);
+    let serializedAddress = '';
+    if (datum.fields[1].bytes.length !== 0) {
+      serializedAddress = serializeAddressObj(
+        pubKeyAddress(datum.fields[1].bytes as string),
+        0,
+      );
+    }
+    console.log(`serializedAddress: ${serializedAddress}`);
     if (lockRequestModel.is_unlock) {
-      if (lockRequestModel.unlocker_addr.trim() == '')
-        throw new HttpException(
-          'The address wallet of unlocker must be not null',
-          HttpStatus.BAD_REQUEST,
-        );
-      unsignedTx = await confirmStatusContract.unLock({
+      unsignedTx = await this.confirmStatusContract.unLock({
         title: this.lockName,
-        authority: lockRequestModel.unlocker_addr,
+        authority: serializedAddress,
         isLock: 0,
       });
     } else {
-      unsignedTx = await confirmStatusContract.lock({
+      unsignedTx = await this.confirmStatusContract.lock({
         title: this.lockName,
-        authority: '',
+        authority: serializedAddress,
         isLock: 1,
       });
     }
@@ -90,11 +145,8 @@ export class AppService extends MeshAdapter {
       authorizeRequestModel.licensee_addr =
         authorizeRequestModel.authorizer_addr;
     }
-    const confirmStatusContract: StatusManagement = new StatusManagement({
-      wallet: this.wallet,
-    });
-    const unsignedTx: string = await confirmStatusContract.authorize({
-      title: 'The Safe',
+    const unsignedTx: string = await this.confirmStatusContract.authorize({
+      title: this.lockName,
       authority: authorizeRequestModel.licensee_addr,
       isLock: 1,
     });
@@ -182,14 +234,14 @@ export class AppService extends MeshAdapter {
       submitter: blockfrostProvider,
       key: {
         type: 'mnemonic',
-        words: process.env.SELLER?.split(' ') || [],
+        words: process.env.OWNER?.split(' ') || [],
       },
     });
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: this.wallet,
     });
     const unsignedTx: string = await confirmStatusContract.authorize({
-      title: 'The Safe',
+      title: this.lockName,
       authority: authorizeRequestModel.licensee_addr,
       isLock: 1,
     });
@@ -229,8 +281,10 @@ export class AppService extends MeshAdapter {
   }
 
   getAssetEncoded() {
-    const forgingScript = ForgeScript.withOneSignature(WALLET_ADDRESS);
+    const forgingScript = ForgeScript.withOneSignature(
+      process.env.WALLET_ADDRESS_OWNER ?? '',
+    );
     const policyId = resolveScriptHash(forgingScript);
-    return policyId + stringToHex('The Safe');
+    return policyId + stringToHex(this.lockName);
   }
 }

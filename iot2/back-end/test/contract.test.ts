@@ -16,30 +16,30 @@ describe('Marketplace', function () {
       submitter: blockfrostProvider,
       key: {
         type: 'mnemonic',
-        words: process.env.AUTHORIZOR?.split(' ') || [],
-        // words: process.env.BUYER?.split(" ") || [],
+        // words: process.env.OWNER?.split(" ") || [],
+        words: process.env.OWNER?.split(' ') || [],
       },
     });
   });
   jest.setTimeout(60000);
 
   test('Lock', async function () {
-    //return;
-    // const confirmStatusContract: StatusManagement = new StatusManagement({
-    //   wallet: wallet,
-    // });
-    // const unsignedTx: string = await confirmStatusContract.lock({
-    //   title: 'The Safe',
-    //   authority: '',
-    //   isLock: 1,
-    // });
-    // const signedTx = await wallet.signTx(unsignedTx, true);
-    // const txHash = await wallet.submitTx(signedTx);
-    // console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    // txHashTemp = txHash;
-    // blockfrostProvider.onTxConfirmed(txHash, () => {
-    //   expect(txHash.length).toBe(64);
-    // });
+    return;
+    const confirmStatusContract: StatusManagement = new StatusManagement({
+      wallet: wallet,
+    });
+    const unsignedTx: string = await confirmStatusContract.lock({
+      title: process.env.LOCK_NAME,
+      authority: 'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
+      isLock: 1,
+    });
+    const signedTx = await wallet.signTx(unsignedTx, true);
+    const txHash = await wallet.submitTx(signedTx);
+    console.log('https://preprod.cexplorer.io/tx/' + txHash);
+    txHashTemp = txHash;
+    blockfrostProvider.onTxConfirmed(txHash, () => {
+      expect(txHash.length).toBe(64);
+    });
   });
 
   test('Un Lock', async function () {
@@ -47,11 +47,10 @@ describe('Marketplace', function () {
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });
-    console.log(wallet.getChangeAddress());
+
     const unsignedTx: string = await confirmStatusContract.unLock({
-      title: 'The Safe',
-      authority:
-        'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
+      title: 'The Tidvn',
+      authority:'',
       isLock: 0,
     });
 
@@ -65,22 +64,22 @@ describe('Marketplace', function () {
   });
 
   test('Authority', async function () {
-    //return;
-    // const confirmStatusContract: StatusManagement = new StatusManagement({
-    //   wallet: wallet,
-    // });
-    // const unsignedTx: string = await confirmStatusContract.authorize({
-    //   title: 'The Safe',
-    //   authority:
-    //     'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
-    //   isLock: 1,
-    // });
-    // const signedTx = await wallet.signTx(unsignedTx, true);
-    // const txHash = await wallet.submitTx(signedTx);
-    // console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    // txHashTemp = txHash;
-    // blockfrostProvider.onTxConfirmed(txHash, () => {
-    //   expect(txHash.length).toBe(64);
-    // });
+    return;
+    const confirmStatusContract: StatusManagement = new StatusManagement({
+      wallet: wallet,
+    });
+    const unsignedTx: string = await confirmStatusContract.authorize({
+      title: 'The Tidvn',
+      authority:
+        'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
+      isLock: 1,
+    });
+    const signedTx = await wallet.signTx(unsignedTx, true);
+    const txHash = await wallet.submitTx(signedTx);
+    console.log('https://preprod.cexplorer.io/tx/' + txHash);
+    txHashTemp = txHash;
+    blockfrostProvider.onTxConfirmed(txHash, () => {
+      expect(txHash.length).toBe(64);
+    });
   });
 });
