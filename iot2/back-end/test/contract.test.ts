@@ -17,19 +17,19 @@ describe('Marketplace', function () {
       key: {
         type: 'mnemonic',
         // words: process.env.OWNER?.split(" ") || [],
-        words: process.env.AUTHORIZOR?.split(' ') || [],
+        words: process.env.OWNER?.split(' ') || [],
       },
     });
   });
   jest.setTimeout(60000);
 
   test('Lock', async function () {
-    // return;
+    return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });
     const unsignedTx: string = await confirmStatusContract.lock({
-      title: 'The Tidvn',
+      title: process.env.LOCK_NAME,
       authority: 'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
       isLock: 1,
     });
@@ -43,7 +43,7 @@ describe('Marketplace', function () {
   });
 
   test('Un Lock', async function () {
-    return;
+    //return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });

@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: iot3-mysql-dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: iot3_vending_machine
+      MYSQL_USER: iot3user
+      MYSQL_PASSWORD: iot3password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    networks:
+      - iot3-dev-network
+
+  # Back-end Development Service
+  backend-dev:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: iot3-backend-dev
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+      - "9229:9229"  # Debug port
+    environment:
+      DB_DRIVER: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: iot3_vending_machine
+      DB_USER: iot3user
+      DB_PASSWORD: iot3password
+      APP_WALLET: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon beef crack"
+      BLOCKFROST_API_KEY: "preprodd5DPyqaYr9wHq61rSloWWgT4dM4wM23A"
+      SERVER_PORT: 3004
+      FRONT_END_HOST: "http://localhost:3005"
+      NODE_ENV: development
+    volumes:
+      - ./back-end:/app
+      - /app/node_modules
+      - ./back-end/data:/app/data
+    depends_on:
+      - mysql
+    networks:
+      - iot3-dev-network
+    command: npm run start:dev
+
+  # Front-end Development Service
+  frontend-dev:
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: iot3-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      NEXT_PUBLIC_API_ENDPOINT: "http://localhost:3004/api"
+      NEXT_PUBLIC_WEBSOCKET: "ws://localhost:3004"
+      NODE_ENV: development
+    volumes:
+      - ./front-end:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend-dev
+    networks:
+      - iot3-dev-network
+    command: npm run dev
+
+volumes:
+  mysql_dev_data:
+    driver: local
+
+networks:
+  iot3-dev-network:
+    driver: bridge
