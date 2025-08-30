@@ -35,7 +35,7 @@ export class AppService  {
     const userPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
     const contractAddr = CONTRACT_ADDRESS;
     const utxos = await blockfrostProvider.fetchAddressUTxOs(contractAddr);
-    const datum = deserializeDatum(utxos[0].output.plutusData ?? '');
+    const datum = deserializeDatum(utxos[utxos.length -1].output.plutusData ?? '');
     if (userPaymentKeyHash == datum.fields[0].bytes) return 0;
     else if (userPaymentKeyHash == datum.fields[1].bytes) return 1;
     else return -1;
