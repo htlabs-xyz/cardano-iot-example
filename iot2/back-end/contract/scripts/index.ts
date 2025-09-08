@@ -13,10 +13,10 @@ export class StatusManagement extends MeshAdapter {
      * @param  
      * @returns 
      */
-    lock = async ({ title, authority, isLock, }: { title: string, authority?: string, isLock: number }) => {
+    lock = async ({ title, authorityPaymentKeyHash, isLock, }: { title: string, authorityPaymentKeyHash?: string, isLock: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
         const ownerPaymentKeyHash = deserializeAddress(process.env.WALLET_ADDRESS_OWNER as string).pubKeyHash;
-        const authorityPaymentKeyHash = authority ? deserializeAddress(authority).pubKeyHash : "";
+        // const authorityPaymentKeyHash = authority ? deserializeAddress(authority).pubKeyHash : "";
         const forgingScript = ForgeScript.withOneSignature(process.env.WALLET_ADDRESS_OWNER as string);
         const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
@@ -59,10 +59,10 @@ export class StatusManagement extends MeshAdapter {
         return await unsignedTx.complete();
     }
 
-    unLock = async ({ title, authority, isLock, }: { title: string, authority: string, isLock: number }) => {
+    unLock = async ({ title, authorityPaymentKeyHash, isLock, }: { title: string, authorityPaymentKeyHash: string, isLock: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
         const ownerPaymentKeyHash = deserializeAddress(process.env.WALLET_ADDRESS_OWNER as string).pubKeyHash;
-        const authorityPaymentKeyHash = authority ? deserializeAddress(authority).pubKeyHash : "";
+        // const authorityPaymentKeyHash = authority ? deserializeAddress(authority).pubKeyHash : "";
         const forgingScript = ForgeScript.withOneSignature(process.env.WALLET_ADDRESS_OWNER as string);
         const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
@@ -97,10 +97,10 @@ export class StatusManagement extends MeshAdapter {
         return await unsignedTx.complete();
     }
 
-    authorize = async ({ title, authority, isLock, }: { title: string, authority: string, isLock: number }) => {
+    authorize = async ({ title, authorityPaymentKeyHash, isLock, }: { title: string, authorityPaymentKeyHash: string, isLock: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
         const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
-        const authorityPaymentKeyHash = deserializeAddress(authority).pubKeyHash;
+        // const authorityPaymentKeyHash = deserializeAddress(authority).pubKeyHash;
         const forgingScript = ForgeScript.withOneSignature(process.env.WALLET_ADDRESS_OWNER as string);
         const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
