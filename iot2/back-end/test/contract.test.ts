@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/require-await */
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { MeshWallet } from '@meshsdk/core';
+import { deserializeAddress, MeshWallet } from '@meshsdk/core';
 import { config } from 'dotenv';
 import { StatusManagement } from '../contract/scripts';
 import { blockfrostProvider } from '../contract/scripts/common';
@@ -28,9 +28,12 @@ describe('Marketplace', function () {
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });
+    const authorityPaymentKeyHash = deserializeAddress(
+      wallet.getChangeAddress(),
+    ).pubKeyHash;
     const unsignedTx: string = await confirmStatusContract.lock({
-      title: process.env.LOCK_NAME as string,
-      authority: 'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
+      title: process.env.LOCK_NAME ?? '',
+      authorityPaymentKeyHash,
       isLock: 1,
     });
     const signedTx = await wallet.signTx(unsignedTx, true);
@@ -47,10 +50,12 @@ describe('Marketplace', function () {
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });
-
+    const authorityPaymentKeyHash = deserializeAddress(
+      wallet.getChangeAddress(),
+    ).pubKeyHash;
     const unsignedTx: string = await confirmStatusContract.unLock({
-      title: process.env.LOCK_NAME as string,
-      authority:'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
+      title: process.env.LOCK_NAME ?? '',
+      authorityPaymentKeyHash,
       isLock: 0,
     });
 
@@ -68,10 +73,12 @@ describe('Marketplace', function () {
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });
+    const authorityPaymentKeyHash = deserializeAddress(
+      wallet.getChangeAddress(),
+    ).pubKeyHash;
     const unsignedTx: string = await confirmStatusContract.authorize({
-      title: process.env.LOCK_NAME as string,
-      authority:
-        '',
+      title: process.env.LOCK_NAME ?? '',
+      authorityPaymentKeyHash,
       isLock: 1,
     });
     const signedTx = await wallet.signTx(unsignedTx, true);
