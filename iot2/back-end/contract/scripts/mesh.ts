@@ -5,15 +5,16 @@ import { Plutus } from "./type";
 
 export class MeshAdapter {
     protected fetcher: IFetcher;
-    protected wallet: MeshWallet;
+    protected pubKeyIssuer: string;
+    protected meshWallet: MeshWallet;
     protected meshTxBuilder: MeshTxBuilder;
     protected confirmStatusAddress: string;
     protected confirmStatusScript: PlutusScript;
     protected confirmStatusScriptCbor: string;
     protected confirmStatusCompileCode: string;
 
-    constructor({ wallet = null! }: { wallet?: MeshWallet }) {
-        this.wallet = wallet;
+    constructor({ meshWallet = null! }: { meshWallet?: MeshWallet }) {
+        this.meshWallet = meshWallet;
         this.fetcher = blockfrostProvider;
         this.meshTxBuilder = new MeshTxBuilder({
             fetcher: this.fetcher,
@@ -21,9 +22,9 @@ export class MeshAdapter {
         });
         this.confirmStatusCompileCode = this.readValidator(
             blueprint as Plutus,
-            "status_management.status_management.spend",
+            "contract.status_management.spend",
         );
-
+        this.pubKeyIssuer = deserializeAddress(this.wallet.getChangeAddress()).pubKeyHash;
         this.confirmStatusScriptCbor = applyParamsToScript(this.confirmStatusCompileCode, []);
 
         this.confirmStatusScript = {
