@@ -38,7 +38,8 @@ export default function TemperatureTable(props: TemperatureTableProps) {
                             <TableRow>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Time</TableHead>
-                                <TableHead>Value</TableHead>
+                                <TableHead>Temperature</TableHead>
+                                <TableHead>Humidity</TableHead>
                                 <TableHead>Transaction</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -52,13 +53,22 @@ export default function TemperatureTable(props: TemperatureTableProps) {
                                 >
                                     <TableCell>{item.formattedDate}</TableCell>
                                     <TableCell>{item.formattedTime}</TableCell>
-                                    {item.value && <TableCell>
+                                    {item.temperature && <TableCell>
                                         <span className="font-medium">
-                                            {item.value >= 1000000
-                                                ? `${(item.value / 1000000).toFixed(2)}M`
-                                                : item.value >= 1000
-                                                    ? `${(item.value / 1000).toFixed(2)}K`
-                                                    : item.value}
+                                            {item.temperature >= 1000000
+                                                ? `${(item.temperature / 1000000).toFixed(2)}M`
+                                                : item.temperature >= 1000
+                                                    ? `${(item.temperature / 1000).toFixed(2)}K`
+                                                    : item.temperature.toLocaleString()}
+                                        </span>
+                                    </TableCell>}
+                                    {item.humidity && <TableCell>
+                                        <span className="font-medium">
+                                            {item.humidity >= 1000000
+                                                ? `${(item.humidity / 1000000).toFixed(2)}M`
+                                                : item.humidity >= 1000
+                                                    ? `${(item.humidity / 1000).toFixed(2)}K`
+                                                    : item.humidity.toLocaleString()}
                                         </span>
                                     </TableCell>}
                                     <TableCell>

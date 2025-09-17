@@ -19,17 +19,18 @@ export default function TemperatureData(props: TemperatureDataProps) {
     const socketClient = useContext(WebsocketContext);
 
     useEffect(() => {
-        socketClient.on('onUpdatedTemperature', (temperature: Temperature) => {
-            console.log('new temperature received; ', temperature);
-            if (temperature.time && temperature.value) {
-                const date = new Date(temperature.time);
+        socketClient.on('onUpdatedTemperature', (req: Temperature) => {
+            console.log('new temperature received; ', req);
+            if (req.time && req.temperature !== undefined && req.humidity !== undefined) {
+                const date = new Date(req.time);
                 const maxId = chartData[chartData?.length - 1]?.id + 1;
                 const chartItemData: TemperatureChartData = {
-                    ...temperature,
+                    ...req,
                     id: maxId + 1,
                     formattedDate: format(date, "MM/dd/yyyy"),
                     formattedTime: format(date, "h:mm:ss a"),
-                    formattedValue: temperature.value.toLocaleString(),
+                    formattedTemperature: req.temperature.toLocaleString(),
+                    formattedHumidity: req.humidity.toLocaleString(),
                 };
                 setChatData((prev: any) => [...prev, chartItemData]);
             }

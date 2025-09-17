@@ -18,7 +18,11 @@ export class TemperatureRequestModel {
 
   @ApiProperty({ description: 'Measured temperature', example: 36 })
   @IsNumber({}, { message: 'Temperature value must be a number' })
-  value: number;
+  temperature: number;
+
+  @ApiProperty({ description: 'Measured humidity', example: 36 })
+  @IsNumber({}, { message: 'Humidity value must be a number' })
+  humidity: number;
 
   @ApiProperty({
     description: 'Temperature unit',
@@ -39,7 +43,11 @@ export class TemperatureRequestModel {
 export class TemperatureResponseModel {
   @ApiProperty({ description: 'Measured temperature', example: 36 })
   @IsNumber({}, { message: 'Temperature value must be a number' })
-  value: number;
+  temperature: number;
+
+  @ApiProperty({ description: 'Measured humidity', example: 36 })
+  @IsNumber({}, { message: 'Humidity value must be a number' })
+  humidity: number;
 
   @ApiProperty({
     description: 'Temperature unit',

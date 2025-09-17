@@ -2,7 +2,8 @@ import { Device } from "./device.type";
 
 export interface Temperature {
     device_address?: string;
-    value?: number;
+    temperature?: number;
+    humidity?: number;
     unit?: TemperatureUnit;
     time?: Date;
     tx_ref: string;
@@ -23,5 +24,6 @@ export interface TemperatureChartData extends Temperature {
     id: number;
     formattedDate: string;
     formattedTime: string;
-    formattedValue: string;
+    formattedTemperature: string;
+    formattedHumidity: string;
 }

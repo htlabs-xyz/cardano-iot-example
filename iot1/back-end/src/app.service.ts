@@ -74,23 +74,27 @@ export class AppService {
     );
 
     const maxMs = new Date(maxObj.time).getTime();
-    let sum = 0;
+    let sumTemperature = 0;
+    let sumHumidity = 0;
     let count = 0;
     for (const [, temp] of temperatureMap) {
       const tMs = new Date(temp.time).getTime();
       if (maxMs - tMs <= this.ALLOWED_TIME_OFFSET) {
-        sum += temp.value;
+        sumTemperature += temp.temperature;
+        sumHumidity += temp.humidity;
         count++;
       }
     }
 
-    const average = count ? sum / count : null;
+    const averageTemperature = count ? sumTemperature / count : null;
+    const averageHumidity = count ? sumHumidity / count : null;
 
-    if (average === null) return;
+    if (averageTemperature === null || averageHumidity === null) return;
     await this.saveTemperature({
       device_address: maxObj.device_address,
       time: maxObj.time,
-      value: average,
+      temperature: averageTemperature,
+      humidity: averageHumidity,
       unit: TemperatureUnit.CELSIUS,
     });
   }
@@ -105,14 +109,15 @@ export class AppService {
     return 'Ok';
   }
 
-  async saveTemperature(temperature: TemperatureRequestModel) {
+  async saveTemperature(req: TemperatureRequestModel) {
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
         wallet: this.wallet,
       });
     const unsignedTx: string = await confirmStatusContract.confirm({
-      title: 'Temperature',
-      value: temperature.value,
+      sensor: 'Sensor 1',
+      temperator: req.temperature,
+      huminity: req.humidity,
     });
 
     const signedTx = await this.wallet.signTx(unsignedTx, true);
@@ -123,7 +128,8 @@ export class AppService {
     });
 
     const temperatureResponseModel = new TemperatureResponseModel();
-    temperatureResponseModel.value = temperature.value;
+    temperatureResponseModel.temperature = req.temperature;
+    temperatureResponseModel.humidity = req.humidity;
     temperatureResponseModel.time = new Date();
     temperatureResponseModel.tx_ref =
       'https://preprod.cexplorer.io/tx/' + txHash;
@@ -144,6 +150,7 @@ export class AppService {
       const datum_hash = utxo.outputs[0].inline_datum;
       if (datum_hash != null && datum_hash != undefined) {
         const datum_deserialize = deserializeDatum(datum_hash);
+        console.log('datum_deserialize:', datum_deserialize);
         if (
           datum_deserialize &&
           datum_deserialize.fields &&
@@ -151,7 +158,8 @@ export class AppService {
         ) {
           const temperature = new TemperatureResponseModel();
           temperature.time = new Date(tx.block_time * 1000);
-          temperature.value = datum_deserialize.fields[1].int;
+          temperature.temperature = datum_deserialize.fields[1].int;
+          temperature.humidity = datum_deserialize.fields[2].int;
           temperature.tx_ref =
             'https://preprod.cexplorer.io/tx/' + utxo.inputs[0].tx_hash;
           listTemperature.push(temperature);
@@ -174,14 +182,14 @@ export class AppService {
     return parsedData;
   }
 
-  async widthdrawTemperature(temperature: TemperatureRequestModel) {
+  async widthdrawTemperature(req: TemperatureRequestModel) {
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
         wallet: this.wallet,
       });
     const unsignedTx: string = await confirmStatusContract.withdraw({
       title: 'Temperature',
-      value: temperature.value,
+      value: req.temperature,
     });
 
     const signedTx = await this.wallet.signTx(unsignedTx, true);
@@ -192,7 +200,8 @@ export class AppService {
     });
 
     const temperatureResponseModel = new TemperatureResponseModel();
-    temperatureResponseModel.value = temperature.value;
+    temperatureResponseModel.temperature = req.temperature;
+    temperatureResponseModel.humidity = req.humidity;
     temperatureResponseModel.time = new Date();
     temperatureResponseModel.tx_ref =
       'https://preprod.cexplorer.io/tx/' + txHash;
