@@ -16,8 +16,8 @@ describe('Marketplace', function () {
       submitter: blockfrostProvider,
       key: {
         type: 'mnemonic',
-        // words: process.env.OWNER?.split(" ") || [],
-        words: process.env.OWNER?.split(' ') || [],
+        words: process.env.OWNER?.split(" ") || [],
+        // words: process.env.AUTHORIZOR?.split(' ') || [],
       },
     });
   });
@@ -29,7 +29,7 @@ describe('Marketplace', function () {
       wallet: wallet,
     });
     const unsignedTx: string = await confirmStatusContract.lock({
-      title: process.env.LOCK_NAME,
+      title: process.env.LOCK_NAME as string,
       authority: 'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
       isLock: 1,
     });
@@ -43,14 +43,14 @@ describe('Marketplace', function () {
   });
 
   test('Un Lock', async function () {
-    //return;
+    return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });
 
     const unsignedTx: string = await confirmStatusContract.unLock({
-      title: 'The Tidvn',
-      authority:'',
+      title: process.env.LOCK_NAME as string,
+      authority:'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
       isLock: 0,
     });
 
@@ -64,14 +64,14 @@ describe('Marketplace', function () {
   });
 
   test('Authority', async function () {
-    return;
+    // return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       wallet: wallet,
     });
     const unsignedTx: string = await confirmStatusContract.authorize({
-      title: 'The Tidvn',
+      title: process.env.LOCK_NAME as string,
       authority:
-        'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
+        '',
       isLock: 1,
     });
     const signedTx = await wallet.signTx(unsignedTx, true);

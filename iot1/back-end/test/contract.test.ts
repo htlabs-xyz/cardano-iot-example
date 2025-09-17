@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { MeshWallet } from '@meshsdk/core';
 import { blockfrostProvider } from '../contract/scripts/common';
-
 import { ConfirmStatusContract } from 'contract/scripts';
 
 describe('Marketplace', function () {
@@ -25,10 +24,16 @@ describe('Marketplace', function () {
 
   test('Temperature', async function () {
     return;
+    const confirmStatusContract: ConfirmStatusContract = new ConfirmStatusContract({wallet: wallet})
+    const unsignedTx: string  = await confirmStatusContract.confirm({
+      sensor: "Sensor 1",
+      temperator: 60,
+      huminity: 80,
+    })
   });
 
   test('Withdraw', async function () {
-    // return;
+    return;
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
         wallet: wallet,

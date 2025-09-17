@@ -4,29 +4,27 @@ import {
     mConStr0,
     mConStr1,
     resolveScriptHash,
-    scriptAddress,
-    serializeAddressObj,
     stringToHex,
 } from "@meshsdk/core";
 import { MeshAdapter } from "./mesh";
 
 export class ConfirmStatusContract extends MeshAdapter {
-    confirm = async ({ title, value }: { title: string, value: number }) => {
+    confirm = async ({ sensor, temperator, huminity }: { sensor: string,temperator: number, huminity: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
         const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
         const forgingScript = ForgeScript.withOneSignature(walletAddress);
         const policyId = resolveScriptHash(forgingScript);
-        const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
+        const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(sensor));
         const unsignedTx = this.meshTxBuilder
         if (!utxo) {
             unsignedTx
-                .mint("1", policyId, stringToHex(title))
+                .mint("1", policyId, stringToHex(sensor))
                 .mintingScript(forgingScript)
                 .txOut(this.confirmStatusAddress, [{
-                    unit: policyId + stringToHex(title),
+                    unit: policyId + stringToHex(sensor),
                     quantity: String(1),
                 }])
-                .txOutInlineDatumValue(mConStr0([ownerPaymentKeyHash, value]));
+                .txOutInlineDatumValue(mConStr0([ temperator, huminity,ownerPaymentKeyHash]));
         } else {
             unsignedTx
                 .spendingPlutusScriptV3()
@@ -35,10 +33,10 @@ export class ConfirmStatusContract extends MeshAdapter {
                 .txInRedeemerValue(mConStr0([]))
                 .txInScript(this.confirmStatusScriptCbor)
                 .txOut(this.confirmStatusAddress, [{
-                    unit: policyId + stringToHex(title),
+                    unit: policyId + stringToHex(sensor),
                     quantity: String(1),
                 }])
-                .txOutInlineDatumValue(mConStr0([ownerPaymentKeyHash, value]))
+                .txOutInlineDatumValue(mConStr0([ temperator, huminity,ownerPaymentKeyHash]))
         }
 
         unsignedTx

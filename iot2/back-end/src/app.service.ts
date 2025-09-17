@@ -135,6 +135,8 @@ export class AppService extends MeshAdapter {
         isLock: 1,
       });
     }
+
+    console.log(unsignedTx)
     return unsignedTx;
   }
 
@@ -142,13 +144,17 @@ export class AppService extends MeshAdapter {
     this.wallet = this.getWalletClient(authorizeRequestModel.authorizer_addr);
 
     if (authorizeRequestModel.is_remove_authorize) {
-      authorizeRequestModel.licensee_addr =
-        authorizeRequestModel.authorizer_addr;
+      authorizeRequestModel.licensee_addr = '';
     }
+    const utxo = await this.getAddressUTXOAsset(
+      this.confirmStatusAddress,
+      this.policyId + stringToHex(this.lockName),
+    );
+    const datum = deserializeDatum(utxo.output.plutusData ?? '');
     const unsignedTx: string = await this.confirmStatusContract.authorize({
       title: this.lockName,
       authority: authorizeRequestModel.licensee_addr,
-      isLock: 1,
+      isLock: datum.fields[2].int,
     });
 
     return unsignedTx;

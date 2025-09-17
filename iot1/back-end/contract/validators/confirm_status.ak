@@ -3,8 +3,9 @@ use cardano/transaction.{InlineDatum, OutputReference, Transaction, find_input}
 use cardano/tx
 
 pub type Datum {
+  temperator: Int,
+  huminity: Int,
   owner: VerificationKeyHash,
-  value: Int,
 }
 
 pub type Redeemer {
@@ -28,7 +29,10 @@ validator confirm_status {
       True ->
         when redeemer is {
           Update -> True
-          Withdraw -> datum_output.value >= datum_input.value
+          Withdraw -> and {
+              datum_output.temperator >= datum_input.temperator,
+              datum_output.huminity >= datum_input.huminity,
+            }
         }
 
       False -> False
