@@ -1,35 +1,69 @@
-// @ts-check
-import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
-import globals from 'globals';
-import tseslint from 'typescript-eslint';
+import typescriptEslint from "@typescript-eslint/eslint-plugin";
+import globals from "globals";
+import tsParser from "@typescript-eslint/parser";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import js from "@eslint/js";
+import { FlatCompat } from "@eslint/eslintrc";
 
-export default tseslint.config(
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+  allConfig: js.configs.all,
+});
+
+const eslintConfig = [
   {
-    ignores: ['eslint.config.mjs'],
+    ignores: ["**/node_modules", "**/.eslintrc.js", "src/components/ui/**", ".next/**"],
   },
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  eslintPluginPrettierRecommended,
+  ...compat.extends(
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jsx-a11y/recommended",
+    "plugin:prettier/recommended",
+    "next",
+    "next/core-web-vitals",
+  ),
   {
+    plugins: {
+      "@typescript-eslint": typescriptEslint,
+    },
     languageOptions: {
       globals: {
+        ...globals.browser,
+        ...globals.amd,
         ...globals.node,
-        ...globals.jest,
       },
+      parser: tsParser,
       ecmaVersion: 5,
-      sourceType: 'module',
+      sourceType: "commonjs",
       parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
+        project: true,
+        tsconfigRootDir: __dirname,
       },
     },
-  },
-  {
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn'
+      "prettier/prettier": "error",
+      "react/react-in-jsx-scope": "off",
+      "jsx-a11y/anchor-is-valid": [
+        "error",
+        {
+          components: ["Link"],
+          specialLink: ["hrefLeft", "hrefRight"],
+          aspects: ["invalidHref", "preferButton"],
+        },
+      ],
+      "react/prop-types": 0,
+      "@typescript-eslint/no-unused-vars": 1,
+      "react/no-unescaped-entities": 0,
+      "@typescript-eslint/explicit-module-boundary-types": "off",
+      "@typescript-eslint/no-var-requires": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
     },
   },
-);
+];
+
+export default eslintConfig;

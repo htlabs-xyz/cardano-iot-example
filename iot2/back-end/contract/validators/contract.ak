@@ -1,5 +1,6 @@
 use aiken/collection/list
 use aiken/crypto.{VerificationKeyHash}
+use cardano/address.{Address}
 use cardano/assets.{flatten, without_lovelace}
 use cardano/transaction.{
   InlineDatum, Output, OutputReference, Transaction, find_input,
@@ -8,7 +9,7 @@ use cardano/tx
 use validation/find.{output_by_addr_value}
 
 pub type Datum {
-  authority: VerificationKeyHash,
+  authority: Address,
   is_locked: Int,
 }
 

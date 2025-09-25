@@ -1,11 +1,11 @@
-import { applyParamsToScript, IFetcher, MeshTxBuilder, MeshWallet, PlutusScript, serializePlutusScript, UTxO } from "@meshsdk/core";
+import { applyParamsToScript, deserializeAddress, IFetcher, MeshTxBuilder, MeshWallet, PlutusScript, serializePlutusScript, UTxO } from "@meshsdk/core";
 import blueprint from "../plutus.json";
 import { blockfrostProvider, convertInlineDatum } from "./common";
 import { Plutus } from "./type";
 
 export class MeshAdapter {
     protected fetcher: IFetcher;
-    protected pubKeyIssuer: string;
+    protected pubKeyOwner: string;
     protected meshWallet: MeshWallet;
     protected meshTxBuilder: MeshTxBuilder;
     protected confirmStatusAddress: string;
@@ -24,8 +24,8 @@ export class MeshAdapter {
             blueprint as Plutus,
             "contract.status_management.spend",
         );
-        this.pubKeyIssuer = deserializeAddress(this.wallet.getChangeAddress()).pubKeyHash;
-        this.confirmStatusScriptCbor = applyParamsToScript(this.confirmStatusCompileCode, []);
+        this.pubKeyOwner = deserializeAddress(this.meshWallet.getChangeAddress()).pubKeyHash;
+        this.confirmStatusScriptCbor = applyParamsToScript(this.confirmStatusCompileCode, [this.pubKeyOwner]);
 
         this.confirmStatusScript = {
             code: this.confirmStatusScriptCbor,
@@ -46,9 +46,9 @@ export class MeshAdapter {
         collateral: UTxO;
         walletAddress: string;
     }> => {
-        const utxos = await this.wallet.getUtxos();
-        const collaterals = await this.wallet.getCollateral();
-        const walletAddress = this.wallet.getChangeAddress();
+        const utxos = await this.meshWallet.getUtxos();
+        const collaterals = await this.meshWallet.getCollateral();
+        const walletAddress = this.meshWallet.getChangeAddress();
         if (!utxos || utxos.length === 0)
             throw new Error("No UTXOs found in getWalletForTx method.");
 
