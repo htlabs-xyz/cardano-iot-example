@@ -55,7 +55,7 @@ export const routes = {
     redirect: "/dashboard/warehouse",
   },
 
-  download: {
-    redirect: "/download",
+  tracking: {
+    redirect: "/tracking",
   },
 };
