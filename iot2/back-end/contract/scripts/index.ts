@@ -6,7 +6,45 @@ import {
 } from '@meshsdk/core';
 import { MeshAdapter } from './mesh';
 
+/**
+ * StatusManagement class
+ *
+ * This class provides methods to manage a status token lifecycle
+ * on the Cardano blockchain using Mesh SDK and Plutus V3 scripts.
+ *
+ * Main responsibilities:
+ * - Lock: Mint or update a status token and mark it as locked.
+ * - UnLock: Update an existing status token to mark it as unlocked.
+ * - Authorize: Change or assign a new authorized address to a status token.
+ *
+ * Each method constructs an unsigned transaction that must be signed
+ * and submitted by the wallet. The class extends MeshAdapter to
+ * reuse wallet and transaction builder utilities.
+ *
+ * Usage:
+ *   const manager = new StatusManagement({ meshWallet });
+ *   const tx = await manager.lock({ title: "My Status" });
+ *   const signedTx = await meshWallet.signTx(tx, true);
+ *   const txHash = await meshWallet.submitTx(signedTx);
+ *
+ * Network: Currently set to "preprod" (testnet).
+ */
 export class StatusManagement extends MeshAdapter {
+  /**
+   * Lock a given status token by minting it or updating its datum if it already exists.
+   *
+   * Workflow:
+   * - If the token does not exist at the confirmStatusAddress:
+   *   - Mint a new token with quantity 1.
+   *   - Attach inline datum with the authorized wallet address and lock state = 1.
+   * - If the token already exists:
+   *   - Spend the existing UTXO.
+   *   - Recreate the token with updated inline datum (still locked).
+   *
+   * @param {Object} params
+   * @param {string} params.title - The identifier of the status token.
+   * @returns {Promise<any>} The unsigned transaction ready to be signed and submitted.
+   */
   lock = async ({ title }: { title: string }) => {
     const { utxos, collateral, walletAddress } = await this.getWalletForTx();
 
@@ -80,6 +118,19 @@ export class StatusManagement extends MeshAdapter {
     return await unsignedTx.complete();
   };
 
+  /**
+   * Unlock a given status token by updating its datum value to unlocked state.
+   *
+   * Workflow:
+   * - Find the UTXO containing the token at confirmStatusAddress.
+   * - Spend it using the Plutus script.
+   * - Recreate the token with updated inline datum where lock state = 0.
+   *
+   * @param {Object} params
+   * @param {string} params.title - The identifier of the status token.
+   * @returns {Promise<any>} The unsigned transaction ready to be signed and submitted.
+   * @throws {Error} If no UTXOs are found for the provided token.
+   */
   unLock = async ({ title }: { title: string }) => {
     const { utxos, collateral, walletAddress } = await this.getWalletForTx();
 
@@ -132,6 +183,20 @@ export class StatusManagement extends MeshAdapter {
     return await unsignedTx.complete();
   };
 
+  /**
+   * Authorize a new address as the controller of the status token.
+   *
+   * Workflow:
+   * - Find the UTXO containing the token.
+   * - Spend it using the Plutus script with a different redeemer (mConStr1).
+   * - Recreate the token with inline datum updated to the new authorized address.
+   *
+   * @param {Object} params
+   * @param {string} params.title - The identifier of the status token.
+   * @param {string} params.authority - The new authorized address. If not provided, keep existing one.
+   * @returns {Promise<any>} The unsigned transaction ready to be signed and submitted.
+   * @throws {Error} If no UTXOs are found for the provided token.
+   */
   authorize = async ({
     title,
     authority,
