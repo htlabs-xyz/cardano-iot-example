@@ -1,20 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNumber } from 'class-validator';
-import SensorDeviceModel from './sensor-device.model';
-
-export enum TemperatureUnit {
-  CELSIUS = 0,
-  FAHRENHEIT = 1,
-  KELVIN = 2,
-}
+import { IsNumber } from 'class-validator';
 
 export class TemperatureRequestModel {
   @ApiProperty({
-    description: 'The address of device',
-    example:
-      'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
+    description: 'The id of device',
+    example: 'SENSOR-01',
   })
-  device_address: string;
+  device_id: string;
 
   @ApiProperty({ description: 'Measured temperature', example: 36 })
   @IsNumber({}, { message: 'Temperature value must be a number' })
@@ -23,15 +15,6 @@ export class TemperatureRequestModel {
   @ApiProperty({ description: 'Measured humidity', example: 36 })
   @IsNumber({}, { message: 'Humidity value must be a number' })
   humidity: number;
-
-  @ApiProperty({
-    description: 'Temperature unit',
-    example: TemperatureUnit.CELSIUS,
-  })
-  @IsEnum(TemperatureUnit, {
-    message: 'temperature unit must be Celsius (0), Fahrenheit (1), Kelvin (2)',
-  })
-  unit: TemperatureUnit;
 
   @ApiProperty({
     description: 'Time of the measurement',
@@ -50,15 +33,6 @@ export class TemperatureResponseModel {
   humidity: number;
 
   @ApiProperty({
-    description: 'Temperature unit',
-    example: TemperatureUnit.CELSIUS,
-  })
-  @IsEnum(TemperatureUnit, {
-    message: 'temperature unit must be Celsius (0), Fahrenheit (1), Kelvin (2)',
-  })
-  unit: TemperatureUnit;
-
-  @ApiProperty({
     description: 'Time of the measurement',
     example: new Date(),
   })
@@ -70,12 +44,4 @@ export class TemperatureResponseModel {
       'https://preprod.cexplorer.io/tx/85936c1350cf50ab5ec69d5c30dd8d2a023cf88251a2463c3fbe6c1da871d5e1',
   })
   tx_ref: string;
-}
-
-export class DeviceResultResponseModel {
-  @ApiProperty({ description: 'Device information' })
-  device_info: SensorDeviceModel | null;
-
-  @ApiProperty({ description: 'List temperature of device' })
-  temperatures: TemperatureResponseModel[] | null | undefined;
 }
