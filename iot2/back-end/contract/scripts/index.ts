@@ -11,18 +11,17 @@ import { convertInlineDatum } from "./common";
 export class StatusManagement extends MeshAdapter {
     lock = async ({ title, isLock }: { title: string, isLock: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-   
-        const forgingScript = ForgeScript.withOneSignature(this.confirmStatusAddress as string);
-        const policyId = resolveScriptHash(forgingScript);
-        const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
+        const forgingScript = ForgeScript.withOneSignature(walletAddress as string);
+        
+        const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, this.policyId + stringToHex(title));
 
         const unsignedTx = this.meshTxBuilder
         if (!utxo) {
             unsignedTx
-                .mint("1", policyId, stringToHex(title))
+                .mint("1", this.policyId, stringToHex(title))
                 .mintingScript(forgingScript)
                 .txOut(this.confirmStatusAddress, [{
-                    unit: policyId + stringToHex(title),
+                    unit: this.policyId + stringToHex(title),
                     quantity: String(1),
                 }])
                 .txOutInlineDatumValue(mConStr0([mConStr0([]), isLock]));
@@ -35,7 +34,7 @@ export class StatusManagement extends MeshAdapter {
                 .txInRedeemerValue(mConStr0([]))
                 .txInScript(this.confirmStatusScriptCbor)
                 .txOut(this.confirmStatusAddress, [{
-                    unit: policyId + stringToHex(title),
+                    unit: this.policyId + stringToHex(title),
                     quantity: String(1),
                 }])
                 .txOutInlineDatumValue(mConStr0([mConStr0([]), isLock]))

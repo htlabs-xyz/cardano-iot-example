@@ -1,12 +1,16 @@
 use aiken/collection/list
 use aiken/crypto.{VerificationKeyHash}
-use cardano/address.{Address}
-use cardano/assets.{flatten, without_lovelace}
+use cardano/assets.{PolicyId, flatten, without_lovelace}
 use cardano/transaction.{
   InlineDatum, Output, OutputReference, Transaction, find_input,
 }
 use cardano/tx
 use validation/find.{output_by_addr_value}
+
+pub type Address {
+  payment: VerificationKeyHash,
+  stake: VerificationKeyHash,
+}
 
 pub type Datum {
   authority: Address,
@@ -32,6 +36,11 @@ pub type Redeemer {
 // * Requires only the owner's signature.
 // Security: Prevents unauthorized state transitions or authority changes.
 validator status_management(owner: VerificationKeyHash) {
+  mint(_redeemer: Void, _policy_id: PolicyId, transaction: Transaction) {
+    let Transaction { extra_signatories, .. } = transaction
+    tx.verify_signature(extra_signatories, owner)
+  }
+
   spend(
     datum_opt: Option<Datum>,
     redeemer: Redeemer,
@@ -49,7 +58,7 @@ validator status_management(owner: VerificationKeyHash) {
     expect datum_output: Datum = datum_output_inline
     let owner_sign = tx.verify_signature(extra_signatories, owner)
     let authority_sign =
-      tx.verify_signature(extra_signatories, datum_input.authority)
+      tx.verify_signature(extra_signatories, datum_input.authority.payment)
     let change_authority = datum_input.authority == datum_output.authority
     let utxo_output = output_by_addr_value(outputs, script_address, token)
 

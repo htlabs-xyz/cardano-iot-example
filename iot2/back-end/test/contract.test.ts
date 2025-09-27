@@ -30,8 +30,8 @@ describe('Marketplace', function () {
     });
     
     const unsignedTx: string = await confirmStatusContract.lock({
-      title: process.env.LOCK_NAME ?? '',
-      isLock: 1,
+      title: "17112003",
+      isLock: 0,
     });
 
     console.log(unsignedTx)
