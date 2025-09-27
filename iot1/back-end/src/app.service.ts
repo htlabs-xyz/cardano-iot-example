@@ -10,33 +10,28 @@ import {
   stringToHex,
 } from '@meshsdk/core';
 import { Injectable } from '@nestjs/common';
+import { MeshAdapter } from 'contract/scripts/mesh';
 import { ConfirmStatusContract } from '../contract/scripts';
 import { blockfrostProvider } from '../contract/scripts/common';
-import * as device_data from '../data/device.json';
-import { AppGateway } from './app.gateway';
 import { MemoryCacheService } from './memoryCache.service';
-import SensorDeviceModel from './models/sensor-device.model';
 import {
-  DeviceResultResponseModel,
   TemperatureRequestModel,
   TemperatureResponseModel,
-  TemperatureUnit,
 } from './models/temperature.model';
 
 @Injectable()
-export class AppService {
-  private wallet: MeshWallet;
-  private API: BlockFrostAPI;
+export class AppService extends MeshAdapter {
+  private blockFrostAPI: BlockFrostAPI;
+  private policyId: string;
+  private SENSOR_NAME = process.env.SENSOR_NAME || 'Sensor 1';
   private readonly CACHE_KEY = process.env.APP_CACHE_KEY || 'temperature_cache';
   private readonly ALLOWED_TIME_OFFSET = parseInt(
     process.env.ALLOWED_TIME_OFFSET || '3000',
     10,
   );
 
-  constructor(
-    private readonly appGateway: AppGateway,
-    private readonly memoryCacheService: MemoryCacheService,
-  ) {
+  constructor(private readonly memoryCacheService: MemoryCacheService) {
+    super({ wallet: undefined });
     this.wallet = new MeshWallet({
       networkId: 0,
       fetcher: blockfrostProvider,
@@ -46,9 +41,52 @@ export class AppService {
         words: process.env.APP_WALLET?.split(' ') || [],
       },
     });
-    this.API = new BlockFrostAPI({
+    this.blockFrostAPI = new BlockFrostAPI({
       projectId: process.env.BLOCKFROST_API_KEY ?? '',
     });
+    const forgingScript = ForgeScript.withOneSignature(
+      this.wallet.getChangeAddress(),
+    );
+    this.policyId = resolveScriptHash(forgingScript);
+  }
+
+  async getAllTemperature() {
+    const encodedAssetName = this.policyId + stringToHex(this.SENSOR_NAME);
+    const transactions =
+      await this.blockFrostAPI.assetsTransactions(encodedAssetName);
+    const listTemperature: TemperatureResponseModel[] = [];
+    for (const tx of transactions) {
+      const utxo = await this.blockFrostAPI.txsUtxos(tx.tx_hash);
+      const datum_hash = utxo.outputs[0].inline_datum;
+      if (datum_hash != null && datum_hash != undefined) {
+        const datum_deserialize = deserializeDatum(datum_hash);
+        if (
+          datum_deserialize &&
+          datum_deserialize.fields &&
+          datum_deserialize.fields[0].int &&
+          datum_deserialize.fields[1].int
+        ) {
+          const temperature = new TemperatureResponseModel();
+          temperature.time = new Date(tx.block_time * 1000);
+          temperature.temperature = datum_deserialize.fields[0].int;
+          temperature.humidity = datum_deserialize.fields[1].int;
+          temperature.tx_ref =
+            'https://preprod.cexplorer.io/tx/' + utxo.inputs[0].tx_hash;
+          listTemperature.push(temperature);
+        }
+      }
+    }
+    return listTemperature;
+  }
+
+  async submitTemperature(temperature: TemperatureRequestModel) {
+    const existingTemperatures =
+      (await this.memoryCacheService.get<TemperatureRequestModel[]>(
+        this.CACHE_KEY,
+      )) || [];
+    const updateTemperatures = [...existingTemperatures, temperature];
+    await this.memoryCacheService.set(this.CACHE_KEY, updateTemperatures);
+    return 'Ok';
   }
 
   async updateTemperature() {
@@ -62,9 +100,9 @@ export class AppService {
     await this.memoryCacheService.clear();
     const temperatureMap = new Map<string, TemperatureRequestModel>();
     for (const t of existingTemperatures) {
-      const cur = temperatureMap.get(t.device_address);
+      const cur = temperatureMap.get(t.device_id);
       if (!cur || new Date(t.time).getTime() > new Date(cur.time).getTime()) {
-        temperatureMap.set(t.device_address, t);
+        temperatureMap.set(t.device_id, t);
       }
     }
 
@@ -74,45 +112,39 @@ export class AppService {
     );
 
     const maxMs = new Date(maxObj.time).getTime();
-    let sum = 0;
+    let sumTemperature = 0;
+    let sumHumidity = 0;
     let count = 0;
     for (const [, temp] of temperatureMap) {
       const tMs = new Date(temp.time).getTime();
       if (maxMs - tMs <= this.ALLOWED_TIME_OFFSET) {
-        sum += temp.value;
+        sumTemperature += temp.temperature;
+        sumHumidity += temp.humidity;
         count++;
       }
     }
 
-    const average = count ? sum / count : null;
+    const averageTemperature = count ? sumTemperature / count : null;
+    const averageHumidity = count ? sumHumidity / count : null;
 
-    if (average === null) return;
+    if (averageTemperature === null || averageHumidity === null) return;
     await this.saveTemperature({
-      device_address: maxObj.device_address,
+      device_id: maxObj.device_id,
       time: maxObj.time,
-      value: average,
-      unit: TemperatureUnit.CELSIUS,
+      temperature: averageTemperature,
+      humidity: averageHumidity,
     });
   }
 
-  async submitTemperature(temperature: TemperatureRequestModel) {
-    const existingTemperatures =
-      (await this.memoryCacheService.get<TemperatureRequestModel[]>(
-        this.CACHE_KEY,
-      )) || [];
-    const updateTemperatures = [...existingTemperatures, temperature];
-    await this.memoryCacheService.set(this.CACHE_KEY, updateTemperatures);
-    return 'Ok';
-  }
-
-  async saveTemperature(temperature: TemperatureRequestModel) {
+  async saveTemperature(req: TemperatureRequestModel) {
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
         wallet: this.wallet,
       });
     const unsignedTx: string = await confirmStatusContract.confirm({
-      title: 'Temperature',
-      value: temperature.value,
+      sensor: this.SENSOR_NAME,
+      temperator: req.temperature,
+      huminity: req.humidity,
     });
 
     const signedTx = await this.wallet.signTx(unsignedTx, true);
@@ -123,65 +155,22 @@ export class AppService {
     });
 
     const temperatureResponseModel = new TemperatureResponseModel();
-    temperatureResponseModel.value = temperature.value;
+    temperatureResponseModel.temperature = req.temperature;
+    temperatureResponseModel.humidity = req.humidity;
     temperatureResponseModel.time = new Date();
     temperatureResponseModel.tx_ref =
       'https://preprod.cexplorer.io/tx/' + txHash;
-    this.appGateway.server.emit(
-      'onUpdatedTemperature',
-      temperatureResponseModel,
-    );
     return temperatureResponseModel;
   }
 
-  async getAllTemperature(walletAddress: string) {
-    const encodedAssetName = this.getAssetEncoded(walletAddress);
-    const transactions = await this.API.assetsTransactions(encodedAssetName);
-    //console.log("transaction:", transaction)
-    const listTemperature: TemperatureResponseModel[] = [];
-    for (const tx of transactions) {
-      const utxo = await this.API.txsUtxos(tx.tx_hash);
-      const datum_hash = utxo.outputs[0].inline_datum;
-      if (datum_hash != null && datum_hash != undefined) {
-        const datum_deserialize = deserializeDatum(datum_hash);
-        if (
-          datum_deserialize &&
-          datum_deserialize.fields &&
-          datum_deserialize.fields[1].int
-        ) {
-          const temperature = new TemperatureResponseModel();
-          temperature.time = new Date(tx.block_time * 1000);
-          temperature.value = datum_deserialize.fields[1].int;
-          temperature.tx_ref =
-            'https://preprod.cexplorer.io/tx/' + utxo.inputs[0].tx_hash;
-          listTemperature.push(temperature);
-        }
-      }
-    }
-    const allDeviceInfo = await this.getListDeviceInfo();
-    const deviceResult = new DeviceResultResponseModel();
-    deviceResult.device_info =
-      allDeviceInfo.find((x) => x.device_address == walletAddress) ?? null;
-    deviceResult.temperatures = listTemperature.reverse();
-    return deviceResult;
-  }
-
-  async getListDeviceInfo(): Promise<SensorDeviceModel[]> {
-    // console.log("device_data:", device_data)
-    const parsedData: SensorDeviceModel[] = JSON.parse(
-      JSON.stringify(device_data),
-    ).devices;
-    return parsedData;
-  }
-
-  async widthdrawTemperature(temperature: TemperatureRequestModel) {
+  async widthdrawTemperature(req: TemperatureRequestModel) {
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
         wallet: this.wallet,
       });
     const unsignedTx: string = await confirmStatusContract.withdraw({
-      title: 'Temperature',
-      value: temperature.value,
+      title: this.SENSOR_NAME,
+      value: req.temperature,
     });
 
     const signedTx = await this.wallet.signTx(unsignedTx, true);
@@ -192,29 +181,11 @@ export class AppService {
     });
 
     const temperatureResponseModel = new TemperatureResponseModel();
-    temperatureResponseModel.value = temperature.value;
+    temperatureResponseModel.temperature = req.temperature;
+    temperatureResponseModel.humidity = req.humidity;
     temperatureResponseModel.time = new Date();
     temperatureResponseModel.tx_ref =
       'https://preprod.cexplorer.io/tx/' + txHash;
     return temperatureResponseModel;
-  }
-
-  async testSubmitTemperatureSocket() {
-    const temperatureResponseModel = {
-      value: Math.floor(Math.random() * (40 - 10 + 1)) + 10,
-      time: new Date(),
-      tx_ref: 'https://preprod.cexplorer.io/tx/' + 'thisisatestnhe',
-    };
-    this.appGateway.server.emit(
-      'onUpdatedTemperature',
-      temperatureResponseModel,
-    );
-    return temperatureResponseModel;
-  }
-
-  getAssetEncoded(walletAddress: string) {
-    const forgingScript = ForgeScript.withOneSignature(walletAddress);
-    const policyId = resolveScriptHash(forgingScript);
-    return policyId + stringToHex('Temperature');
   }
 }
