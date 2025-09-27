@@ -12,11 +12,77 @@ This system consists of three main components:
 
 ## 🏗️ Architecture
 
+![Diagram](./docs/images/iot1-diagram.png)
+
+*(The diagram above illustrates the overall flow of API and events. The sections below describe the corresponding APIs and events in detail.)*
+
+---
+
+### 1. Get all temperatures by device
+**Method:** `GET /api/temperatures`
+
+- **Response body**
+```json
+{
+  "status": "boolean",
+  "statusCode": "number",
+  "path": "string",
+  "message": "string", 
+  "data": [
+      {
+        "temperature": "number",
+         "humidity": "number",
+        "time": "Date",
+        "tx_ref": "string"
+      }
+  ] ,
+  "timestamp": "string (yyyy-MM-dd HH:mm:ss format)"
+}
 ```
-IoT Sensors → Backend API → Cardano Blockchain
-                    ↓
-            Frontend Dashboard
+
+### 2. Submit updated temperature
+**Method:** `POST /api/temperatures`
+
+- **Request body**
+```json
+{
+  "device_id": "string",
+  "temperature": "number",
+  "humidity": "number",
+  "time": "Date"
+}
 ```
+
+- **Response body**
+```json
+{
+  "status": "boolean",
+  "statusCode": "number",
+  "path": "string",
+  "message": "string",
+  "data": {
+    "temperature": "number",
+    "humidity": "number",
+    "time": "Date",
+    "tx_ref": "string"
+  },
+  "timestamp": "string (yyyy-MM-dd HH:mm:ss format)"
+}
+```    
+
+### 3. Background Service
+
+In addition to API and events, the system includes a **Background Service** that:  
+- Periodically aggregates sensor readings.  
+- Validates data against tolerance thresholds.  
+- Stores verified records to the **Cardano blockchain** for transparency and audit.  
+
+![Background Service](./docs/images/iot1-example-cron-job.png)
+
+---
+
+> 📌 The diagrams above provide visual overviews, while this README details the API endpoints, WebSocket events, and background service workflow.
+
 
 ### Key Features
 - **Real-time Data Collection**: WebSocket connections for live temperature updates
@@ -57,7 +123,6 @@ IoT Sensors → Backend API → Cardano Blockchain
 │   ├── src/
 │   │   ├── app.controller.ts # REST API endpoints
 │   │   ├── app.service.ts    # Business logic
-│   │   ├── app.gateway.ts    # WebSocket gateway
 │   │   ├── scheduler.service.ts # Cron job handler
 │   │   └── models/           # Data models
 │   ├── contract/             # Aiken smart contracts
