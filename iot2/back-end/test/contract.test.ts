@@ -8,9 +8,9 @@ import { blockfrostProvider } from '../contract/scripts/common';
 config();
 describe('Marketplace', function () {
   let txHashTemp: string;
-  let wallet: MeshWallet;
+  let meshWallet: MeshWallet;
   beforeEach(async function () {
-    wallet = new MeshWallet({
+    meshWallet = new MeshWallet({
       networkId: 0,
       fetcher: blockfrostProvider,
       submitter: blockfrostProvider,
@@ -24,22 +24,21 @@ describe('Marketplace', function () {
   jest.setTimeout(60000);
 
   test('Lock', async function () {
-    return;
+    // return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
-      wallet: wallet,
+      meshWallet: meshWallet,
     });
-    const authorityPaymentKeyHash = deserializeAddress(
-      wallet.getChangeAddress(),
-    ).pubKeyHash;
+    
     const unsignedTx: string = await confirmStatusContract.lock({
       title: process.env.LOCK_NAME ?? '',
-      authorityPaymentKeyHash,
       isLock: 1,
     });
-    const signedTx = await wallet.signTx(unsignedTx, true);
-    const txHash = await wallet.submitTx(signedTx);
+
+    console.log(unsignedTx)
+
+    const signedTx = await meshWallet.signTx(unsignedTx, true);
+    const txHash = await meshWallet.submitTx(signedTx);
     console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    txHashTemp = txHash;
     blockfrostProvider.onTxConfirmed(txHash, () => {
       expect(txHash.length).toBe(64);
     });
@@ -47,46 +46,40 @@ describe('Marketplace', function () {
 
   test('Un Lock', async function () {
     return;
-    const confirmStatusContract: StatusManagement = new StatusManagement({
-      wallet: wallet,
-    });
-    const authorityPaymentKeyHash = deserializeAddress(
-      wallet.getChangeAddress(),
-    ).pubKeyHash;
-    const unsignedTx: string = await confirmStatusContract.unLock({
-      title: process.env.LOCK_NAME ?? '',
-      authorityPaymentKeyHash,
-      isLock: 0,
-    });
+    // const confirmStatusContract: StatusManagement = new StatusManagement({
+    //   meshWallet: meshWallet,
+    // });
+   
+    // const unsignedTx: string = await confirmStatusContract.unLock({
+    //   title: process.env.LOCK_NAME ?? '',
+    //   authorityPaymentKeyHash,
+    //   isLock: 0,
+    // });
 
-    const signedTx = await wallet.signTx(unsignedTx, true);
-    const txHash = await wallet.submitTx(signedTx);
-    console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    txHashTemp = txHash;
-    blockfrostProvider.onTxConfirmed(txHash, () => {
-      expect(txHash.length).toBe(64);
-    });
+    // const signedTx = await meshWallet.signTx(unsignedTx, true);
+    // const txHash = await meshWallet.submitTx(signedTx);
+    // console.log('https://preprod.cexplorer.io/tx/' + txHash);
+    // txHashTemp = txHash;
+    // blockfrostProvider.onTxConfirmed(txHash, () => {
+    //   expect(txHash.length).toBe(64);
+    // });
   });
 
   test('Authority', async function () {
     // return;
-    const confirmStatusContract: StatusManagement = new StatusManagement({
-      wallet: wallet,
-    });
-    const authorityPaymentKeyHash = deserializeAddress(
-      wallet.getChangeAddress(),
-    ).pubKeyHash;
-    const unsignedTx: string = await confirmStatusContract.authorize({
-      title: process.env.LOCK_NAME ?? '',
-      authorityPaymentKeyHash,
-      isLock: 1,
-    });
-    const signedTx = await wallet.signTx(unsignedTx, true);
-    const txHash = await wallet.submitTx(signedTx);
-    console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    txHashTemp = txHash;
-    blockfrostProvider.onTxConfirmed(txHash, () => {
-      expect(txHash.length).toBe(64);
-    });
+    // const confirmStatusContract: StatusManagement = new StatusManagement({
+    //   meshWallet: meshWallet,
+    // });
+
+    // const unsignedTx: string = await confirmStatusContract.authorize({
+    //   title: process.env.LOCK_NAME ?? '',
+    // });
+    // const signedTx = await wallet.signTx(unsignedTx, true);
+    // const txHash = await wallet.submitTx(signedTx);
+    // console.log('https://preprod.cexplorer.io/tx/' + txHash);
+    // txHashTemp = txHash;
+    // blockfrostProvider.onTxConfirmed(txHash, () => {
+    //   expect(txHash.length).toBe(64);
+    // });
   });
 });

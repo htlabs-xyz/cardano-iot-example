@@ -1,55 +1,140 @@
-# contract
+# CIP68 Generator
 
-Write validators in the `validators` folder, and supporting functions in the `lib` folder using `.ak` as a file extension.
+CIP-68 is an open-source standard designed for creating and managing NFTs on the Cardano blockchain. It introduces advanced features for flexible and scalable token management, allowing developers to mint, burn, update, and remove NFTs with enhanced security and efficiency.
 
-For example, as `validators/always_true.ak`
+## Features
 
-```aiken
-validator my_first_validator {
-  spend(_datum: Option<Data>, _redeemer: Data, _output_reference: Data, _context: Data) {
-    True
-  }
-}
+-   [x] **Mint**: Create new NFTs with customizable metadata, adhering to Cardano standards.
+-   [x] **Burn**: Permanently remove NFTs from circulation, controlling supply.
+-   [x] **Update**: Modify the metadata of existing NFTs without changing their identity.
+-   [x] **Remove**: Change metadata to retire NFTs from active use without destroying them.
+
+We primarily use two main SDKs, Mesh and Blockfrost, to efficiently retrieve information and execute transactions on the blockchain. Additionally, Mesh provides the flexibility to use other providers beyond Blockfrost (such as Koios ...).
+
+-   [x] **Blockfrost**: use [Blockfrost](https://blockfrost.io) to query data
+-   [x] **Mesh**: use [Mesh](https://meshjs.dev) join blockfrost to make transactions and work with Wallets simply
+
+## Install
+
+-   npm: `npm i @cardano2vn/cip68generator`
+-   yarn: `yarn add @cardano2vn/cip68generator`
+
+## Create `BlockfrostProvider` and `MeshTxBuilder` to efficiently retrieve information and execute transactions.
+
+```ts
+import { BlockfrostProvider, MeshTxBuilder } from '@meshsdk/core';
+
+const blockfrostProvider: BlockfrostProvider = new BlockfrostProvider('<Your-Api-Key>');
+
+const meshTxBuilder: MeshTxBuilder = new MeshTxBuilder({
+    fetcher: blockfrostProvider,
+    evaluator: blockfrostProvider,
+    submitter: blockfrostProvider,
+});
+
+const wallet: MeshWallet = new MeshWallet({
+    networkId: 0,
+    fetcher: blockfrostProvider,
+    submitter: blockfrostProvider,
+    key: {
+        type: 'root',
+        bech32: '<Root-Private-Key>',
+    },
+});
 ```
 
-## Building
+## Mint: Create new NFTs with customizable metadata, adhering to Cardano standards.
 
-```sh
-aiken build
+```ts
+import { Cip68Contract } from '@cardano2vn/cip68generator';
+
+const cip68Contract: Cip68Contract = new Cip68Contract({
+    wallet: wallet,
+    fetcher: blockfrostProvider,
+    meshTxBuilder: meshTxBuilder,
+});
+
+const unsignedTx = await cip68Contract.mint({
+    assetName: 'CIP68 Generator',
+    quantity: '1',
+    metadata: {
+        name: 'CIP68 Generator',
+        image: 'ipfs://QmRzicpReutwCkM6aotuKjErFCUD213DpwPq6ByuzMJaua',
+        mediaType: 'image/jpg',
+        description: 'Open source dynamic assets (Token/NFT) generator (CIP68)',
+    },
+});
+
+const signedTx = await wallet.signTx(unsignedTx, true);
+const txHash = await wallet.submitTx(signedTx);
 ```
 
-## Testing
+## Burn: Permanently remove NFTs from circulation, controlling supply.
 
-You can write tests in any module using the `test` keyword. For example:
+```ts
+import { Cip68Contract } from '@cardano2vn/cip68generator';
 
-```aiken
-test foo() {
-  1 + 1 == 2
-}
+const cip68Contract: Cip68Contract = new Cip68Contract({
+    wallet: wallet,
+    fetcher: blockfrostProvider,
+    meshTxBuilder: meshTxBuilder,
+});
+
+const unsignedTx: string = await cip68Contract.burn({
+    txHash: '<Tx-Hash-Template>',
+    quantity: '-1',
+    assetName: 'CIP68 Generators',
+});
+const signedTx = await wallet.signTx(unsignedTx, true);
+const txHash = await wallet.submitTx(signedTx);
 ```
 
-To run all tests, simply do:
+## Update: Modify the metadata of existing NFTs without changing their identity.
 
-```sh
-aiken check
+```ts
+import { Cip68Contract } from '@cardano2vn/cip68generator';
+
+const cip68Contract = new Cip68Contract({
+    fetcher: blockfrostProvider,
+    wallet: wallet,
+    meshTxBuilder: meshTxBuilder,
+});
+
+const unsignedTx: string = await cip68Contract.update({
+    txHash: '<Tx-Hash-Template>',
+    quantity: '1',
+    assetName: 'CIP68 Generators',
+    metadata: {
+        name: 'CIP68 Generators',
+        image: 'ipfs://QmRzicpReutwCkM6aotuKjErFCUD213DpwPq6ByuzMJaua',
+        mediaType: 'image/jpg',
+        description: 'Open source dynamic assets (Token/NFT) generator (CIP68)',
+    },
+});
+const signedTx = await wallet.signTx(unsignedTx, true);
+const txHash = await wallet.submitTx(signedTx);
 ```
 
-To run only tests matching the string `foo`, do:
+## Remove: Change metadata to retire NFTs from active use without destroying them.
 
-```sh
-aiken check -m foo
+```ts
+import { Cip68Contract } from '@cardano2vn/cip68generator';
+
+const cip68Contract = new Cip68Contract({
+    fetcher: blockfrostProvider,
+    wallet: wallet,
+    meshTxBuilder: meshTxBuilder,
+});
+
+const unsignedTx: string = await cip68Contract.update({
+    txHash: '<Tx-Hash-Template>',
+    quantity: '1',
+    assetName: 'CIP68 Generators',
+    metadata: {
+        name: 'CIP68 Generators',
+        image: 'ipfs://QmRzicpReutwCkM6aotuKjErFCUD213DpwPq6ByuzMJaua',
+    },
+});
+const signedTx = await wallet.signTx(unsignedTx, true);
+const txHash = await wallet.submitTx(signedTx);
 ```
-
-## Documentation
-
-If you're writing a library, you might want to generate an HTML documentation for it.
-
-Use:
-
-```sh
-aiken docs
-```
-
-## Resources
-
-Find more on the [Aiken's user manual](https://aiken-lang.org).

@@ -6,18 +6,13 @@ import {
     resolveScriptHash, stringToHex
 } from "@meshsdk/core";
 import { MeshAdapter } from "./mesh";
+import { convertInlineDatum } from "./common";
 
 export class StatusManagement extends MeshAdapter {
-    /**
-     * 
-     * @param  
-     * @returns 
-     */
-    lock = async ({ title, authorityPaymentKeyHash, isLock, }: { title: string, authorityPaymentKeyHash?: string, isLock: number }) => {
+    lock = async ({ title, isLock }: { title: string, isLock: number }) => {
         const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-        const ownerPaymentKeyHash = deserializeAddress(process.env.WALLET_ADDRESS_OWNER as string).pubKeyHash;
-        // const authorityPaymentKeyHash = authority ? deserializeAddress(authority).pubKeyHash : "";
-        const forgingScript = ForgeScript.withOneSignature(process.env.WALLET_ADDRESS_OWNER as string);
+   
+        const forgingScript = ForgeScript.withOneSignature(this.confirmStatusAddress as string);
         const policyId = resolveScriptHash(forgingScript);
         const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
 
@@ -30,8 +25,9 @@ export class StatusManagement extends MeshAdapter {
                     unit: policyId + stringToHex(title),
                     quantity: String(1),
                 }])
-                .txOutInlineDatumValue(mConStr0([ownerPaymentKeyHash, authorityPaymentKeyHash, isLock]));
+                .txOutInlineDatumValue(mConStr0([mConStr0([]), isLock]));
         } else {
+            const datum = convertInlineDatum({inlineDatum: utxo.output.plutusData as string})
             unsignedTx
                 .spendingPlutusScriptV3()
                 .txIn(utxo.input.txHash, utxo.input.outputIndex)
@@ -42,7 +38,7 @@ export class StatusManagement extends MeshAdapter {
                     unit: policyId + stringToHex(title),
                     quantity: String(1),
                 }])
-                .txOutInlineDatumValue(mConStr0([ownerPaymentKeyHash, authorityPaymentKeyHash, isLock]))
+                .txOutInlineDatumValue(mConStr0([mConStr0([]), isLock]))
         }
 
         unsignedTx
