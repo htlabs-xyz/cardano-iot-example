@@ -6,7 +6,7 @@ import { config } from 'dotenv';
 import { StatusManagement } from '../contract/scripts';
 import { blockfrostProvider } from '../contract/scripts/common';
 config();
-describe('Marketplace', function () {
+describe('Status Management', function () {
   let txHashTemp: string;
   let meshWallet: MeshWallet;
   beforeEach(async function () {
@@ -16,25 +16,22 @@ describe('Marketplace', function () {
       submitter: blockfrostProvider,
       key: {
         type: 'mnemonic',
-        words: process.env.OWNER?.split(" ") || [],
-        // words: process.env.AUTHORIZOR?.split(' ') || [],
+        // words: process.env.OWNER?.split(' ') || [],
+        words: process.env.AUTHORIZOR?.split(' ') || [],
       },
     });
   });
   jest.setTimeout(60000);
 
   test('Lock', async function () {
-    // return;
+    return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       meshWallet: meshWallet,
     });
-    
-    const unsignedTx: string = await confirmStatusContract.lock({
-      title: "17112003",
-      isLock: 0,
-    });
 
-    console.log(unsignedTx)
+    const unsignedTx: string = await confirmStatusContract.lock({
+      title: 'The Lock',
+    });
 
     const signedTx = await meshWallet.signTx(unsignedTx, true);
     const txHash = await meshWallet.submitTx(signedTx);
@@ -46,40 +43,39 @@ describe('Marketplace', function () {
 
   test('Un Lock', async function () {
     return;
-    // const confirmStatusContract: StatusManagement = new StatusManagement({
-    //   meshWallet: meshWallet,
-    // });
-   
-    // const unsignedTx: string = await confirmStatusContract.unLock({
-    //   title: process.env.LOCK_NAME ?? '',
-    //   authorityPaymentKeyHash,
-    //   isLock: 0,
-    // });
+    const confirmStatusContract: StatusManagement = new StatusManagement({
+      meshWallet: meshWallet,
+    });
 
-    // const signedTx = await meshWallet.signTx(unsignedTx, true);
-    // const txHash = await meshWallet.submitTx(signedTx);
-    // console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    // txHashTemp = txHash;
-    // blockfrostProvider.onTxConfirmed(txHash, () => {
-    //   expect(txHash.length).toBe(64);
-    // });
+    const unsignedTx: string = await confirmStatusContract.unLock({
+      title: 'The Lock',
+    });
+
+    const signedTx = await meshWallet.signTx(unsignedTx, true);
+    const txHash = await meshWallet.submitTx(signedTx);
+    console.log('https://preprod.cexplorer.io/tx/' + txHash);
+    txHashTemp = txHash;
+    blockfrostProvider.onTxConfirmed(txHash, () => {
+      expect(txHash.length).toBe(64);
+    });
   });
 
   test('Authority', async function () {
     // return;
-    // const confirmStatusContract: StatusManagement = new StatusManagement({
-    //   meshWallet: meshWallet,
-    // });
-
-    // const unsignedTx: string = await confirmStatusContract.authorize({
-    //   title: process.env.LOCK_NAME ?? '',
-    // });
-    // const signedTx = await wallet.signTx(unsignedTx, true);
-    // const txHash = await wallet.submitTx(signedTx);
-    // console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    // txHashTemp = txHash;
-    // blockfrostProvider.onTxConfirmed(txHash, () => {
-    //   expect(txHash.length).toBe(64);
-    // });
+    const confirmStatusContract: StatusManagement = new StatusManagement({
+      meshWallet: meshWallet,
+    });
+    const unsignedTx: string = await confirmStatusContract.authorize({
+      title: 'The Lock',
+      authority:
+        'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
+    });
+    const signedTx = await meshWallet.signTx(unsignedTx, true);
+    const txHash = await meshWallet.submitTx(signedTx);
+    console.log('https://preprod.cexplorer.io/tx/' + txHash);
+    txHashTemp = txHash;
+    blockfrostProvider.onTxConfirmed(txHash, () => {
+      expect(txHash.length).toBe(64);
+    });
   });
 });
