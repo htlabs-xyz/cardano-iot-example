@@ -1,6 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean } from 'class-validator';
 
+export enum AccessRole {
+  NEW_USER = -1,
+  OWNER = 0,
+  AUTHORITY = 1,
+  UNKNOWN = 2,
+}
+export class AccessLockResponseModel {
+  access_role: AccessRole;
+  new_user_unsigned_tx?: string;
+  lock_status?: boolean;
+}
+
 export default class LockRequestModel {
   @ApiProperty({ description: 'Unlock request', example: true })
   @IsBoolean({ message: 'Status must be true/false (unlock/lock)' })
