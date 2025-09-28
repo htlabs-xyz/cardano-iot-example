@@ -1,133 +1,257 @@
 import {
-    deserializeAddress,
-    ForgeScript,
-    mConStr0,
-    mConStr1,
-    resolveScriptHash, stringToHex
-} from "@meshsdk/core";
-import { MeshAdapter } from "./mesh";
-import { convertInlineDatum } from "./common";
+  deserializeAddress,
+  mConStr0,
+  mConStr1,
+  stringToHex,
+} from '@meshsdk/core';
+import { MeshAdapter } from './mesh';
 
+/**
+ * StatusManagement class
+ *
+ * This class provides methods to manage a status token lifecycle
+ * on the Cardano blockchain using Mesh SDK and Plutus V3 scripts.
+ *
+ * Main responsibilities:
+ * - Lock: Mint or update a status token and mark it as locked.
+ * - UnLock: Update an existing status token to mark it as unlocked.
+ * - Authorize: Change or assign a new authorized address to a status token.
+ *
+ * Each method constructs an unsigned transaction that must be signed
+ * and submitted by the wallet. The class extends MeshAdapter to
+ * reuse wallet and transaction builder utilities.
+ *
+ * Usage:
+ *   const manager = new StatusManagement({ meshWallet });
+ *   const tx = await manager.lock({ title: "My Status" });
+ *   const signedTx = await meshWallet.signTx(tx, true);
+ *   const txHash = await meshWallet.submitTx(signedTx);
+ *
+ * Network: Currently set to "preprod" (testnet).
+ */
 export class StatusManagement extends MeshAdapter {
-    lock = async ({ title, isLock }: { title: string, isLock: number }) => {
-        const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-   
-        const forgingScript = ForgeScript.withOneSignature(this.confirmStatusAddress as string);
-        const policyId = resolveScriptHash(forgingScript);
-        const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
+  /**
+   * Lock a given status token by minting it or updating its datum if it already exists.
+   *
+   * Workflow:
+   * - If the token does not exist at the confirmStatusAddress:
+   *   - Mint a new token with quantity 1.
+   *   - Attach inline datum with the authorized wallet address and lock state = 1.
+   * - If the token already exists:
+   *   - Spend the existing UTXO.
+   *   - Recreate the token with updated inline datum (still locked).
+   *
+   * @param {Object} params
+   * @param {string} params.title - The identifier of the status token.
+   * @returns {Promise<any>} The unsigned transaction ready to be signed and submitted.
+   */
+  lock = async ({ title }: { title: string }) => {
+    const { utxos, collateral, walletAddress } = await this.getWalletForTx();
 
-        const unsignedTx = this.meshTxBuilder
-        if (!utxo) {
-            unsignedTx
-                .mint("1", policyId, stringToHex(title))
-                .mintingScript(forgingScript)
-                .txOut(this.confirmStatusAddress, [{
-                    unit: policyId + stringToHex(title),
-                    quantity: String(1),
-                }])
-                .txOutInlineDatumValue(mConStr0([mConStr0([]), isLock]));
-        } else {
-            const datum = convertInlineDatum({inlineDatum: utxo.output.plutusData as string})
-            unsignedTx
-                .spendingPlutusScriptV3()
-                .txIn(utxo.input.txHash, utxo.input.outputIndex)
-                .txInInlineDatumPresent()
-                .txInRedeemerValue(mConStr0([]))
-                .txInScript(this.confirmStatusScriptCbor)
-                .txOut(this.confirmStatusAddress, [{
-                    unit: policyId + stringToHex(title),
-                    quantity: String(1),
-                }])
-                .txOutInlineDatumValue(mConStr0([mConStr0([]), isLock]))
-        }
+    console.log(walletAddress);
+    const utxo = await this.getAddressUTXOAsset(
+      this.confirmStatusAddress as string,
+      this.policyId + stringToHex(title),
+    );
 
-        unsignedTx
-            .changeAddress(walletAddress)
-            .requiredSignerHash(deserializeAddress(walletAddress).pubKeyHash)
-            .selectUtxosFrom(utxos)
-            .txInCollateral(
-                collateral.input.txHash,
-                collateral.input.outputIndex,
-                collateral.output.amount,
-                collateral.output.address,
-            )
-            .setNetwork("preprod");
-        return await unsignedTx.complete();
+    const unsignedTx = this.meshTxBuilder;
+    if (!utxo) {
+      unsignedTx
+        .mintPlutusScriptV3()
+        .mint('1', this.policyId, stringToHex(title))
+        .mintingScript(this.mintScriptCbor)
+        .mintRedeemerValue(mConStr0([]))
+
+        .txOut(this.confirmStatusAddress as string, [
+          {
+            unit: this.policyId + stringToHex(title),
+            quantity: String(1),
+          },
+        ])
+        .txOutInlineDatumValue(
+          mConStr0([
+            mConStr0([
+              deserializeAddress(walletAddress).pubKeyHash,
+              deserializeAddress(walletAddress).stakeCredentialHash,
+            ]),
+            1,
+          ]),
+        );
+    } else {
+      const datum = this.convertDatum({
+        plutusData: utxo.output.plutusData as string,
+      });
+      unsignedTx
+        .spendingPlutusScriptV3()
+        .txIn(utxo.input.txHash, utxo.input.outputIndex)
+        .txInInlineDatumPresent()
+        .txInRedeemerValue(mConStr0([]))
+        .txInScript(this.confirmStatusScriptCbor)
+        .txOut(this.confirmStatusAddress as string, [
+          {
+            unit: this.policyId + stringToHex(title),
+            quantity: String(1),
+          },
+        ])
+        .txOutInlineDatumValue(
+          mConStr0([
+            mConStr0([
+              deserializeAddress(datum.authorized).pubKeyHash,
+              deserializeAddress(datum.authorized).stakeCredentialHash,
+            ]),
+            1,
+          ]),
+        );
     }
 
-    unLock = async ({ title, authorityPaymentKeyHash, isLock, }: { title: string, authorityPaymentKeyHash: string, isLock: number }) => {
-        const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-        const ownerPaymentKeyHash = deserializeAddress(process.env.WALLET_ADDRESS_OWNER as string).pubKeyHash;
-        // const authorityPaymentKeyHash = authority ? deserializeAddress(authority).pubKeyHash : "";
-        const forgingScript = ForgeScript.withOneSignature(process.env.WALLET_ADDRESS_OWNER as string);
-        const policyId = resolveScriptHash(forgingScript);
-        const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
-        const unsignedTx = this.meshTxBuilder
-        if (!utxo) {
-            throw new Error("No UTXOs found in getUtxoForTx method.");
-        } else {
-            unsignedTx
-                .spendingPlutusScriptV3()
-                .txIn(utxo.input.txHash, utxo.input.outputIndex)
-                .txInInlineDatumPresent()
-                .txInRedeemerValue(mConStr0([]))
-                .txInScript(this.confirmStatusScriptCbor)
-                .txOut(this.confirmStatusAddress, [{
-                    unit: policyId + stringToHex(title),
-                    quantity: String(1),
-                }])
-                .txOutInlineDatumValue(mConStr0([ownerPaymentKeyHash, authorityPaymentKeyHash, isLock]))
-        }
+    unsignedTx
+      .changeAddress(walletAddress)
+      .requiredSignerHash(deserializeAddress(walletAddress).pubKeyHash)
+      .selectUtxosFrom(utxos)
+      .txInCollateral(
+        collateral.input.txHash,
+        collateral.input.outputIndex,
+        collateral.output.amount,
+        collateral.output.address,
+      )
+      .setNetwork('preprod');
+    return await unsignedTx.complete();
+  };
 
-        unsignedTx
-            .changeAddress(walletAddress)
-            .requiredSignerHash(deserializeAddress(walletAddress).pubKeyHash)
-            .selectUtxosFrom(utxos)
-            .txInCollateral(
-                collateral.input.txHash,
-                collateral.input.outputIndex,
-                collateral.output.amount,
-                collateral.output.address,
-            )
-            .setNetwork("preprod");
-        return await unsignedTx.complete();
+  /**
+   * Unlock a given status token by updating its datum value to unlocked state.
+   *
+   * Workflow:
+   * - Find the UTXO containing the token at confirmStatusAddress.
+   * - Spend it using the Plutus script.
+   * - Recreate the token with updated inline datum where lock state = 0.
+   *
+   * @param {Object} params
+   * @param {string} params.title - The identifier of the status token.
+   * @returns {Promise<any>} The unsigned transaction ready to be signed and submitted.
+   * @throws {Error} If no UTXOs are found for the provided token.
+   */
+  unLock = async ({ title }: { title: string }) => {
+    const { utxos, collateral, walletAddress } = await this.getWalletForTx();
+
+    const utxo = await this.getAddressUTXOAsset(
+      this.confirmStatusAddress as string,
+      this.policyId + stringToHex(title),
+    );
+
+    const unsignedTx = this.meshTxBuilder;
+    if (!utxo) {
+      throw new Error('No UTXOs found in getUtxoForTx method.');
+    } else {
+      const datum = this.convertDatum({
+        plutusData: utxo.output.plutusData as string,
+      });
+      unsignedTx
+        .spendingPlutusScriptV3()
+        .txIn(utxo.input.txHash, utxo.input.outputIndex)
+        .txInInlineDatumPresent()
+        .txInRedeemerValue(mConStr0([]))
+        .txInScript(this.confirmStatusScriptCbor)
+        .txOut(this.confirmStatusAddress as string, [
+          {
+            unit: this.policyId + stringToHex(title),
+            quantity: String(1),
+          },
+        ])
+        .txOutInlineDatumValue(
+          mConStr0([
+            mConStr0([
+              deserializeAddress(datum.authorized).pubKeyHash,
+              deserializeAddress(datum.authorized).stakeCredentialHash,
+            ]),
+            0,
+          ]),
+        );
     }
 
-    authorize = async ({ title, authorityPaymentKeyHash, isLock, }: { title: string, authorityPaymentKeyHash: string, isLock: number }) => {
-        const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-        const ownerPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
-        // const authorityPaymentKeyHash = deserializeAddress(authority).pubKeyHash;
-        const forgingScript = ForgeScript.withOneSignature(process.env.WALLET_ADDRESS_OWNER as string);
-        const policyId = resolveScriptHash(forgingScript);
-        const utxo = await this.getAddressUTXOAsset(this.confirmStatusAddress, policyId + stringToHex(title));
-        const unsignedTx = this.meshTxBuilder
-        if (!utxo) {
-            throw new Error("No UTXOs found in getUtxoForTx method.");
-        } else {
-            unsignedTx
-                .spendingPlutusScriptV3()
-                .txIn(utxo.input.txHash, utxo.input.outputIndex)
-                .txInInlineDatumPresent()
-                .txInRedeemerValue(mConStr1([]))
-                .txInScript(this.confirmStatusScriptCbor)
-                .txOut(this.confirmStatusAddress, [{
-                    unit: policyId + stringToHex(title),
-                    quantity: String(1),
-                }])
-                .txOutInlineDatumValue(mConStr0([ownerPaymentKeyHash, authorityPaymentKeyHash, isLock]))
-        }
+    unsignedTx
+      .changeAddress(walletAddress)
+      .requiredSignerHash(deserializeAddress(walletAddress).pubKeyHash)
+      .selectUtxosFrom(utxos)
+      .txInCollateral(
+        collateral.input.txHash,
+        collateral.input.outputIndex,
+        collateral.output.amount,
+        collateral.output.address,
+      )
+      .setNetwork('preprod');
+    return await unsignedTx.complete();
+  };
 
-        unsignedTx
-            .changeAddress(walletAddress)
-            .requiredSignerHash(deserializeAddress(walletAddress).pubKeyHash)
-            .selectUtxosFrom(utxos)
-            .txInCollateral(
-                collateral.input.txHash,
-                collateral.input.outputIndex,
-                collateral.output.amount,
-                collateral.output.address,
-            )
-            .setNetwork("preprod");
-        return await unsignedTx.complete();
+  /**
+   * Authorize a new address as the controller of the status token.
+   *
+   * Workflow:
+   * - Find the UTXO containing the token.
+   * - Spend it using the Plutus script with a different redeemer (mConStr1).
+   * - Recreate the token with inline datum updated to the new authorized address.
+   *
+   * @param {Object} params
+   * @param {string} params.title - The identifier of the status token.
+   * @param {string} params.authority - The new authorized address. If not provided, keep existing one.
+   * @returns {Promise<any>} The unsigned transaction ready to be signed and submitted.
+   * @throws {Error} If no UTXOs are found for the provided token.
+   */
+  authorize = async ({
+    title,
+    authority,
+  }: {
+    title: string;
+    authority: string;
+  }) => {
+    const { utxos, collateral, walletAddress } = await this.getWalletForTx();
+    const utxo = await this.getAddressUTXOAsset(
+      this.confirmStatusAddress as string,
+      this.policyId + stringToHex(title),
+    );
+    const unsignedTx = this.meshTxBuilder;
+    if (!utxo) {
+      throw new Error('No UTXOs found in getUtxoForTx method.');
+    } else {
+      const datum = this.convertDatum({
+        plutusData: utxo.output.plutusData as string,
+      });
+      unsignedTx
+        .spendingPlutusScriptV3()
+        .txIn(utxo.input.txHash, utxo.input.outputIndex)
+        .txInInlineDatumPresent()
+        .txInRedeemerValue(mConStr1([]))
+        .txInScript(this.confirmStatusScriptCbor)
+        .txOut(this.confirmStatusAddress as string, [
+          {
+            unit: this.policyId + stringToHex(title),
+            quantity: String(1),
+          },
+        ])
+        .txOutInlineDatumValue(
+          mConStr0([
+            mConStr0([
+              deserializeAddress(authority ? authority : datum.authorized)
+                .pubKeyHash,
+              deserializeAddress(authority ? authority : datum.authorized)
+                .stakeCredentialHash,
+            ]),
+            datum.isLock,
+          ]),
+        );
     }
+
+    unsignedTx
+      .changeAddress(walletAddress)
+      .requiredSignerHash(deserializeAddress(walletAddress).pubKeyHash)
+      .selectUtxosFrom(utxos)
+      .txInCollateral(
+        collateral.input.txHash,
+        collateral.input.outputIndex,
+        collateral.output.amount,
+        collateral.output.address,
+      )
+      .setNetwork('preprod');
+    return await unsignedTx.complete();
+  };
 }
