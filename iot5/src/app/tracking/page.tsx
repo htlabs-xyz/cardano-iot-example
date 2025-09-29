@@ -1,59 +1,61 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import Image from "next/image";
-import { appImage } from "@/public/images";
-import { ArrowRight } from "lucide-react";
-import React from "react";
+import { Search } from "lucide-react";
+import React, { useState } from "react";
 import Header from "@/app/(landing)/_layout/header";
 import Footer from "@/app/(landing)/_layout/footer";
-import QRCodeGenerator from "@/components/qrcode-generator";
+import { Stepper } from "@/components/ui/stepper";
+
+const steps = [
+  { title: "Step 1", description: "Create your account" },
+  { title: "Step 2", description: "Verify your email" },
+  { title: "Step 3", description: "Add your details" },
+  { title: "Step 4", description: "Confirm and finish" },
+];
 
 export default function DownloadPage() {
+  const [currentStep, setCurrentStep] = useState(0);
   return (
     <main className="relative px-4 overflow-x-hidden">
       <Header />
-      {/* banner-begin */}
-      <section className="px-0 pt-[150px] max-md:pt-[150px] max-md:px-3">
-        <aside className="mx-auto my-0 w-full h-full max-w-[1200px] flex items-center justify-center">
-          <QRCodeGenerator
-            code={
-              "lakshtoihadbgkljasdfaskjhfdhaskjlavhndkyfnoaiwyireiorva385q8w45n089wnvnaw3856a098nn64598ya98nweyawyna5894yhnhitaiwy598ayvfuhaubaytuabnt87bna9084a0buynt89yaw458ya8ey"
-            }
-          />
-        </aside>
-      </section>
-      {/* banner-end */}
 
-      {/* subscribe-begin */}
-      <div className="px-auto pb-[50px] mt-[80px]">
-        <div className="mx-auto my-0 w-full max-w-[1200px]">
-          <section className="flex justify-between rounded-xl bg-slate-900 px-[100px] py-[45px] max-sm:flex-col max-sm:px-3 max-sm:py-7">
-            <div className="mr-[100px] h-[150px] w-[150px] max-md:w-[100px] max-md:h-[100px]">
-              <Image className="h-full w-full animate-pulse object-cover" src={appImage.logo} alt="" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-[40px] leading-[50px] max-sm:text-[22px] max-md:text-[20px]">
-                Stay Updated with<span className="pl-4 text-[#ccc]">Traceability</span>
-              </h2>
-              <p className="mb-7 mt-4 text-gray-400 max-sm:text-[12px] max-md:mt-1">
-                Supply Chain Traceability Generator: Simplifying Asset Management on Blockchain, Open-Source Transparency for Supply Chains, Simplify
-                Blockchain-Based Supply Chain Tracking.
-              </p>
-
-              <Link href="https://github.com/indepedenceee/traceability" target="_blank">
-                <Button className="flex h-[45px] items-center gap-2 rounded-md max-md:text-[12px]">
-                  <span>Star us on GitHub</span>
-                  <ArrowRight />
-                </Button>
-              </Link>
-            </div>
-          </section>
+      <div className="flex flex-col items-center justify-center px-auto pb-[50px] pt-[150px]">
+        <div className="text-center mb-4">
+          <h2 className="text-5xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+            Hydra Pact Features
+          </h2>
+          <p className="text-gray-300 max-w-2xl text-xl mx-auto leading-relaxed">
+            Discover the cutting-edge tools and capabilities of Hydra Pact, designed to empower DeFi on Cardano.
+          </p>
+        </div>
+        <div className="mt-6 w-full max-w-xl">
+          <div className="relative flex items-center gap-2">
+            <span className="absolute left-4 text-gray-400">
+              <Search aria-hidden="true" />
+            </span>
+            <input
+              type="text"
+              placeholder="Search fundraisers"
+              className="w-full rounded-full pl-12 pr-4 py-3 text-gray-700 placeholder-gray-400 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              aria-label="Search fundraisers"
+            />
+          </div>
         </div>
       </div>
-      {/* subscribe-end */}
-      {/* footer-begin */}
+
+      {/* stepper */}
+
+      <div className="container mx-auto py-10">
+        <h1 className="text-2xl font-bold mb-8 text-center">Stepper Demo</h1>
+        <Stepper steps={steps} currentStep={currentStep} onStepChange={setCurrentStep} />
+        <div className="mt-8 p-4 border rounded-md">
+          <h2 className="text-lg font-semibold mb-2">Current Step Content</h2>
+          <p>{steps[currentStep].description}</p>
+        </div>
+      </div>
+
+      {/* stepper */}
+
       <Footer />
       {/* footer-end */}
     </main>
