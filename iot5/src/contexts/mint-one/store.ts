@@ -39,7 +39,7 @@ const useMintOneStore = create<MintOneStore>((set) => ({
     setTxHash: (txhash) => set({ txhash }),
     setBasicInfoToMint: (basicInfo) => set({ basicInfoToMint: basicInfo }),
     setLoading: (loading) => set({ loading }),
-    setMetadataToMint: (metadata) => set({ metadataToMint: metadata }),
+    setMetadataToMint: (metadata) => set({ metadataToMint: { ...metadata } }),
     setTransportationToMint: (transportation) => set({ transportationToMint: transportation }),
     updateTaskState: (status, name = "", content = "") => {
         set((state) => {

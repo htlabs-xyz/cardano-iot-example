@@ -61,40 +61,8 @@ export default function ProductsPage() {
 
     const plugin = React.useRef(Autoplay({ delay: 2000, stopOnInteraction: true }));
     return (
-        <main className="relative px-4 overflow-x-hidden">
+        <main className="relative px-4 overflow-x-hidden mt-24">
             <Header />
-            {/* banner-begin */}
-            <section className="px-0 pt-[150px] max-md:pt-[150px] max-md:px-3">
-                <aside className="mx-auto my-0 w-full h-full max-w-[1200px] flex items-center justify-center">
-                    <Carousel
-                        plugins={[plugin.current]}
-                        className="w-full h-full"
-                        onMouseEnter={plugin.current.stop}
-                        onMouseLeave={plugin.current.reset}
-                    >
-                        <CarouselContent className="w-full p-0">
-                            {banners.map(({ image }, index) => (
-                                <CarouselItem key={index}>
-                                    <div>
-                                        <Card className="w-full p-0 rounded aspect-[3/1.2]">
-                                            <CardContent className="flex w-full items-center p-0 justify-center">
-                                                <Image
-                                                    className="object-cover aspect-[3/1.2] w-full h-full"
-                                                    src={image}
-                                                    alt=""
-                                                />
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                </CarouselItem>
-                            ))}
-                        </CarouselContent>
-                        <CarouselPrevious />
-                        <CarouselNext />
-                    </Carousel>
-                </aside>
-            </section>
-            {/* banner-end */}
 
             {/* feature-begin */}
             <section className={"px-0 mt-5 max-md:mt-[200px]"}>

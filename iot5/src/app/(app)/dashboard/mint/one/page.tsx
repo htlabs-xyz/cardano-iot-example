@@ -29,9 +29,7 @@ export default function Page() {
         if (!isNil(metadataTemplate) && metadataTemplate !== metadataToMint) {
             setMetadataToMint(metadataTemplate);
         }
-    }, [metadataTemplate, metadataToMint, setMetadataToMint]);
-
-    console.log(metadataToMint);
+    }, [metadataTemplate, metadataToMint, setMetadataToMint, transportationToMint, setTransportationToMint]);
 
     return (
         <div className="pt-8 pb-20 px-10 m-auto flex flex-col">

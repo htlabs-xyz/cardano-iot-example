@@ -187,8 +187,10 @@ export default function MintOneProvider({
             const input = {
                 assetName: basicInfoToMint.assetName,
                 quantity: basicInfoToMint.quantity,
-                metadata: metadataToMint!,
+                metadata: { ...metadataToMint!, ...transportationToMint! },
             };
+
+            console.log(input);
 
             updateTaskState("inprogress", "create_transaction", "Creating Transaction");
             const {

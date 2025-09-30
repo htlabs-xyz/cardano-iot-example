@@ -2,131 +2,118 @@ import { Media } from "@prisma/client";
 import { isEmpty } from "lodash";
 import { create } from "zustand";
 
-interface IJsonBuilderStore {
-    fields: {
-        key: string;
-        value: string;
-    }[];
+interface ITransportationStore {
+    startLocation: string;
+    endLocation: string;
+    waypoints: string[];
+    media?: { url: string; type: string };
     error: string;
-    init: (json: Record<string, string>) => void;
-    getJsonResult: () => Record<string, string>;
-    addField: () => void;
-    addMediaField?: (file: Media) => void;
-    updateField?: (index: number, field: "key" | "value", value: string) => void;
-    removeField?: (index: number) => void;
+    init: (data: Record<string, any>) => void;
+    getJsonResult: () => Record<string, any>;
+    setStartLocation: (location: string) => void;
+    setEndLocation: (location: string) => void;
+    addWaypoint: (waypoint: string) => void;
+    removeWaypoint: (index: number) => void;
+    updateWaypoint: (index: number, value: string) => void;
+    addMediaField: (file: Media) => void;
     setErrors: (error: string) => void;
 }
 
-export const useTransportation = create<IJsonBuilderStore>((set, get) => ({
-    fields: [],
-    template: "",
-    error: null!,
-    init: (json) => {
-        if (isEmpty(json)) {
+export const useTransportation = create<ITransportationStore>((set, get) => ({
+    startLocation: "",
+    endLocation: "",
+    waypoints: [],
+    media: undefined,
+    error: "",
+    init: (data) => {
+        if (isEmpty(data)) {
             return set({
-                fields: [
-                    { key: "name", value: "Image NFT" },
-                    { key: "description", value: "Asset Description" },
-                    { key: "image", value: "ipfs://..." },
-                    { key: "mediaType", value: "image/png" },
-                    { key: "location", value: "Ha noi - Vietnam" },
-                ],
+                startLocation: "Da Nang",
+                endLocation: "",
+                waypoints: [],
+                media: undefined,
+                error: "",
             });
         }
-        const fields = Object.entries(json).map(([key, value]) => ({
-            key,
-            value: value as string,
-        }));
-        set({ fields });
+        set({
+            startLocation: data.startLocation || "",
+            endLocation: data.endLocation || "",
+            waypoints: data?.waypoints! || [],
+            media: data.media || undefined,
+            error: "",
+        });
     },
     getJsonResult: () => {
-        const fields = get().fields;
-        const json = fields.reduce(
-            (acc, { key, value }) => {
-                if (key) {
-                    if (/^[a-zA-Z_$][a-zA-Z_$0-9]*$/.test(key)) {
-                        acc[key] = value;
-                    }
-                }
-                return acc;
-            },
-            {} as Record<string, string>,
-        );
+        const { startLocation, endLocation, waypoints, media } = get();
+        const json: Record<string, any> = {
+            startLocation,
+            endLocation,
+            waypoints,
+        };
+        if (media) {
+            json.media = media;
+        }
         return json;
     },
-    addField: () => {
+    setStartLocation: (location) => {
         set((state) => {
-            const Newfields = [...state.fields, { key: "", value: "" }];
-            const error = validateField(Newfields);
-            return { fields: Newfields, error };
+            const newState = { ...state, startLocation: location };
+            const error = validateFields(newState);
+            return { ...newState, error };
         });
     },
-    removeField: (index) => {
+    setEndLocation: (location) => {
         set((state) => {
-            const newFields = state.fields.filter((_, i) => i !== index);
-            const error = validateField(newFields);
-            return { fields: newFields, error };
+            const newState = { ...state, endLocation: location };
+            const error = validateFields(newState);
+            return { ...newState, error };
         });
     },
-    updateField: (index, field, value) => {
+    addWaypoint: (waypoint) => {
         set((state) => {
-            const newFields = [...state.fields];
-            newFields[index][field] = value;
-            const error = validateField(newFields);
-            return { fields: newFields, error };
+            const newWaypoints = [...state.waypoints, waypoint || ""];
+            const newState = { ...state, waypoints: newWaypoints };
+            const error = validateFields(newState);
+            return { ...newState, error };
+        });
+    },
+    removeWaypoint: (index) => {
+        set((state) => {
+            const newWaypoints = state.waypoints.filter((_, i) => i !== index);
+            const newState = { ...state, waypoints: newWaypoints };
+            const error = validateFields(newState);
+            return { ...newState, error };
+        });
+    },
+    updateWaypoint: (index, value) => {
+        set((state) => {
+            const newWaypoints = [...state.waypoints];
+            newWaypoints[index] = value;
+            const newState = { ...state, waypoints: newWaypoints };
+            const error = validateFields(newState);
+            return { ...newState, error };
         });
     },
     addMediaField: (file: Media) => {
-        set((state) => {
-            const updatedFields = state.fields.map((field) => {
-                if (field.key === "image") {
-                    return { ...field, value: file.url };
-                }
-                if (field.key === "mediaType") {
-                    return { ...field, value: file.type };
-                }
-                return field;
-            });
-
-            if (!state.fields.some((field) => field.key === "image")) {
-                updatedFields.push({ key: "image", value: file.url });
-            }
-            if (!state.fields.some((field) => field.key === "mediaType")) {
-                updatedFields.push({ key: "mediaType", value: file.type });
-            }
-
-            return { fields: updatedFields };
-        });
+        set((state) => ({
+            ...state,
+            media: { url: file.url, type: file.type },
+        }));
     },
     setErrors: (error) => {
         set({ error });
     },
 }));
 
-const validateField = (
-    fields: {
-        key: string;
-        value: string;
-    }[],
-): string => {
-    for (let i = 0; i < fields.length; i++) {
-        const { key, value } = fields[i];
-
-        if (!/^[a-zA-Z_$][a-zA-Z_$0-9]*$/.test(key)) {
-            return `Invalid key format : ${key}`;
-        }
-
-        if (fields.filter((f) => f.key === key).length > 1) {
-            return `Duplicate key : ${key}`;
-        }
-
-        if (isEmpty(value)) {
-            return `Value cant be empty`;
-        }
-
-        if (typeof value !== "string") {
-            return `Value must be a string. Received: ${typeof value}`;
-        }
+const validateFields = (state: { startLocation: string; endLocation: string; waypoints: string[] }): string => {
+    if (isEmpty(state.startLocation)) {
+        return "Start location cannot be empty";
+    }
+    if (isEmpty(state.endLocation)) {
+        return "End location cannot be empty";
+    }
+    if (state.waypoints.some((wp) => isEmpty(wp))) {
+        return "Waypoints cannot be empty";
     }
     return "";
 };

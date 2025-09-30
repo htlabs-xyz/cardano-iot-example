@@ -41,11 +41,33 @@ export async function getPkHash(datum: string) {
     return null;
 }
 
-export function convertToKeyValue(data: { k: { bytes: string }; v: { bytes: string } }[]): Record<string, string> {
+export function convertToKeyValue(
+    data: { k: { bytes: string }; v: { bytes?: string; list?: { bytes: string }[] } }[],
+): Record<string, string | string[]> {
     return Object.fromEntries(
         data.map(({ k, v }) => {
             const key = Buffer.from(k.bytes, "hex").toString("utf-8");
-            const value = key === "_pk" ? v.bytes : Buffer.from(v.bytes, "hex").toString("utf-8");
+            let value: string | string[];
+
+            if (key === "_pk") {
+                value = v.bytes || "";
+            } else if (v.list) {
+                value = v.list
+                    .map((item) => {
+                        try {
+                            return Buffer.from(item.bytes, "hex").toString("utf-8");
+                        } catch (error) {
+                            console.error(`Lỗi giải mã bytes cho waypoint: ${item.bytes}`, error);
+                            return "";
+                        }
+                    })
+                    .filter((item) => item !== "");
+            } else if (v.bytes) {
+                value = Buffer.from(v.bytes, "hex").toString("utf-8");
+            } else {
+                value = "";
+            }
+
             return [key, value];
         }),
     );

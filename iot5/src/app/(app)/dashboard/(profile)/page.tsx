@@ -25,6 +25,8 @@ export default function ProfilePage() {
     const { listNft, filter, setFilter, loading, totalPages, currentPage, setCurrentPage, totalUserAssets } =
         useProfileContext();
 
+    console.log(listNft);
+
     const { data: userStatistics, isLoading: statisticLoading } = useQuery({
         queryKey: ["getUserStatistics"],
         queryFn: () => getUserStatistics(),
