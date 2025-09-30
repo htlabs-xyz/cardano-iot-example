@@ -7,19 +7,19 @@ import { PropsWithChildren } from "react";
 import { redirect } from "next/navigation";
 
 export default function DashboardLayout({ children }: Readonly<PropsWithChildren>) {
-  const session = useSession();
+    const session = useSession();
 
-  if (session.status === "loading") {
-    return <Loading />;
-  }
+    if (session.status === "loading") {
+        return <Loading />;
+    }
 
-  if (session.status === "unauthenticated") {
-    redirect("/login");
-  }
+    if (session.status === "unauthenticated") {
+        redirect("/login");
+    }
 
-  return (
-    <>
-      <DesktopDashboardLayout>{children}</DesktopDashboardLayout>
-    </>
-  );
+    return (
+        <>
+            <DesktopDashboardLayout>{children}</DesktopDashboardLayout>
+        </>
+    );
 }

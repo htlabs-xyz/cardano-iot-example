@@ -10,10 +10,15 @@ import { FilePick } from "./file-pick";
 import { isEmpty } from "lodash";
 import { Card } from "./ui/card";
 import { useTransportation } from "@/hooks/use-transportation";
-import { useJsonBuilderStore } from "./store";
 
-export default function JsonBuilder({ className, title = "Metadata Builder" }: { className?: string; title?: string }) {
-    const { fields, addField, removeField, updateField, error, getJsonResult } = useJsonBuilderStore();
+export default function JsonBuilderTransportation({
+    className,
+    title = "Transportation Builder",
+}: {
+    className?: string;
+    title?: string;
+}) {
+    const { fields, addField, removeField, updateField, error, getJsonResult } = useTransportation();
     return (
         <div className={cn(className, "flex h-full bg-section gap-4 flex-1")}>
             <Card className="w-1/2 p-4 flex-1 space-y-2 flex flex-col">

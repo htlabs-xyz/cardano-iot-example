@@ -3,7 +3,6 @@
 import * as React from "react"
 import { Check, ChevronRight } from "lucide-react"
 import { cn } from "@/utils"
-import { Button } from "@/components/ui/button"
 
 interface StepProps {
   title: string
@@ -42,10 +41,9 @@ const Step: React.FC<StepProps> = ({ title, description, isCompleted, isActive }
 interface StepperProps {
   steps: Array<{ title: string; description?: string }>
   currentStep: number
-  onStepChange: (step: number) => void
 }
 
-export function Stepper({ steps, currentStep, onStepChange }: StepperProps) {
+export function Stepper({ steps, currentStep }: StepperProps) {
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -61,14 +59,7 @@ export function Stepper({ steps, currentStep, onStepChange }: StepperProps) {
           </React.Fragment>
         ))}
       </div>
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={() => onStepChange(currentStep - 1)} disabled={currentStep === 0}>
-          Previous
-        </Button>
-        <Button onClick={() => onStepChange(currentStep + 1)} disabled={currentStep === steps.length - 1}>
-          {currentStep === steps.length - 1 ? "Finish" : "Next"}
-        </Button>
-      </div>
+      
     </div>
   )
 }

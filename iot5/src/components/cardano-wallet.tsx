@@ -7,22 +7,22 @@ import Account from "./account";
 import { useRouter } from "next/navigation";
 
 const CardanoWallet = () => {
-  const { wallet } = useWallet();
-  const router = useRouter();
-  return (
-    <div style={{ width: "min-content", zIndex: 50 }}>
-      {!isNil(wallet) ? (
-        <Account />
-      ) : (
-        <div>
-          <Button onClick={() => router.push("/login")}>Connect Wallet</Button>
+    const { wallet } = useWallet();
+    const router = useRouter();
+    return (
+        <div style={{ width: "min-content", zIndex: 50 }}>
+            {!isNil(wallet) ? (
+                <Account />
+            ) : (
+                <div>
+                    <Button onClick={() => router.push("/login")}>Connect Wallet</Button>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export const WalletConnectButton = dynamic(() => Promise.resolve(CardanoWallet), {
-  loading: () => <></>,
-  ssr: false,
+    loading: () => <></>,
+    ssr: false,
 });

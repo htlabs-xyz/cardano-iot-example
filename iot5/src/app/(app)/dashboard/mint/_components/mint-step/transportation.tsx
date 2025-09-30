@@ -1,23 +1,23 @@
 import JsonBuilder from "@/components/json-builder";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
-import { useJsonBuilderStore } from "@/components/store";
 import { isEmpty, isNil } from "lodash";
+import { useTransportation } from "@/hooks/use-transportation";
 
-export default function MetadataStep({
+export default function TransportationStep({
     stepper,
-    setMetadataToMint,
-    metadataToMint,
+    setTransportationToMint,
+    transportationToMint,
 }: {
     stepper: { next: () => void; prev: () => void; isFirst: boolean };
-    setMetadataToMint: (metadata: Record<string, string>) => void;
-    metadataToMint: Record<string, string> | null;
+    setTransportationToMint: (transportation: Record<string, string>) => void;
+    transportationToMint: Record<string, string> | null;
 }) {
-    const { init, getJsonResult, setErrors } = useJsonBuilderStore();
+    const { init, getJsonResult, setErrors } = useTransportation();
 
     useEffect(() => {
-        init(metadataToMint || {});
-    }, [init, metadataToMint]);
+        init(transportationToMint || {});
+    }, [init, transportationToMint]);
 
     const handleNext = () => {
         const json = getJsonResult();
@@ -27,13 +27,13 @@ export default function MetadataStep({
             return;
         }
 
-        setMetadataToMint(json);
+        setTransportationToMint(json);
         stepper.next();
     };
     return (
         <div className="h-full py-8 m-auto flex w-full gap-4">
             <div className="rounded-md flex-1 pb-4">
-                <JsonBuilder className="flex h-full justify-between w-full" />
+                <JsonBuilder title="Transportation Builder" className="flex h-full justify-between w-full" />
                 <div className=" z-10 max-h-16 w-full ">
                     <div className="ml-4 flex h-16 items-center">
                         <div className="flex flex-1 items-center justify-end space-x-2">

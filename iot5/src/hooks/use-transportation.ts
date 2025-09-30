@@ -17,7 +17,7 @@ interface IJsonBuilderStore {
     setErrors: (error: string) => void;
 }
 
-export const useJsonBuilderStore = create<IJsonBuilderStore>((set, get) => ({
+export const useTransportation = create<IJsonBuilderStore>((set, get) => ({
     fields: [],
     template: "",
     error: null!,
