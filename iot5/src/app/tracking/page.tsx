@@ -136,7 +136,7 @@ export default function TrackingPage() {
                 unit:
                     searchQuery || "5147554ecaa8931fb9730e2707d75384e12087e45334acdc006b0595000643b050726f647563742031",
             }),
-        enabled: !!searchQuery, // Only fetch when searchQuery is non-empty
+        enabled: !!searchQuery,
     });
 
     // Generate steps from waypoints
