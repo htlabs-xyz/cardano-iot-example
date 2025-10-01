@@ -283,28 +283,29 @@ export class Cip68Contract extends MeshAdapter implements ICip68Contract {
      * @param txHash - string
      * @returns
      */
-    update = async (params: { assetName: string; metadata: Record<string, string>; txHash?: string }[]) => {
+    update = async (
+        params: { unit?: string; assetName: string; metadata: Record<string, string>; txHash?: string }[],
+    ) => {
         const { utxos, walletAddress, collateral } = await this.getWalletForTx();
         const unsignedTx = this.meshTxBuilder;
         await Promise.all(
-            params.map(async ({ assetName, metadata, txHash }) => {
+            params.map(async ({ unit, assetName, metadata, txHash }) => {
                 const storeUtxo = !isNil(txHash)
                     ? await this.getUtxoForTx(this.storeAddress, txHash)
                     : await this.getAddressUTXOAsset(
                           this.storeAddress,
-                          this.policyId + CIP68_100(stringToHex(assetName)),
+                          unit ? unit : this.policyId + CIP68_100(stringToHex(assetName)),
                       );
                 if (!storeUtxo) throw new Error("Store UTXO not found");
                 unsignedTx
                     .spendingPlutusScriptV3()
                     .txIn(storeUtxo.input.txHash, storeUtxo.input.outputIndex)
-                    .txInInlineDatumPresent() // Lấy datum ở utxo chi tiêu
-                    // .spendingReferenceTxInInlineDatumPresent() // lấy datum ở utxo reference
+                    .txInInlineDatumPresent()
                     .txInRedeemerValue(mConStr0([]))
                     .txInScript(this.storeScriptCbor)
                     .txOut(this.storeAddress, [
                         {
-                            unit: this.policyId + CIP68_100(stringToHex(assetName)),
+                            unit: unit ? unit : this.policyId + CIP68_100(stringToHex(assetName)),
                             quantity: "1",
                         },
                     ])

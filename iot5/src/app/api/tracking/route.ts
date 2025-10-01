@@ -1,111 +1,107 @@
-import { blockfrostFetcher } from "@/lib/cardano";
-import {
-    AssetDetails,
-    AssetDetailsWithTransactionHistory,
-    SpecialTransaction,
-    TransactionAsset,
-    TransactionHistory,
-} from "@/types";
+// app/api/users/route.ts
+import { appNetworkId } from "@/constants";
+import { Cip68Contract } from "@/contract";
+import { blockfrostFetcher, blockfrostProvider } from "@/lib/cardano";
+import { AssetDetails, TransactionAsset } from "@/types";
 import { datumToJson } from "@/utils";
+import { deserializeAddress, MeshWallet } from "@meshsdk/core";
 import { isNil } from "lodash";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
-export async function GET(request: Request) {
+function getNextLocation(currentLocation: string, waypoints: string, endLocation: string): string {
+    if (!waypoints) {
+        return endLocation;
+    }
+
+    const waypointList = waypoints.split(",").map((wp) => wp.trim());
+    const currentIndex = waypointList.indexOf(currentLocation);
+
+    if (currentIndex === -1) {
+        return waypointList[0] || endLocation;
+    }
+
+    if (currentIndex < waypointList.length - 1) {
+        return waypointList[currentIndex + 1];
+    }
+
+    return endLocation;
+}
+
+export async function POST(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
-        const unit = searchParams.get("unit") as string;
+        const body = await request.json();
+        const { unit } = body;
+
+        if (!unit || typeof unit !== "string") {
+            return NextResponse.json({ error: "Invalid or missing 'unit' in request body" }, { status: 400 });
+        }
 
         const assetDetails: AssetDetails = await blockfrostFetcher.fetchSpecificAsset(unit);
         const userAssetsDetails = await blockfrostFetcher.fetchSpecificAsset(unit.replace("000643b0", "000de140"));
+
         if (isNil(assetDetails)) {
-            throw new Error("Asset not found");
+            return NextResponse.json({ error: "Asset not found" }, { status: 404 });
         }
 
         assetDetails.quantity = userAssetsDetails.quantity;
 
         if (isNil(assetDetails)) {
-            throw new Error("Asset not found");
+            return NextResponse.json({ error: "Asset not found" }, { status: 404 });
         }
+
         const assetTxs: TransactionAsset[] = await blockfrostFetcher.fetchAssetTransactions(unit);
         const transaction = await blockfrostFetcher.fetchTransactionsUTxO(assetTxs[0].tx_hash);
 
-        const assetOutput = transaction.outputs.find(function (output) {
-            const asset = output.amount.find(function (amt) {
-                return amt.unit === unit;
-            });
-            return asset !== undefined;
-        });
+        const assetOutput = transaction.outputs.find((output) => output.amount.some((amt) => amt.unit === unit));
 
         const metadata = assetOutput?.inline_datum
             ? ((await datumToJson(assetOutput.inline_datum, {
                   contain_pk: true,
               })) as Record<string, string>)
             : {};
-        const assetTransactions: TransactionHistory[] = await blockfrostFetcher.fetchAssetTransactions(unit);
 
-        const transaction_history = await Promise.all(
-            assetTransactions.map(async function ({ tx_hash }) {
-                const specialTransaction: SpecialTransaction = await blockfrostFetcher.fetchSpecialTransaction(tx_hash);
-                const transaction = await blockfrostFetcher.fetchTransactionsUTxO(tx_hash);
+        const location = getNextLocation(metadata.location, metadata.waypoints, metadata.endLocation);
 
-                const assetInput = transaction.inputs.find(function (input) {
-                    const asset = input.amount.find(function (amt) {
-                        return amt.unit === unit;
-                    });
-                    return asset !== undefined;
-                });
+        const meshWallet = new MeshWallet({
+            networkId: appNetworkId,
+            fetcher: blockfrostProvider,
+            submitter: blockfrostProvider,
+            key: {
+                type: "mnemonic",
+                words: process.env.BOB_APP_MNEMONIC?.split(" ") || [],
+            },
+        });
 
-                const assetOutput = transaction.outputs.find(function (output) {
-                    const asset = output.amount.find(function (amt) {
-                        return amt.unit === unit;
-                    });
-                    return asset !== undefined;
-                });
+        const cip68Contract: Cip68Contract = new Cip68Contract({
+            wallet: meshWallet,
+        });
 
-                if (!assetInput && assetOutput) {
-                    return {
-                        metadata: assetOutput.inline_datum ? await datumToJson(assetOutput.inline_datum) : {},
-                        txHash: tx_hash,
-                        datetime: specialTransaction.block_time,
-                        fee: specialTransaction.fees,
-                        status: "Completed",
-                        action: "Mint",
-                    };
-                }
+        const pubKeyHash = deserializeAddress(meshWallet.getChangeAddress()).pubKeyHash;
 
-                if (!assetOutput && assetInput) {
-                    return {
-                        metadata: assetInput.inline_datum ? await datumToJson(assetInput.inline_datum) : {},
-                        txHash: tx_hash,
-                        datetime: specialTransaction.block_time,
-                        fee: specialTransaction.fees,
-                        status: "Completed",
-                        action: "Burn",
-                    };
-                }
+        const unsignedTx = await cip68Contract.update([
+            {
+                assetName: "",
+                unit: unit,
+                metadata: {
+                    ...metadata,
+                    location: location,
+                },
+            },
+        ]);
 
-                if (assetInput && assetOutput) {
-                    return {
-                        metadata: assetOutput.inline_datum ? await datumToJson(assetOutput.inline_datum) : {},
-                        txHash: tx_hash,
-                        datetime: specialTransaction.block_time,
-                        fee: specialTransaction.fees,
-                        status: "Completed",
-                        action: "Update",
-                    };
-                }
-            }),
-        );
+        const signedTx = await meshWallet.signTx(unsignedTx, true);
+        const txHash = await meshWallet.submitTx(signedTx);
 
-        const data = {
-            ...assetDetails,
-            metadata: metadata,
-            transaction_history: transaction_history.reverse(),
-        };
+        // Wait for transaction confirmation
+        await new Promise<void>((resolve, reject) => {
+            blockfrostProvider.onTxConfirmed(txHash, () => {
+                resolve();
+            });
+        });
 
-        return NextResponse.json(data);
+        return NextResponse.json({ message: `https://preview.cexplorer.io/tx/${txHash}` }, { status: 201 });
     } catch (error) {
-        console.error("Error fetching transportation data:", error);
+        console.error("Error in POST /api/users:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

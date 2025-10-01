@@ -5,7 +5,7 @@ import { AssetDetails, SpecialTransaction, TransactionAsset, TransactionHistory 
 import { datumToJson } from "@/utils";
 import { isNil } from "lodash";
 
-export async function getTracking({unit}: {unit: string}) {
+export async function getTracking({ unit }: { unit: string }) {
     const assetDetails: AssetDetails = await blockfrostFetcher.fetchSpecificAsset(unit);
     const userAssetsDetails = await blockfrostFetcher.fetchSpecificAsset(unit.replace("000643b0", "000de140"));
     if (isNil(assetDetails)) {

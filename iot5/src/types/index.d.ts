@@ -90,7 +90,6 @@ export type TransactionHistory = {
     block_time: number;
 };
 
-
 export type AssetDetailsWithTransactionHistory = AssetDetails & {
     transaction_history: TransactionHistory[];
 };
