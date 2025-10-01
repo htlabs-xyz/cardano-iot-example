@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Media } from "@prisma/client";
 import { isEmpty } from "lodash";
 import { create } from "zustand";
@@ -36,10 +37,10 @@ export const useTransportation = create<ITransportationStore>((set, get) => ({
             });
         }
         set({
-            startLocation: data.startLocation || "",
-            endLocation: data.endLocation || "",
-            waypoints: data?.waypoints! || [],
-            media: data.media || undefined,
+            startLocation: data?.startLocation || "",
+            endLocation: data?.endLocation || "",
+            waypoints: data?.waypoints ? data?.waypoints : [],
+            media: data?.media || undefined,
             error: "",
         });
     },

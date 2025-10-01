@@ -1,4 +1,5 @@
 "use server";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { appNetworkId } from "@/constants";
 import { Cip68Contract } from "@/contract";
 import { blockfrostProvider, koiosFetcher } from "@/lib/cardano";
@@ -46,8 +47,7 @@ export async function getWalletAssets({
         });
 
         const data = await koiosFetcher.fetchAssetsInfo(asset_list);
-        console.log(data);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const assets: AssetDetails[] = await Promise.all(
             data.map((asset: any) => {
                 return {

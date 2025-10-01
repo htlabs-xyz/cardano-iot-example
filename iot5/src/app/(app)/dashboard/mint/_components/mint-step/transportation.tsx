@@ -1,8 +1,9 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
-import { isEmpty, isNil } from "lodash";
+import { isEmpty } from "lodash";
 import { useTransportation } from "@/hooks/use-transportation";
 import { motion } from "framer-motion";
 
@@ -12,7 +13,9 @@ export default function TransportationStep({
     transportationToMint,
 }: {
     stepper: { next: () => void; prev: () => void; isFirst: boolean };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setTransportationToMint: (transportation: Record<string, any>) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     transportationToMint: Record<string, any> | null;
 }) {
     const {
@@ -69,7 +72,7 @@ export default function TransportationStep({
                 )}
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium mb-1">Start Location</label>
+                        <div className="block text-sm font-medium mb-1">Start Location</div>
                         <Input
                             value={startLocation}
                             onChange={(e) => setStartLocation(e.target.value)}
@@ -78,7 +81,7 @@ export default function TransportationStep({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium mb-1">End Location</label>
+                        <div className="block text-sm font-medium mb-1">End Location</div>
                         <Input
                             value={endLocation}
                             onChange={(e) => setEndLocation(e.target.value)}
@@ -87,7 +90,7 @@ export default function TransportationStep({
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium mb-1">Waypoints</label>
+                        <div className="block text-sm font-medium mb-1">Waypoints</div>
                         {waypoints.map((waypoint, index) => (
                             <motion.div
                                 key={index}

@@ -41,6 +41,7 @@ describe('Status Management', function () {
     return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       meshWallet: meshWallet,
+      ownerAddress: ""
     });
 
     const unsignedTx: string = await confirmStatusContract.lock({
@@ -67,6 +68,7 @@ describe('Status Management', function () {
     return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       meshWallet: meshWallet,
+      ownerAddress: ""
     });
 
     const unsignedTx: string = await confirmStatusContract.unLock({
@@ -102,6 +104,7 @@ describe('Status Management', function () {
   test('Authority', async function () {
     const confirmStatusContract: StatusManagement = new StatusManagement({
       meshWallet: meshWallet,
+      ownerAddress: ""
     });
     const unsignedTx: string = await confirmStatusContract.authorize({
       title: 'The Lock',
