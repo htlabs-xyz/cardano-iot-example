@@ -5,7 +5,7 @@ import { MeshWallet } from '@meshsdk/core';
 import { config } from 'dotenv';
 import { StatusManagement } from '../contract/scripts';
 import { blockfrostProvider } from '../contract/scripts/common';
-
+config();
 describe('Status Management', function () {
   let txHashTemp: string;
   let meshWallet: MeshWallet;
@@ -22,8 +22,8 @@ describe('Status Management', function () {
       submitter: blockfrostProvider,
       key: {
         type: 'mnemonic',
-        // words: process.env.OWNER?.split(' ') || [],
-        words: process.env.AUTHORIZOR?.split(' ') || [],
+        words: process.env.OWNER?.split(' ') || [],
+        //words: process.env.AUTHORIZOR?.split(' ') || [],
       },
     });
   });
@@ -64,7 +64,7 @@ describe('Status Management', function () {
    * - Wait for confirmation and validate transaction hash length.
    */
   test('Un Lock', async function () {
-    return;
+    //return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       meshWallet: meshWallet,
     });
@@ -100,6 +100,7 @@ describe('Status Management', function () {
    *   - Transaction hash must be 64 characters long (valid Cardano tx hash).
    */
   test('Authority', async function () {
+    return;
     const confirmStatusContract: StatusManagement = new StatusManagement({
       meshWallet: meshWallet,
     });

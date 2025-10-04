@@ -2,10 +2,8 @@ import { BlockFrostAPI } from '@blockfrost/blockfrost-js';
 import {
   deserializeAddress,
   deserializeDatum,
-  ForgeScript,
   MeshWallet,
-  resolveScriptHash,
-  stringToHex,
+  stringToHex
 } from '@meshsdk/core';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { MeshAdapter } from 'contract/scripts/mesh';
@@ -13,11 +11,12 @@ import { StatusManagement } from '../contract/scripts';
 import { blockfrostProvider } from '../contract/scripts/common';
 import { AppGateway } from './app.gateway';
 import AuthorizeRequestModel from './models/authorize-request.model';
+import { DatumModel } from './models/datum.model';
 import LockRequestModel, {
   AccessLockResponseModel,
+  AccessRole,
   LockStatusModel,
   SubmitTxModel,
-  AccessRole,
 } from './models/lock-request.model';
 @Injectable()
 export class AppService extends MeshAdapter {
@@ -32,12 +31,14 @@ export class AppService extends MeshAdapter {
   }
 
   async getAccessLock(walletAddress: string) {
+    this.meshWallet = this.getWalletClient(walletAddress);
     const userPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
     const utxo = await this.getAddressUTXOAsset(
       this.confirmStatusAddress,
-      this.getAssetEncoded(walletAddress),
+      this.getAssetEncoded(),
     );
-
+    console.log(`userPaymentKeyHash: ${userPaymentKeyHash}`);
+    return;
     // If new lock name
     if (!utxo || utxo == null) {
       const confirmStatusContract = new StatusManagement({
@@ -45,7 +46,6 @@ export class AppService extends MeshAdapter {
       });
       const unsignedTx = await confirmStatusContract.lock({
         title: this.LOCK_NAME,
-        isLock: 1,
       });
       return {
         access_role: AccessRole.NEW_USER,
@@ -54,22 +54,24 @@ export class AppService extends MeshAdapter {
       } satisfies AccessLockResponseModel;
     }
 
-    const datum = deserializeDatum(utxo.output.plutusData ?? '');
-    if (userPaymentKeyHash == datum.fields[0].bytes)
-      return {
-        access_role: AccessRole.OWNER,
-        lock_status: datum.fields[0].int == 1,
-      } satisfies AccessLockResponseModel;
-    else if (userPaymentKeyHash == datum.fields[1].bytes)
-      return {
-        access_role: AccessRole.AUTHORITY,
-        lock_status: datum.fields[1].int == 1,
-      } satisfies AccessLockResponseModel;
-    else
-      return {
-        access_role: AccessRole.UNKNOWN,
-        lock_status: false,
-      } satisfies AccessLockResponseModel;
+    const datum = deserializeDatum<DatumModel>(utxo.output.plutusData ?? '');
+    console.log('datum:', JSON.stringify(datum));
+    
+    const ownerBytes = datum.fields[0].fields[0].bytes;
+    const authorityBytes = datum.fields[0].fields[1].bytes;
+    const isLocked = datum.fields[1].int === 1;
+
+    const access_role =
+      userPaymentKeyHash === ownerBytes
+        ? AccessRole.OWNER
+        : userPaymentKeyHash === authorityBytes
+          ? AccessRole.AUTHORITY
+          : AccessRole.UNKNOWN;
+
+    return {
+      access_role,
+      lock_status: access_role === AccessRole.UNKNOWN ? false : isLocked,
+    } satisfies AccessLockResponseModel;
   }
 
   async updateStatusDevice(lockRequestModel: LockRequestModel) {
@@ -87,24 +89,12 @@ export class AppService extends MeshAdapter {
       meshWallet: currentUserWallet,
     });
     if (lockRequestModel.is_unlock) {
-      const utxo = await this.getAddressUTXOAsset(
-        this.confirmStatusAddress,
-        this.policyId + stringToHex(this.LOCK_NAME),
-      );
-      const datum = deserializeDatum(utxo.output.plutusData ?? '');
-      let authorityPaymentKeyHash = '';
-      if (datum.fields[1].bytes.length !== 0) {
-        authorityPaymentKeyHash = datum.fields[1].bytes as string;
-      }
       unsignedTx = await confirmStatusContract.unLock({
         title: this.LOCK_NAME,
-        authorityPaymentKeyHash,
-        isLock: 0,
       });
     } else {
       unsignedTx = await confirmStatusContract.lock({
         title: this.LOCK_NAME,
-        isLock: 1,
       });
     }
     console.log(unsignedTx);
@@ -131,8 +121,7 @@ export class AppService extends MeshAdapter {
     });
     const unsignedTx: string = await confirmStatusContract.authorize({
       title: this.LOCK_NAME,
-      authorityPaymentKeyHash,
-      isLock: datum.fields[2].int,
+      authority: authorityPaymentKeyHash,
     });
     console.log(unsignedTx);
     return unsignedTx;
@@ -221,9 +210,7 @@ export class AppService extends MeshAdapter {
     });
   }
 
-  getAssetEncoded(walletAddress: string) {
-    const forgingScript = ForgeScript.withOneSignature(walletAddress);
-    const policyId = resolveScriptHash(forgingScript);
-    return policyId + stringToHex(this.LOCK_NAME);
+  getAssetEncoded() {
+    return this.policyId + stringToHex(this.LOCK_NAME);
   }
 }

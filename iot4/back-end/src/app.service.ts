@@ -54,6 +54,7 @@ export class AppService {
     const metadata = await confirmStatusContract.read({
       assetName: userVerifyModel.user_fullname,
     });
+    console.log("metadata:", metadata);
     if (!metadata) {
       throw new Error('User not found');
     }
