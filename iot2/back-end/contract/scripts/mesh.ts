@@ -80,7 +80,13 @@ export class MeshAdapter {
    *
    * @throws Error if the required validator is not found in the blueprint.
    */
-  constructor({ meshWallet = null! }: { meshWallet?: MeshWallet }) {
+  constructor({
+    meshWallet = null!,
+    ownerAddress,
+  }: {
+    meshWallet?: MeshWallet;
+    ownerAddress?: string;
+  }) {
     this.meshWallet = meshWallet;
     this.fetcher = blockfrostProvider;
     this.meshTxBuilder = new MeshTxBuilder({
@@ -94,7 +100,7 @@ export class MeshAdapter {
 
     this.mintCompileCode = this.readValidator(blueprint as Plutus, title.mint);
     this.pubKeyOwner = deserializeAddress(
-      process.env.OWNER_ADDRESS as string,
+      ownerAddress ? ownerAddress : this.meshWallet.getChangeAddress(),
     ).pubKeyHash;
     this.confirmStatusScriptCbor = applyParamsToScript(
       this.confirmStatusCompileCode,

@@ -47,8 +47,6 @@ export class StatusManagement extends MeshAdapter {
    */
   lock = async ({ title }: { title: string }) => {
     const { utxos, collateral, walletAddress } = await this.getWalletForTx();
-
-    console.log(walletAddress);
     const utxo = await this.getAddressUTXOAsset(
       this.confirmStatusAddress as string,
       this.policyId + stringToHex(title),

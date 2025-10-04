@@ -6,8 +6,8 @@ const KOIOS_TOKEN = process.env.KOIOS_TOKEN || "";
 const appNetwork: Network = (process.env.NEXT_PUBLIC_APP_NETWORK?.toLowerCase() as Network) || "preprod";
 
 const appUrl: { [key: string]: string } = {
-  mainnet: process.env.NEXT_PUBLIC_APP_URL_MAINNET || "https://cip68.cardano2vn.io",
-  preview: process.env.NEXT_PUBLIC_APP_URL_PREVIEW || "https://cip68-preview.cardano2vn.io",
+    mainnet: process.env.NEXT_PUBLIC_APP_URL_MAINNET || "https://cip68.cardano2vn.io",
+    preview: process.env.NEXT_PUBLIC_APP_URL_PREVIEW || "https://cip68-preview.cardano2vn.io",
 };
 
 const appNetworkId = appNetwork === "mainnet" ? 1 : 0;

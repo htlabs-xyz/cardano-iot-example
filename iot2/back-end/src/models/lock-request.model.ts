@@ -7,16 +7,72 @@ export enum AccessRole {
   AUTHORITY = 1,
   UNKNOWN = 2,
 }
-export class AccessLockResponseModel {
+
+export enum LockStatus {
+  NEW_LOCK = -1,
+  CLOSE = 0,
+  OPEN = 1,
+}
+
+export const parseLockStatus = (status: number): LockStatus => {
+  switch (status) {
+    case -1:
+      return LockStatus.NEW_LOCK;
+    case 0:
+      return LockStatus.CLOSE;
+    case 1:
+      return LockStatus.OPEN;
+    default:
+      return LockStatus.CLOSE;
+  }
+};
+
+export class LoginResponseModel {
   access_role: AccessRole;
+  lock_status?: LockStatus;
+}
+export class LoginRequestModel {
+  @ApiProperty({ example: AccessRole.OWNER })
+  access_role: AccessRole;
+
+  @ApiProperty({
+    example:
+      'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
+  })
+  user_addr: string;
+
+  @ApiProperty({
+    example:
+      'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
+  })
+  owner_addr: string;
+
+  @ApiProperty({ example: 'The Lock' })
+  lock_name: string;
+}
+
+export class RegisterNewLockRequestModel {
+  @ApiProperty({
+    example:
+      'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
+  })
+  owner_addr: string;
+
+  @ApiProperty({ example: 'The Lock 2' })
+  lock_name: string;
+}
+
+export class RegisterNewLockResponseModel {
   new_user_unsigned_tx?: string;
-  lock_status?: boolean;
 }
 
 export default class LockRequestModel {
   @ApiProperty({ description: 'Unlock request', example: true })
   @IsBoolean({ message: 'Status must be true/false (unlock/lock)' })
   is_unlock: boolean;
+
+  @ApiProperty({ example: 'The Lock' })
+  lock_name: string;
 
   @ApiProperty({
     description: 'The address wallet of unlocker',
@@ -26,6 +82,12 @@ export default class LockRequestModel {
   unlocker_addr: string;
 
   @ApiProperty({
+    example:
+      'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
+  })
+  owner_addr: string;
+
+  @ApiProperty({
     description: 'Time of the measurement',
     example: new Date(),
   })
@@ -33,16 +95,16 @@ export default class LockRequestModel {
 }
 
 export class LockStatusModel {
-  @ApiProperty({ description: 'status of lock', example: true })
+  @ApiProperty({ description: 'status of lock', example: LockStatus.CLOSE })
   @IsBoolean({ message: 'Status must be true/false (unlock/lock)' })
-  lock_status: boolean;
+  lock_status: LockStatus;
 
   @ApiProperty({
     description: 'The address wallet of locker/unlocker',
     example:
       'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
   })
-  user_addr: string;
+  user_addr?: string;
 
   @ApiProperty({
     description: 'Timestamp of the measurement',
@@ -71,4 +133,15 @@ export class SubmitTxModel {
 
   @ApiProperty({ description: 'data', example: '{}' })
   data: any;
+}
+
+export class LockInfoRequestModel {
+  @ApiProperty({
+    example:
+      'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
+  })
+  owner_addr: string;
+
+  @ApiProperty({ example: 'The Lock' })
+  lock_name: string;
 }

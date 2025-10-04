@@ -7,15 +7,18 @@ export default class AuthorizeRequestModel {
   })
   is_remove_authorize: boolean;
 
+  @ApiProperty({ example: 'The Lock' })
+  lock_name: string;
+
   @ApiProperty({
-    description: 'The address wallet of authorizer',
+    description: 'The address wallet of owner',
     example:
       'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
   })
-  authorizer_addr: string;
+  owner_addr: string;
 
   @ApiProperty({
-    description: 'The address wallet of licensee',
+    description: 'The address wallet of owner',
     example:
       'addr_test1qrkuhqzeg2c4fcwcn8nklgdvzgfsjd95dnzg0gf3x2vrkljal42832fu44020sefy9538j2yq7s2temv20l4haxzkwxsx732dh',
   })

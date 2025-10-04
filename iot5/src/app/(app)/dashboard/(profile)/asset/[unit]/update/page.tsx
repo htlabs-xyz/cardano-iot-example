@@ -5,22 +5,22 @@ import { MetadataStep, PreviewStep, ResultStep, TransactionStep } from "../../..
 import { useUnitContext } from "@/contexts/unit";
 
 export default function Page() {
-  const { updateStepper } = useUnitContext();
+    const { updateStepper } = useUnitContext();
 
-  return (
-    <div className="py-8 px-10 m-auto flex flex-col">
-      <div className="rounded-xl p-6 bg-section shadow-md flex flex-col gap-3">
-        <h1 className="text-2xl font-medium leading-7 text-center">Update Step</h1>
-        <StepperNav />
-        <div className="space-y-4">
-          {updateStepper.switch({
-            metadata: () => <MetadataStep />,
-            preview: () => <PreviewStep />,
-            transaction: () => <TransactionStep />,
-            result: () => <ResultStep />,
-          })}
+    return (
+        <div className="py-8 px-10 m-auto flex flex-col">
+            <div className="rounded-xl p-6 bg-section shadow-md flex flex-col gap-3">
+                <h1 className="text-2xl font-medium leading-7 text-center">Update Step</h1>
+                <StepperNav />
+                <div className="space-y-4">
+                    {updateStepper.switch({
+                        metadata: () => <MetadataStep />,
+                        preview: () => <PreviewStep />,
+                        transaction: () => <TransactionStep />,
+                        result: () => <ResultStep />,
+                    })}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
