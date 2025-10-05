@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { CreditCard } from "lucide-react"
-import { toast } from "sonner"
 
 interface NFCReadDialogProps {
   isOpen: boolean
@@ -11,31 +10,6 @@ interface NFCReadDialogProps {
 }
 
 export function NFCReadDialog({ isOpen, onOpenChange }: NFCReadDialogProps) {
-  const handleStartRead = () => {
-    toast.loading("Reading data from NFC card...", {
-      id: "nfc-read",
-    })
-
-    // Simulate NFC read process
-    setTimeout(() => {
-      onOpenChange(false)
-
-      // Simulate reading user data
-      const mockUserData = {
-        user_id: "USR001",
-        user_fullname: "John Doe",
-        user_birthday: new Date("1990-01-15"),
-        user_gender: "male",
-        user_country: "usa",
-      }
-
-      toast.success("Data successfully read from NFC card!", {
-        id: "nfc-read",
-        description: `User: ${mockUserData.user_fullname} (ID: ${mockUserData.user_id})`,
-      })
-    }, 2000)
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -57,12 +31,9 @@ export function NFCReadDialog({ isOpen, onOpenChange }: NFCReadDialogProps) {
             <p className="font-medium text-gray-900">Scanning NFC card...</p>
             <p className="text-sm text-gray-500 mt-1">Keep NFC card near the device</p>
           </div>
-          <div className="flex gap-2 pt-4">
+          <div className="flex justify-center gap-2 pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
-            </Button>
-            <Button onClick={handleStartRead} className="bg-green-600 hover:bg-green-700">
-              Start Scanning
             </Button>
           </div>
         </div>

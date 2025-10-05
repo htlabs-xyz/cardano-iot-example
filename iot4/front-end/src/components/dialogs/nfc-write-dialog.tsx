@@ -4,30 +4,15 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { UserInfoRequest } from "@/types/user.type"
 import { Nfc } from "lucide-react"
-import { toast } from "sonner"
-
 interface NFCWriteDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  userData: UserInfoRequest
+  userData: UserInfoRequest,
+  onWriteToNFC?: () => void,
+  isLoading?: boolean
 }
 
-export function NFCWriteDialog({ isOpen, onOpenChange, userData }: NFCWriteDialogProps) {
-  const handleStartWrite = () => {
-    toast.loading("Writing data to NFC card...", {
-      id: "nfc-write",
-    })
-
-    // Simulate NFC write process
-    setTimeout(() => {
-      onOpenChange(false)
-      toast.success("Data successfully written to NFC card!", {
-        id: "nfc-write",
-        description: `User: ${userData.user_fullname} (${userData.user_id})`,
-      })
-    }, 2000)
-  }
-
+export function NFCWriteDialog({ isOpen, onOpenChange, userData, onWriteToNFC, isLoading }: NFCWriteDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -53,11 +38,13 @@ export function NFCWriteDialog({ isOpen, onOpenChange, userData }: NFCWriteDialo
             )}
           </div>
           <div className="flex gap-2 pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleStartWrite} className="bg-indigo-600 hover:bg-indigo-700">
-              Start Writing
+            {!isLoading && (
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+            )}
+            <Button onClick={onWriteToNFC} className="bg-indigo-600 hover:bg-indigo-700" disabled={isLoading}>
+              {isLoading ? "Writing..." : "Start Writing"}
             </Button>
           </div>
         </div>

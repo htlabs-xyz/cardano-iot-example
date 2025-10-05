@@ -16,9 +16,11 @@ export interface UserInfoRequest {
 }
 
 export interface UserVerifyRequest {
-  /** The identity of person */
   user_id: string;
-
-  /** The name of person */
+}
+export interface UserVerifyResponse {
   user_fullname: string;
+  user_birthday: Date;
+  user_gender: string;
+  user_country: string;
 }
