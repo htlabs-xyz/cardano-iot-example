@@ -1,54 +1,13 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Shield, Plus } from "lucide-react"
+import { Plus, Shield } from "lucide-react"
 
-import { toast } from "sonner"
-import { VerifyTab } from "@/components/tabs/verify-tab"
 import { AddInfoTab } from "@/components/tabs/add-info-tab"
-import { NFCWriteDialog } from "@/components/dialogs/nfc-write-dialog"
-import { NFCReadDialog } from "@/components/dialogs/nfc-read-dialog"
-import { UserInfoRequest } from "@/types/user.type"
+import { VerifyTab } from "@/components/tabs/verify-tab"
 
 export default function NFCIdentitySystem() {
-  const [isNfcWriteDialogOpen, setIsNfcWriteDialogOpen] = useState(false)
-  const [isNfcReadDialogOpen, setIsNfcReadDialogOpen] = useState(false)
-  const [formData, setFormData] = useState<UserInfoRequest>({
-    user_id: "",
-    user_fullname: "",
-    user_birthday: new Date(),
-    user_gender: "",
-    user_country: "",
-  })
-
-  const handleInputChange = (field: keyof UserInfoRequest, value: string | Date) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
-  }
-
-  const handleWriteToNFC = () => {
-    // Validate form data
-    if (
-      !formData.user_id ||
-      !formData.user_fullname ||
-      !formData.user_birthday ||
-      !formData.user_gender ||
-      !formData.user_country
-    ) {
-      toast.error("Please fill in all required information")
-      return
-    }
-    setIsNfcWriteDialogOpen(true)
-  }
-
-  const handleNFCRead = () => {
-    setIsNfcReadDialogOpen(true)
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="mx-auto max-w-4xl">
@@ -79,19 +38,15 @@ export default function NFCIdentitySystem() {
               </TabsList>
 
               <TabsContent value="verify" className="space-y-6">
-                <VerifyTab onNFCRead={handleNFCRead} />
+                <VerifyTab />
               </TabsContent>
 
               <TabsContent value="add" className="space-y-6">
-                <AddInfoTab formData={formData} onInputChange={handleInputChange} onWriteToNFC={handleWriteToNFC} />
+                <AddInfoTab />
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
-
-        <NFCWriteDialog isOpen={isNfcWriteDialogOpen} onOpenChange={setIsNfcWriteDialogOpen} userData={formData} />
-
-        <NFCReadDialog isOpen={isNfcReadDialogOpen} onOpenChange={setIsNfcReadDialogOpen} />
       </div>
     </div>
   )

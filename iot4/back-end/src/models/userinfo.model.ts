@@ -26,9 +26,6 @@ export class UserVerifyRequestModel {
     example: '0013812389912',
   })
   user_id: string;
-
-  @ApiProperty({ description: 'The name of person', example: 'Peter Pan JM' })
-  user_fullname: string;
 }
 
 export class UserVerifyResponseModel {
@@ -37,4 +34,20 @@ export class UserVerifyResponseModel {
     example: true,
   })
   is_valid: boolean;
+}
+
+export class UserMetadata {
+  user_fullname: string;
+  user_birthday: Date;
+  user_gender: string;
+  user_country: string;
+}
+
+export function parseUserMetadata(data: UserInfoRequestModel): UserMetadata {
+  return {
+    user_fullname: data.user_fullname,
+    user_birthday: data.user_birthday,
+    user_gender: data.user_gender,
+    user_country: data.user_country,
+  };
 }

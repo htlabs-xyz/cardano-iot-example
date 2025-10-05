@@ -121,8 +121,8 @@ export class OrderService {
     const last_index = utxos.length - 1;
     try {
       if (
-        utxos[last_index].output.amount[0].quantity ==
-        (amount_ada * 1000000).toString()
+        Number(utxos[last_index].output.amount[0].quantity) >=
+        amount_ada * 1000000
       ) {
         const transaction = await this.blockfrostAPI.txs(
           utxos[last_index].input.txHash,

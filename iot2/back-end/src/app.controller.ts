@@ -1,23 +1,38 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { ApiResponseModel } from './common/response.interceptor';
-import AuthorizeRequestModel from './models/authorize-request.model';
-import LockRequestModel, { SubmitTxModel } from './models/lock-request.model';
+import {
+  AuthorizeRequestModel,
+  LockInfoRequestModel,
+  LockRequestModel,
+  SubmitTxModel,
+} from './models/lock.model';
+import {
+  LoginRequestModel,
+  LoginResponseModel,
+  RegisterNewLockRequestModel,
+} from './models/auth.model';
 
 @ApiTags('The locker')
 @Controller('api/lock-device')
 export class AppController {
   constructor(private readonly appService: AppService) {}
-  @ApiOperation({ summary: 'Used to check permission to access the lock' })
+  @ApiOperation({ summary: 'Used to login to the lock' })
   @ApiResponse({
-    status: 201,
+    status: 200,
     description: 'Unlock status',
-    type: ApiResponseModel<boolean>,
+    type: ApiResponseModel<LoginResponseModel>,
   })
-  @Get('get-access/:wallet_address')
-  getAccessLock(@Param('wallet_address') wallet_address: string) {
-    return this.appService.getAccessLock(wallet_address);
+  @Post('login')
+  login(@Body() loginModel: LoginRequestModel) {
+    return this.appService.login(loginModel);
+  }
+
+  @ApiOperation({ summary: 'Used to register a new lock' })
+  @Post('register')
+  register(@Body() registerModel: RegisterNewLockRequestModel) {
+    return this.appService.registerNewLock(registerModel);
   }
 
   @ApiOperation({
@@ -50,13 +65,13 @@ export class AppController {
 
   @ApiOperation({ summary: 'Used to get the history status of the lock' })
   @Get('history')
-  getAllLockHistory() {
-    return this.appService.getAllLockHistory();
+  getAllLockHistory(@Query() lockInfoModel: LockInfoRequestModel) {
+    return this.appService.getAllLockHistory(lockInfoModel);
   }
 
   @ApiOperation({ summary: 'Used to get the status of the lock' })
   @Get('lock-status')
-  getLockStatus() {
-    return this.appService.getLockStatus();
+  getLockStatus(@Query() lockInfoModel: LockInfoRequestModel) {
+    return this.appService.getLockStatus(lockInfoModel);
   }
 }

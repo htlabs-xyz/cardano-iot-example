@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { AppService } from './app.service';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AppService } from './app.service';
 import { ApiResponseModel } from './common/response.interceptor';
 import {
   UserInfoRequestModel,
@@ -11,18 +11,6 @@ import {
 @Controller('api/user-identity')
 export class AppController {
   constructor(private readonly appService: AppService) {}
-
-  @ApiOperation({ summary: 'Used to get all users' })
-  @ApiResponse({
-    status: 200,
-    description: 'Users received',
-    type: ApiResponseModel<string>,
-  })
-  @Get()
-  getAllUsers() {
-    return [];
-  }
-
   @ApiOperation({ summary: 'Used to be submit a new user information' })
   @ApiResponse({
     status: 201,

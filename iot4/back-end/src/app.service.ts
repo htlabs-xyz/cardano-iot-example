@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { SupplyChainManagementContract } from 'contract/scripts';
 import { blockfrostProvider } from 'contract/scripts/common';
 import {
+  parseUserMetadata,
   UserInfoRequestModel,
   UserVerifyRequestModel,
 } from './models/userinfo.model';
@@ -10,7 +11,6 @@ import {
 @Injectable()
 export class AppService {
   private wallet: MeshWallet;
-  private txHashTemp: string;
 
   constructor() {
     this.wallet = new MeshWallet({
@@ -25,24 +25,24 @@ export class AppService {
   }
 
   async writeUserIdentityData(user: UserInfoRequestModel) {
-    const confirmStatusContract: SupplyChainManagementContract =
-      new SupplyChainManagementContract({
-        wallet: this.wallet,
-      });
+    const confirmStatusContract = new SupplyChainManagementContract({
+      wallet: this.wallet,
+    });
+    console.log('metadata:', parseUserMetadata(user));
     const unsignedTx: string = await confirmStatusContract.write({
-      assetName: user.user_fullname,
-      metadata: {
-        name: user.user_fullname,
-      },
+      assetName: user.user_id,
+      metadata: parseUserMetadata(user),
     });
 
     const signedTx = this.wallet.signTx(unsignedTx, true);
     const txHash = await this.wallet.submitTx(signedTx);
-    this.txHashTemp = txHash;
     blockfrostProvider.onTxConfirmed(txHash, () => {
       expect(txHash.length).toBe(64);
     });
-
+    console.log(
+      'Transaction hash:',
+      'https://preprod.cexplorer.io/tx/' + txHash,
+    );
     return 'https://preprod.cexplorer.io/tx/' + txHash;
   }
 
@@ -52,8 +52,9 @@ export class AppService {
         wallet: this.wallet,
       });
     const metadata = await confirmStatusContract.read({
-      assetName: userVerifyModel.user_fullname,
+      assetName: userVerifyModel.user_id,
     });
+    console.log('metadata:', metadata);
     if (!metadata) {
       throw new Error('User not found');
     }

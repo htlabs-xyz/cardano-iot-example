@@ -1,6 +1,7 @@
 import { BlockfrostProvider } from '@meshsdk/core';
 import { decodeFirst, Tagged } from 'cbor';
-
+import { config } from 'dotenv';
+config();
 export const blockfrostProvider = new BlockfrostProvider(
   process.env.BLOCKFROST_API_KEY || '',
 );

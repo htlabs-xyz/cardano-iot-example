@@ -80,7 +80,13 @@ export class MeshAdapter {
    *
    * @throws Error if the required validator is not found in the blueprint.
    */
-  constructor({ meshWallet = null!, ownerAddress }: { meshWallet?: MeshWallet, ownerAddress?: string }) {
+  constructor({
+    meshWallet = null!,
+    ownerAddress,
+  }: {
+    meshWallet?: MeshWallet;
+    ownerAddress?: string;
+  }) {
     this.meshWallet = meshWallet;
     this.fetcher = blockfrostProvider;
     this.meshTxBuilder = new MeshTxBuilder({

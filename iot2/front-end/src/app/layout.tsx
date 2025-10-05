@@ -1,7 +1,7 @@
 import Header from "@/components/layout/_header";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { WalletProvider } from "../contexts/wallet-context";
+import { AppProvider } from "../contexts/app-context";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,12 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased `}>
-        <WalletProvider>
+        <AppProvider>
           <Header />
           <main className=" max-w-6xl mx-auto">
             {children}
           </main>
-        </WalletProvider>
+        </AppProvider>
         {/* <Footer /> */}
       </body >
     </html >

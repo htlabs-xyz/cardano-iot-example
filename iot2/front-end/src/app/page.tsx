@@ -9,11 +9,13 @@ import { AuthorizePopup } from "../components/authorize-popup"
 import HistoryPopup from "../components/history-popup"
 import { LockButton } from "../components/lock-button"
 import RevokePopup from "../components/revoke-popup"
-import { useCurrentWallet } from "../contexts/wallet-context"
+import { useCurrentWallet } from "../contexts/app-context"
+import { AuthorizeRequest, LockInfoRequest, LockRequest, LockStatus } from "@/types/lock.type"
+import { AccessRole } from "@/types/auth.type"
 
 // Define types for our state objects
 type LockState = {
-  isLocked: boolean
+  lockStatus: LockStatus
   isHolding: boolean
   isLoading: boolean
   progress: number
@@ -33,7 +35,7 @@ type AlertState = {
 export default function LockApp() {
   const { currentWallet } = useCurrentWallet();
   const [lockState, setLockState] = useState<LockState>({
-    isLocked: true,
+    lockStatus: LockStatus.CLOSE,
     isHolding: false,
     isLoading: false,
     progress: 0,
@@ -43,7 +45,7 @@ export default function LockApp() {
   const [newWalletAddress, setNewWalletAddress] = useState("")
 
   // Destructure state for easier access
-  const { isLocked, isLoading } = lockState
+  const { lockStatus, isLoading } = lockState
 
   // Helper function to update lock state
   const updateLockState = (updates: Partial<LockState>) => {
@@ -56,15 +58,10 @@ export default function LockApp() {
     setTimeout(() => setAlertState({ type: "none", message: "" }), duration)
   }
 
-  const processLockAction = (action: "lock" | "unlock", animate = true) => {
-    updateLockState({ isLoading: true })
-    const newLockState = action === "lock"
-    updateLockState({ isLocked: newLockState, isLoading: false })
-    // Show success alert
-    if (animate) showAlert("success", newLockState ? "Lock secured successfully!" : "Unlocked successfully!")
-
+  const processLockAction = (lockStatus: LockStatus, animate = true) => {
+    updateLockState({ lockStatus, isLoading: false })
+    if (animate) showAlert("success", lockStatus === LockStatus.CLOSE ? "Lock secured successfully!" : "Unlocked successfully!")
   }
-
 
   //get lock status
   useEffect(() => {
@@ -72,54 +69,32 @@ export default function LockApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  //lock
-  const handleUnlockRequest = async () => {
+  //lock & unlock
+  const handleUpdateLockStatus = async (newLockStatus: LockStatus) => {
     if (isLoading) return
     try {
       updateLockState({ isLoading: true })
-      if (isLocked) {
-        const unlockData = {
-          is_unlock: true,
-          unlocker_addr: currentWallet.address ?? ""
+      if (lockStatus != newLockStatus) {
+        const updateLockRequest: LockRequest = {
+          lock_status: newLockStatus,
+          unlocker_addr: currentWallet.currentUserAddress ?? "",
+          lock_name: currentWallet.lockName ?? "",
+          owner_addr: currentWallet.ownerAddress ?? "",
+          time: new Date()
         }
-        const unsignedTx = await lockApiRequest.requestUpdateStatusDevice(unlockData);
+        const unsignedTx = await lockApiRequest.requestUpdateStatusDevice(updateLockRequest);
         if (currentWallet.browserWallet && unsignedTx.data) {
           const signedTx = await currentWallet.browserWallet.signTx(unsignedTx.data, true);
           const submitTx = await lockApiRequest.submitTransaction({
             signedTx: signedTx,
-            user_addr: currentWallet.address ?? "",
-            data: unlockData
+            user_addr: currentWallet.currentUserAddress ?? "",
+            data: updateLockRequest
           })
           //const txhash = await currentWallet.browserWallet.submitTx(signedTx);
-          if (submitTx.status && submitTx.data?.tx_hash) processLockAction("unlock")
-          else throw new Error()
-        }
-      }
-    }
-    catch { showAlert("error", "Action has been canceled") }
-    finally { updateLockState({ isLoading: false }) }
-  }
-
-  //unlock
-  const handleHoldComplete = async () => {
-    if (isLoading) return
-    try {
-      updateLockState({ isLoading: true })
-      if (!isLocked) {
-        const lockData = {
-          is_unlock: false,
-          unlocker_addr: currentWallet.address ?? ""
-        }
-        const unsignedTx = await lockApiRequest.requestUpdateStatusDevice(lockData);
-        if (currentWallet.browserWallet && unsignedTx.data) {
-          const signedTx = await currentWallet.browserWallet.signTx(unsignedTx.data, true);
-          const submitTx = await lockApiRequest.submitTransaction({
-            signedTx: signedTx,
-            user_addr: currentWallet.address ?? "",
-            data: lockData
-          })
-          //const txhash = await currentWallet.browserWallet.submitTx(signedTx);
-          if (submitTx.status && submitTx.data?.tx_hash) processLockAction("lock")
+          if (submitTx.status && submitTx.data?.tx_hash){
+            console.log('https://preprod.cexplorer.io/tx/' + submitTx.data.tx_hash);
+            processLockAction(newLockStatus)
+          }
           else throw new Error()
         }
       }
@@ -135,9 +110,10 @@ export default function LockApp() {
       if (isLoading) return
       try {
         updateLockState({ isLoading: true })
-        const authorizeModel = {
+        const authorizeModel: AuthorizeRequest = {
           is_remove_authorize: false,
-          authorizer_addr: currentWallet.address ?? "",
+          lock_name: currentWallet.lockName ?? "",
+          owner_addr: currentWallet.ownerAddress ?? "",
           licensee_addr: newWalletAddress,
           time: new Date()
         }
@@ -146,7 +122,7 @@ export default function LockApp() {
           const signedTx = await currentWallet.browserWallet.signTx(unsignedTx.data, true);
           const submitTx = await lockApiRequest.submitTransaction({
             signedTx: signedTx,
-            user_addr: currentWallet.address ?? "",
+            user_addr: currentWallet.currentUserAddress ?? "",
             data: authorizeModel
           })
           //const txhash = await currentWallet.browserWallet.submitTx(signedTx);
@@ -165,10 +141,11 @@ export default function LockApp() {
     try {
       setPopupState({ type: "none" });
       updateLockState({ isLoading: true })
-      const authorizeModel = {
+      const authorizeModel: AuthorizeRequest = {
         is_remove_authorize: true,
-        authorizer_addr: currentWallet.address ?? "",
+        owner_addr: currentWallet.ownerAddress ?? "",
         licensee_addr: "",
+        lock_name: currentWallet.lockName ?? "",
         time: new Date()
       }
       const unsignedTx = await lockApiRequest.requestAuthorize(authorizeModel);
@@ -176,7 +153,7 @@ export default function LockApp() {
         const signedTx = await currentWallet.browserWallet.signTx(unsignedTx.data, true);
         const submitTx = await lockApiRequest.submitTransaction({
           signedTx: signedTx,
-          user_addr: currentWallet.address ?? "",
+          user_addr: currentWallet.currentUserAddress ?? "",
           data: authorizeModel
         })
         //const txhash = await currentWallet.browserWallet.submitTx(signedTx);
@@ -189,18 +166,18 @@ export default function LockApp() {
 
   }
 
-
   //sync
   const handleGetLockStatus = async () => {
     try {
       updateLockState({ isLoading: true })
-      const lockStatus = await lockApiRequest.getLockStatus();
+      const query: LockInfoRequest = {
+        lock_name: currentWallet.lockName ?? "",
+        owner_addr: currentWallet.ownerAddress ?? "",
+      }
+      const lockStatus = await lockApiRequest.getLockStatus(query);
       if (lockStatus.status == true) {
-        if (lockStatus.data?.lock_status == true) {
-          processLockAction("lock", false)
-        }
-        else if (lockStatus.data?.lock_status == false) {
-          processLockAction("unlock", false)
+        if (lockStatus.data?.lock_status !== undefined) {
+          processLockAction(lockStatus.data.lock_status, false)
         }
       }
     } catch { showAlert("error", "Error: Cannot get lock status") }
@@ -210,8 +187,8 @@ export default function LockApp() {
   // Derived instruction text
   const instructionText = useMemo(() => {
     if (isLoading) return "processing..."
-    return isLocked ? "touch to unlock" : "hold to lock"
-  }, [isLocked, isLoading])
+    return lockStatus == LockStatus.CLOSE ? "touch to unlock" : "hold to lock"
+  }, [lockStatus, isLoading])
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 items-center justify-center py-10">
@@ -219,15 +196,15 @@ export default function LockApp() {
       <main className="flex-1 flex flex-col items-center justify-center p-8 max-w-6xl mx-auto w-full">
         {/* Device Info */}
         <div className="flex justify-center items-center w-full mb-8">
-          <h2 className="text-xl text-gray-700">KDLY02_5696e7</h2>
+          <h2 className="text-xl text-gray-700">{currentWallet.lockName}</h2>
         </div>
 
         {/* Lock Button */}
         <LockButton
-          isLocked={isLocked}
+          isLocked={lockStatus == LockStatus.CLOSE}
           isLoading={isLoading}
-          onHoldComplete={handleHoldComplete}
-          onUnlockRequest={handleUnlockRequest}
+          onHoldComplete={() => handleUpdateLockStatus(LockStatus.CLOSE)}
+          onUnlockRequest={() => handleUpdateLockStatus(LockStatus.OPEN)}
         />
 
         {/* Instruction text */}
@@ -239,11 +216,11 @@ export default function LockApp() {
           onAuthorizeClick={() => setPopupState({ type: "authorize" })}
           onHistoryClick={() => setPopupState({ type: "history" })}
           onSyncClick={handleGetLockStatus}
-          is_owner={currentWallet.is_owner}
+          is_owner={currentWallet.accessRole == AccessRole.OWNER}
         />
 
         {/* Alert */}
-        <Alert type={alertState.type} message={alertState.message} isLocked={isLocked} />
+        <Alert type={alertState.type} message={alertState.message} isLocked={lockStatus == LockStatus.CLOSE} />
 
         {/*Remove Popup */}
         <AnimatePresence>

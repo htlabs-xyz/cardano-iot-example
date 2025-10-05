@@ -1,89 +1,83 @@
 import { BlockFrostAPI } from '@blockfrost/blockfrost-js';
-import {
-  deserializeAddress,
-  deserializeDatum,
-  ForgeScript,
-  MeshWallet,
-  resolveScriptHash,
-  stringToHex,
-} from '@meshsdk/core';
+import { deserializeAddress, deserializeDatum } from '@meshsdk/core';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { MeshAdapter } from 'contract/scripts/mesh';
 import { StatusManagement } from '../contract/scripts';
 import { blockfrostProvider } from '../contract/scripts/common';
 import { AppGateway } from './app.gateway';
-import AuthorizeRequestModel from './models/authorize-request.model';
-import LockRequestModel, {
-  LockStatusModel,
+import { ContractHelper } from './common/contract-helper';
+import {
+  AccessRole,
+  LoginRequestModel,
+  LoginResponseModel,
+  RegisterNewLockRequestModel,
+} from './models/auth.model';
+import { DatumModel } from './models/datum.model';
+import {
+  AuthorizeRequestModel,
+  LockInfoRequestModel,
+  LockRequestModel,
+  LockStatus,
+  LockStatusResponseModel,
+  parseLockStatus,
   SubmitTxModel,
-} from './models/lock-request.model';
-
+} from './models/lock.model';
 @Injectable()
-export class AppService extends MeshAdapter {
-  private txHashTemp: string;
+export class AppService {
   private blockFrostAPI: BlockFrostAPI;
-  private policyId: string;
-  private lockName: string;
-  private ownerWallet: MeshWallet;
   constructor(private readonly appGateway: AppGateway) {
-    super({ wallet: undefined });
     this.blockFrostAPI = new BlockFrostAPI({
       projectId: process.env.BLOCKFROST_API_KEY ?? '',
     });
-    this.ownerWallet = new MeshWallet({
-      networkId: 0,
-      fetcher: blockfrostProvider,
-      submitter: blockfrostProvider,
-      key: {
-        type: 'mnemonic',
-        words: process.env.OWNER?.split(' ') || [],
-      },
-    });
-    const forgingScript = ForgeScript.withOneSignature(
-      this.ownerWallet.getChangeAddress(),
-    );
-    this.policyId = resolveScriptHash(forgingScript);
-    this.lockName = process.env.LOCK_NAME ?? '';
   }
 
-  async getAccessLock(walletAddress: string) {
-    const userPaymentKeyHash = deserializeAddress(walletAddress).pubKeyHash;
-    const utxo = await this.getAddressUTXOAsset(
-      this.confirmStatusAddress,
-      this.policyId + stringToHex(this.lockName),
+  async login(loginModel: LoginRequestModel) {
+    const utxos = await ContractHelper.GetContractUTXO(
+      loginModel.owner_addr,
+      loginModel.lock_name,
     );
-
-    // If new lock name
-    if (
-      (!utxo || utxo == null) &&
-      walletAddress == process.env.WALLET_ADDRESS_OWNER
-    ) {
-      const confirmStatusContract = new StatusManagement({
-        wallet: this.ownerWallet,
-      });
-      const unsignedTx = await confirmStatusContract.lock({
-        title: this.lockName,
-        authorityPaymentKeyHash: '',
-        isLock: 1,
-      });
-      const signedTx = await this.ownerWallet.signTx(unsignedTx, true);
-      const txHash = await this.ownerWallet.submitTx(signedTx);
-      await new Promise<void>((resolve, reject) => {
-        blockfrostProvider.onTxConfirmed(txHash, () => {
-          if (txHash.length === 64) {
-            resolve();
-          } else {
-            reject(new Error('Invalid transaction hash length'));
-          }
-        });
-      });
-      return 0;
+    if (!utxos || utxos.length === 0) {
+      throw new Error('Lock not found, please register the lock first');
     }
+    const datum = deserializeDatum<DatumModel>(
+      utxos[utxos.length - 1].output.plutusData!,
+    );
+    if (loginModel.user_addr != loginModel.owner_addr) {
+      // User is not the owner, check authority
+      const authorityBytes = datum.fields[0].fields[0].bytes;
+      const userBytes = deserializeAddress(loginModel.user_addr).pubKeyHash;
+      if (authorityBytes !== userBytes) {
+        return {
+          access_role: AccessRole.UNKNOWN,
+        } satisfies LoginResponseModel;
+      }
+      return {
+        access_role: AccessRole.AUTHORITY,
+        lock_status: parseLockStatus(datum.fields[1].int),
+      } satisfies LoginResponseModel;
+    }
+    return {
+      access_role: AccessRole.OWNER,
+      lock_status: parseLockStatus(datum.fields[1].int),
+    } satisfies LoginResponseModel;
+  }
 
-    const datum = deserializeDatum(utxo.output.plutusData ?? '');
-    if (userPaymentKeyHash == datum.fields[0].bytes) return 0;
-    else if (userPaymentKeyHash == datum.fields[1].bytes) return 1;
-    else return -1;
+  async registerNewLock(registerModel: RegisterNewLockRequestModel) {
+    const utxos = await ContractHelper.GetContractUTXO(
+      registerModel.owner_addr,
+      registerModel.lock_name,
+    );
+    if (utxos && utxos.length > 0) {
+      throw new Error(
+        'The lock already exists, please choose another lock name',
+      );
+    }
+    const contractService = new StatusManagement({
+      meshWallet: ContractHelper.GetWalletClient(registerModel.owner_addr),
+    });
+
+    return await contractService.lock({
+      title: registerModel.lock_name,
+    });
   }
 
   async updateStatusDevice(lockRequestModel: LockRequestModel) {
@@ -92,67 +86,38 @@ export class AppService extends MeshAdapter {
         'The address wallet of unlocker must be not null',
         HttpStatus.BAD_REQUEST,
       );
-    const utxo = await this.getAddressUTXOAsset(
-      this.confirmStatusAddress,
-      this.policyId + stringToHex(this.lockName),
-    );
-    const datum = deserializeDatum(utxo.output.plutusData ?? '');
-    let unsignedTx: string;
-    let authorityPaymentKeyHash = '';
-    if (datum.fields[1].bytes.length !== 0) {
-      authorityPaymentKeyHash = datum.fields[1].bytes as string;
-    }
-    console.log('datum:');
-    console.log(datum);
-    console.log(`authorityPaymentKeyHash: ${authorityPaymentKeyHash}`);
-    console.log(`lockRequestModel.is_unlock: ${lockRequestModel.is_unlock}`);
-    const currentUserWallet = this.getWalletClient(
+    let unsignedTx: string = '';
+
+    const currentUserWallet = ContractHelper.GetWalletClient(
       lockRequestModel.unlocker_addr,
     );
     const confirmStatusContract = new StatusManagement({
-      wallet: currentUserWallet,
+      meshWallet: currentUserWallet,
+      ownerAddress: lockRequestModel.owner_addr,
     });
-    if (lockRequestModel.is_unlock) {
+    if (lockRequestModel.lock_status == LockStatus.OPEN) {
       unsignedTx = await confirmStatusContract.unLock({
-        title: this.lockName,
-        authorityPaymentKeyHash,
-        isLock: 0,
+        title: lockRequestModel.lock_name,
       });
-    } else {
+    } else if (lockRequestModel.lock_status == LockStatus.CLOSE) {
       unsignedTx = await confirmStatusContract.lock({
-        title: this.lockName,
-        authorityPaymentKeyHash,
-        isLock: 1,
+        title: lockRequestModel.lock_name,
       });
     }
-    console.log(unsignedTx);
     return unsignedTx;
   }
 
   async requestAuthorize(authorizeRequestModel: AuthorizeRequestModel) {
-    let authorityPaymentKeyHash: string = '';
-    if (!authorizeRequestModel.is_remove_authorize) {
-      authorityPaymentKeyHash = deserializeAddress(
-        authorizeRequestModel.licensee_addr,
-      ).pubKeyHash;
-    }
-    const utxo = await this.getAddressUTXOAsset(
-      this.confirmStatusAddress,
-      this.policyId + stringToHex(this.lockName),
-    );
-    const datum = deserializeDatum(utxo.output.plutusData ?? '');
-    console.log('datum:');
-    console.log(datum);
-    console.log(`authorityPublicKeyHash: ${authorityPaymentKeyHash}`);
     const confirmStatusContract = new StatusManagement({
-      wallet: this.ownerWallet,
+      meshWallet: ContractHelper.GetWalletClient(
+        authorizeRequestModel.owner_addr,
+      ),
+      ownerAddress: authorizeRequestModel.owner_addr,
     });
     const unsignedTx: string = await confirmStatusContract.authorize({
-      title: this.lockName,
-      authorityPaymentKeyHash,
-      isLock: datum.fields[2].int,
+      title: authorizeRequestModel.lock_name,
+      authority: authorizeRequestModel.licensee_addr,
     });
-    console.log(unsignedTx);
     return unsignedTx;
   }
 
@@ -160,12 +125,11 @@ export class AppService extends MeshAdapter {
     console.log(
       `Submitting transaction for user: ${JSON.stringify(submitModel)}`,
     );
-    const currentUserWallet = this.getWalletClient(submitModel.user_addr);
+    const currentUserWallet = ContractHelper.GetWalletClient(
+      submitModel.user_addr,
+    );
     const txHash = await currentUserWallet.submitTx(submitModel.signedTx);
     //console.log('https://preprod.cexplorer.io/tx/' + txHash);
-    this.txHashTemp = txHash;
-
-    // Wait for transaction confirmation
     await new Promise<void>((resolve, reject) => {
       blockfrostProvider.onTxConfirmed(txHash, () => {
         if (txHash.length === 64) {
@@ -178,74 +142,73 @@ export class AppService extends MeshAdapter {
 
     this.appGateway.server.emit('onUpdatedLockStatus', submitModel.data);
     return {
-      tx_hash: this.txHashTemp,
+      tx_hash: txHash,
       tx_ref: 'https://preprod.cexplorer.io/tx/' + txHash,
     };
   }
 
-  async getLockStatus() {
-    const utxo = await this.getAddressUTXOAsset(
-      this.confirmStatusAddress,
-      this.policyId + stringToHex(this.lockName),
+  async getLockStatus(lockInfoModel: LockInfoRequestModel) {
+    const utxos = await ContractHelper.GetContractUTXO(
+      lockInfoModel.owner_addr,
+      lockInfoModel.lock_name,
     );
-    // const utxos = await blockfrostProvider.fetchAddressUTxOs(contractAddr);
-    const transactionUtxos = await this.blockFrostAPI.txsUtxos(
-      utxo.input.txHash,
+    if (!utxos || utxos.length === 0) {
+      throw new Error('Lock not found, please register the lock first');
+    }
+    const datum = deserializeDatum<DatumModel>(
+      utxos[utxos.length - 1].output.plutusData!,
     );
-    const datum = deserializeDatum(utxo.output.plutusData ?? '');
-    const lockStatus: LockStatusModel = {
-      lock_status: datum.fields[2].int == 1,
-      user_addr: transactionUtxos.outputs[1].address,
+    const lockStatus: LockStatusResponseModel = {
+      lock_status: parseLockStatus(datum.fields[1].int),
       time: new Date(),
-      tx_ref: 'https://preprod.cexplorer.io/tx/' + utxo.input.txHash,
+      tx_ref:
+        'https://preprod.cexplorer.io/tx/' +
+        utxos[utxos.length - 1].input.txHash,
     };
     return lockStatus;
   }
 
-  async getAllLockHistory() {
-    const encodedAssetName = this.getAssetEncoded();
+  async getAllLockHistory(lockInfoModel: LockInfoRequestModel) {
+    const encodedAssetName = ContractHelper.GetAssetName(
+      lockInfoModel.owner_addr,
+      lockInfoModel.lock_name,
+    );
+
     const transactions =
       await this.blockFrostAPI.assetsTransactions(encodedAssetName);
-    const listLockStatus: LockStatusModel[] = [];
-    for (const tx of transactions) {
-      const utxo = await this.blockFrostAPI.txsUtxos(tx.tx_hash);
-      const datum_hash = utxo.outputs[0].inline_datum;
-      if (datum_hash != null && datum_hash != undefined) {
-        const datum_deserialize = deserializeDatum(datum_hash);
-        if (
-          datum_deserialize &&
-          datum_deserialize.fields &&
-          datum_deserialize.fields[2].int != undefined
-        ) {
-          const LockModel = new LockStatusModel();
-          LockModel.time = new Date(tx.block_time * 1000);
-          LockModel.lock_status = datum_deserialize.fields[2].int == 1;
-          LockModel.tx_ref =
-            'https://preprod.cexplorer.io/tx/' + utxo.inputs[0].tx_hash;
-          listLockStatus.push(LockModel);
-        }
-      }
-    }
-    return listLockStatus;
-  }
 
-  getWalletClient(walletAddress: string) {
-    return new MeshWallet({
-      networkId: 0,
-      fetcher: blockfrostProvider,
-      submitter: blockfrostProvider,
-      key: {
-        type: 'address',
-        address: walletAddress,
-      },
-    });
-  }
+    const results = await Promise.allSettled(
+      transactions.map(async (tx) => {
+        const utxo = await this.blockFrostAPI.txsUtxos(tx.tx_hash);
 
-  getAssetEncoded() {
-    const forgingScript = ForgeScript.withOneSignature(
-      process.env.WALLET_ADDRESS_OWNER ?? '',
+        const outWithDatum = utxo.outputs.find((o) => o.inline_datum != null);
+        if (!outWithDatum) return null;
+
+        const datum = deserializeDatum<DatumModel>(outWithDatum.inline_datum!);
+        const isValid = datum?.fields && datum.fields[1]?.int !== undefined;
+        if (!isValid) return null;
+
+        const model = new LockStatusResponseModel();
+        model.time = new Date(tx.block_time * 1000);
+        model.lock_status = parseLockStatus(datum.fields[1].int);
+        model.user_addr =
+          utxo.outputs[1]?.address ?? utxo.outputs[0]?.address ?? '';
+        model.tx_ref =
+          'https://preprod.cexplorer.io/tx/' +
+          (utxo.inputs[0]?.tx_hash ?? tx.tx_hash);
+        return model;
+      }),
     );
-    const policyId = resolveScriptHash(forgingScript);
-    return policyId + stringToHex(this.lockName);
+
+    const listLockStatus = results
+      .filter(
+        (r): r is PromiseFulfilledResult<LockStatusResponseModel | null> =>
+          r.status === 'fulfilled',
+      )
+      .map((r) => r.value)
+      .filter((x): x is LockStatusResponseModel => x != null);
+
+    listLockStatus.sort((a, b) => b.time.getTime() - a.time.getTime());
+    return listLockStatus;
   }
 }
