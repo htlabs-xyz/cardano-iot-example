@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { BlockFrostAPI } from '@blockfrost/blockfrost-js';
 import { deserializeAddress, deserializeDatum } from '@meshsdk/core';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
