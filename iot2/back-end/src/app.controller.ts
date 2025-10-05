@@ -2,14 +2,17 @@ import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { ApiResponseModel } from './common/response.interceptor';
-import AuthorizeRequestModel from './models/authorize-request.model';
-import LockRequestModel, {
+import {
+  AuthorizeRequestModel,
   LockInfoRequestModel,
+  LockRequestModel,
+  SubmitTxModel,
+} from './models/lock.model';
+import {
   LoginRequestModel,
   LoginResponseModel,
   RegisterNewLockRequestModel,
-  SubmitTxModel,
-} from './models/lock-request.model';
+} from './models/auth.model';
 
 @ApiTags('The locker')
 @Controller('api/lock-device')
@@ -27,11 +30,6 @@ export class AppController {
   }
 
   @ApiOperation({ summary: 'Used to register a new lock' })
-  @ApiResponse({
-    status: 200,
-    description: 'Lock registration status',
-    type: ApiResponseModel<LoginResponseModel>,
-  })
   @Post('register')
   register(@Body() registerModel: RegisterNewLockRequestModel) {
     return this.appService.registerNewLock(registerModel);

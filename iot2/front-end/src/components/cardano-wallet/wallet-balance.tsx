@@ -3,7 +3,7 @@
 import { Wallet } from "@meshsdk/common";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useCurrentWallet } from "../../contexts/wallet-context";
+import { useCurrentWallet } from "../../contexts/app-context";
 
 export const WalletBalance = ({
   connected,

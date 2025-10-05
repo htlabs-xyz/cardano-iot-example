@@ -4,11 +4,12 @@ import {
     DialogHeader,
     DialogTitle
 } from "@/components/ui/dialog";
+import { useCurrentWallet } from "@/contexts/app-context";
 import { format } from "date-fns";
 import { Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import lockApiRequest from "../api/lock.api";
-import { LockStatus } from "../types/lock-request.type";
+import { LockInfoRequest, LockStatusResponse } from "../types/lock.type";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Skeleton } from "./ui/skeleton";
@@ -26,15 +27,19 @@ type HistoryPopupProps = {
 
 export default function HistoryPopup({ onCancel, open }: HistoryPopupProps) {
     const [isLoading, setLoading] = useState(false);
-    const [historyList, setHistoryList] = useState<LockStatus[]>();
+    const [historyList, setHistoryList] = useState<LockStatusResponse[]>();
+    const { currentWallet } = useCurrentWallet();
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const historyData = await lockApiRequest.getAllLockHistory();
+                const query: LockInfoRequest = {
+                    lock_name: currentWallet.lockName ?? "",
+                    owner_addr: currentWallet.ownerAddress ?? "",
+                }
+                const historyData = await lockApiRequest.getAllLockHistory(query);
                 if (historyData.status && historyData.data) {
-                    const hisData = historyData.data.reverse();
-                    setHistoryList(hisData)
+                    setHistoryList(historyData.data ?? [])
                 }
             } catch { }
             finally { setLoading(false); }
