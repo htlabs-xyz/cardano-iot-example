@@ -17,7 +17,7 @@ export class AppController {
     type: ApiResponseModel<string>,
   })
   @Post()
-  submitTemperature(@Body() userRequestModel: UserInfoRequestModel) {
+  writeUserData(@Body() userRequestModel: UserInfoRequestModel) {
     return this.appService.writeUserIdentityData(userRequestModel);
   }
 

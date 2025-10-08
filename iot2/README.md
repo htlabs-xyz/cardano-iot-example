@@ -2,7 +2,172 @@
 
 A comprehensive **IoT2 platform** that combines **IoT devices** with **Cardano blockchain** technology to create a secure, transparent, and decentralized **smart lock system** for safes, lockers, and cabinets.
 
-![System Architecture](./back-end/docs/images/iot2-diagram.png)
+![System Architecture](./docs/images/iot2-diagram.png)
+
+## 📋 API Flow Documentation
+
+### Authentication & Access Control
+
+#### **(1) Login + (2) Return user role + lock status**
+- **Access Method**: GET
+- **Endpoint**: `/api/lock-device/login`
+- **Request Body Schema**:
+  ```json
+  {
+    "user_addr": "string",
+    "lock_name": "string"
+  }
+  ```
+- **Response Schema (JSON)**:
+  ```json
+  {
+    "access_role": "number", // Accessible: 0=OWNER, 1=AUTHORITY, 2=NEW_USER, 3=UNKNOWN
+    "lock_status": "number", // LockStatus: 1=LOCK (locked), 0=OPEN (unlocked), -1=NEW_LOCK
+    "user_addr": "string",
+    "lock_name": "string"
+  }
+  ```
+
+---
+
+#### **(3) Register new lock + (4) Return UnsignedTx**
+- **Access Method**: POST
+- **Endpoint**: `/api/lock-device/register`
+- **Request Body Schema**:
+  ```json
+  {
+    "user_addr": "string",
+    "lock_name": "string"
+  }
+  ```
+- **Response Schema (JSON)**:
+  ```json
+  {
+    "new_user_unsigned_tx": "string"
+  }
+  ```
+
+---
+
+#### **(5) Submit transaction + (7) Return txHash**
+- **Access Method**: POST
+- **Endpoint**: `/api/lock-device/submit-transaction`
+- **Request Body Schema**:
+  ```json
+  {
+    "user_addr": "string",
+    "signedTx": "string",
+    "data": "any"
+  }
+  ```
+- **Response Schema (JSON)**:
+  ```json
+  {
+    "tx_hash": "string",
+    "tx_ref": "string"
+  }
+  ```
+
+---
+
+#### **(5) Get Current lock status + (6) Return current status of the lock**
+- **Access Method**: GET
+- **Endpoint**: `/api/lock-device/lock-status`
+- **Request Body Schema (JSON)**: N/A (Query parameters)
+- **Query Parameters**:
+  ```json
+  {
+    "owner_addr": "string",
+    "lock_name": "string"
+  }
+  ```
+- **Response Schema (JSON)**:
+  ```json
+  {
+    "lock_status": "number", // LockStatus: 1=LOCK (locked), 0=OPEN (unlocked), -1=NEW_LOCK
+    "owner_addr": "string",
+    "time": "Date",
+    "tx_ref": "string"
+  }
+  ```
+
+---
+
+#### **(*) Subscribe to event: onUpdateLockStatus + (**) Emit Updated Status**
+- **Access Method**: SOCKET.io
+- **Endpoint**: `wss://hostname` (no specific path configured, uses default)
+- **Event Name (listen/emit)**: `onUpdateLockStatus`
+- **Event Payload (response)**:
+  ```json
+  {
+    "is_unlock": "boolean",
+    "unlocker_addr": "string"
+  }
+  ```
+
+---
+
+#### **(8) Update status of the lock + (9) Return unsignTx**
+- **Access Method**: POST
+- **Endpoint**: `/api/lock-device/update-status`
+- **Request Body Schema (JSON)**:
+  ```json
+  {
+    "lock_status": "number", // LockStatus: 1=LOCK (lock), 0=OPEN (unlock), -1=NEW_LOCK
+    "owner_addr": "string",
+    "unlocker_addr": "string",
+    "owner_addr": "string",
+    "time": "Date"
+  }
+  ```
+- **Response Schema (JSON)**:
+  ```json
+  {
+    "tx_hash": "string",
+    "tx_ref": "string"
+  }
+  ```
+
+---
+
+#### **(9) Authorize the new unlocker + (10) Return post result**
+- **Access Method**: POST
+- **Endpoint**: `/api/lock-device/authorize`
+- **Request Body Schema (JSON)**:
+  ```json
+  {
+    "is_remove_authorize": "boolean", // false=grant access, true=revoke access
+    "owner_addr": "string",
+    "owner_addr": "string",
+    "licensee_addr": "string",
+    "time": "Date"
+  }
+  ```
+- **Response Schema (JSON)**:
+  ```json
+  {
+    "tx_hash": "string",
+    "tx_ref": "string"
+  }
+  ```
+
+---
+
+#### **(11) Get lock history + (12) Return list of lock information**
+- **Access Method**: GET
+- **Endpoint**: `/api/lock-device/history`
+- **Request Body Schema**: None
+- **Response Schema (JSON)**:
+  ```json
+  [
+    {
+      "lock_status": "number", // LockStatus: 1=LOCK (locked), 0=OPEN (unlocked), -1=NEW_LOCK
+      "user_addr": "string",
+      "time": "Date",
+      "tx_ref": "string"
+    }
+  ]
+  ```
 
 ## 🏗️ System Architecture
 

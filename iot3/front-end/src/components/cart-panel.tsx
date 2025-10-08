@@ -22,6 +22,7 @@ import { ProductOrder, ProductOrderDetails } from "../types/order.type";
 import { Product } from "../types/product.type";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import { Sidebar, SidebarContent } from "./ui/sidebar";
+import envConfig from "@/config";
 
 interface CartPanelProps extends React.ComponentProps<typeof Sidebar> {
     cart: ProductOrderDetails[]
@@ -31,8 +32,8 @@ interface CartPanelProps extends React.ComponentProps<typeof Sidebar> {
     onRemoveItem: (productId: number) => void
     onCheckout: () => void
 }
-const durationInSeconds = 120;
-const perSecondToCallAPI = 6;
+const durationInSeconds = envConfig.NEXT_PUBLIC_PAYMENT_DURATION_SECONDS;
+const perSecondToCallAPI = envConfig.NEXT_PUBLIC_PAYMENT_CHECK_INTERVAL_SECONDS;
 export default function CartPanel({ cart, products, device, onUpdateQuantity, onRemoveItem, onCheckout }: CartPanelProps) {
     const [checkoutDialogOpen, setCheckoutDialogOpen] = useState(false)
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
