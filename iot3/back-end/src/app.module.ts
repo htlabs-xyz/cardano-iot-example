@@ -1,40 +1,56 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import DeviceDetailsEntity from './entities/device-detail.entity';
 import DeviceEntity from './entities/device.entity';
 import ProductEntity from './entities/product.entity';
-import { DevicesModule } from './modules/device/device.module';
-import { OrderModule } from './modules/order/order.module';
-import { ProductsModule } from './modules/product/product.module';
-
-if (!process.env.DB_PORT) {
-  throw new Error('DB_PORT environment variable is required');
-}
+import { AppGateway } from './app.gateway';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST,
-      port: +process.env.DB_PORT,
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      entities: [ProductEntity, DeviceEntity, DeviceDetailsEntity], // DS các entity sẽ ánh xạ
-      synchronize: true, //tự tạo bảng từ entity
+    ConfigModule.forRoot({
+      isGlobal: true,
+      // envFilePath: '.env' // tuỳ chỉnh nếu cần
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const host = config.get<string>('DB_HOST');
+        const portStr = config.get<string>('DB_PORT');
+        const username = config.get<string>('DB_USER');
+        const password = config.get<string>('DB_PASSWORD');
+        const database = config.get<string>('DB_NAME');
+
+        if (!portStr) {
+          throw new Error('DB_PORT environment variable is required');
+        }
+        const port = Number(portStr);
+        if (Number.isNaN(port)) {
+          throw new Error('DB_PORT must be a valid number');
+        }
+
+        return {
+          type: 'mysql' as const,
+          host,
+          port,
+          username,
+          password,
+          database,
+          entities: [ProductEntity, DeviceEntity, DeviceDetailsEntity],
+          synchronize: true,
+        };
+      },
     }),
     TypeOrmModule.forFeature([
       ProductEntity,
       DeviceDetailsEntity,
       DeviceEntity,
     ]),
-    OrderModule,
-    DevicesModule,
-    ProductsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AppGateway],
 })
 export class AppModule {}

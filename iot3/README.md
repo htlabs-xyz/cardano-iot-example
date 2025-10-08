@@ -2,6 +2,105 @@
 
 A full-stack IoT vending machine application that demonstrates blockchain integration with Cardano, featuring real-time device monitoring, product management, and payment processing capabilities.
 
+![System Architecture](./docs/images/iot3-diagram.png)
+
+## 📋 API Documentation
+
+### 1. Get List Product By Device
+
+**Endpoint:** `/api/products/device/:device_id`
+- **Method:** GET
+- **Description:** Return list of products for a specific device
+- **Request Body:** None
+
+**Response Schema:**
+```json
+{
+  "device_id": "number",
+  "device_name": "string",
+  "wallet_address": "string",
+  "device_ip": "string",
+  "device_location": "string",
+  "device_type": "number",
+  "device_version": "number",
+  "created_at": "string", // Date
+  "updated_at": "string", // Date
+  "products": [
+    {
+      "product_id": "number",
+      "product_name": "string",
+      "product_price": "number",
+      "product_image": "string",
+      "created_at": "string", // Date
+      "updated_at": "string", // Date
+      "product_quantity": "number",
+      "row": "number",
+      "column": "number"
+    }
+  ]
+}
+```
+
+### 2. Check and Create Order
+
+**Endpoint:** `/api/order`
+- **Method:** POST
+- **Description:** Return result of fetch transaction
+
+**Request Body Schema:**
+```json
+{
+  "device_id": "number",
+  "order_product": [
+    {
+      "product_id": "number",
+      "quantity": "number"
+    }
+  ],
+  "order_payment": "number", // enum: 1=COIN, 2=QR, 3=CASH
+  "order_at": "string" // Date (optional)
+}
+```
+
+**Response Schema:**
+```json
+{
+  "device_id": "number",
+  "order_product": [
+    {
+      "product_id": "number",
+      "quantity": "number"
+    }
+  ],
+  "order_payment": "number", // enum: 1=COIN, 2=QR, 3=CASH
+  "order_at": "string" // Date
+}
+```
+
+### 3. WebSocket Events
+
+**Connection:** `ws://hostname` (WebSocket connection with CORS enabled for all origins)
+
+#### Subscribe to Event: onUpdateProduct
+- **Event Name:** `onUpdateProduct`
+- **Description:** Listen for product updates
+- **Event Payload:**
+```json
+{
+  "product_id": "number",
+  "device_id": "number",
+  "updated_quantity": "number",
+  "row": "number",
+  "column": "number",
+  "release_quantity": "number"
+}
+```
+
+#### Emit Event: onUpdateProduct
+- **Event Name:** `onUpdateProduct`
+- **Description:** Emit product update events
+- **Usage:** Clients should listen for `onUpdateProduct` events for real-time product quantity updates
+
 ## 🏗️ Project Overview
 
 This project simulates a smart vending machine ecosystem with IoT device integration and Cardano blockchain payment capabilities. It consists of:
@@ -69,16 +168,11 @@ This project simulates a smart vending machine ecosystem with IoT device integra
 iot3/
 ├── back-end/                 # NestJS API Server
 │   ├── src/
-│   │   ├── modules/          # Feature modules
-│   │   │   ├── device/       # Device management
-│   │   │   ├── product/      # Product catalog
-│   │   │   └── order/        # Order processing
 │   │   ├── entities/         # Database entities
 │   │   ├── models/           # Data models and DTOs
 │   │   ├── gateway/          # WebSocket gateway
 │   │   └── common/           # Shared utilities
 │   ├── data/                 # Sample JSON data
-│   └── test/                 # E2E tests
 │
 └── front-end/                # Next.js Web App
     ├── src/
