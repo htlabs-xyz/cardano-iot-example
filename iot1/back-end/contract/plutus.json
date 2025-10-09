@@ -14,7 +14,7 @@
     {
       "title": "confirm_status.confirm_status.spend",
       "datum": {
-        "title": "datum_otp",
+        "title": "datum_option",
         "schema": {
           "$ref": "#/definitions/confirm_status~1Datum"
         }
@@ -30,6 +30,31 @@
     },
     {
       "title": "confirm_status.confirm_status.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "59021001010029800aba2aba1aba0aab9faab9eaab9dab9a488888896600264653001300800198041804800cc0200092225980099b8748008c01cdd500144ca60026018003300c300d0019b87480012223322598009801800c566002601c6ea802600516403d15980099b87480080062b3001300e37540130028b201e8b201840302b30013001300b3754005132332259800980218071baa00289991192cc004cdc3a400860226ea8006264b3001300830123754003132323298009bae30190019bad30190039bad3019002488966002603a00915980099199119801001000912cc00400629422b30013371e6eb8c07c00400e2946266004004604000280d101d1bac301d301e301e301e301e301e301e301e301e00e375c601260326ea802e2b3001300e3018375402914a315980099b89375a603860326ea802cdd6980e180c9baa007899b89375a601460326ea802cdd69805180c9baa0078a50405c80ba294101745901a0c064004c060004c04cdd5000c59011180a98091baa0018b2020300130113754600460226ea8c050c044dd500211809980a00091809980a180a000c5900d19198008009bac30110022259800800c530103d87a80008992cc004cdd7980998081baa001007899ba548000cc0480052f5c11330030033014002403860240028080c040c034dd500198061baa0058b2014300b375400e30083754005164018300800130033754011149a26cac8009",
+      "hash": "769aef20121ae5d5af4a12c44082e4accb56e29a14753eb861e0ab6b"
+    },
+    {
+      "title": "tests/confirm_status.confirm_status.spend",
+      "datum": {
+        "title": "datum_option",
+        "schema": {
+          "$ref": "#/definitions/tests~1confirm_status~1Datum"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/tests~1confirm_status~1Redeemer"
+        }
+      },
+      "compiledCode": "59021001010029800aba2aba1aba0aab9faab9eaab9dab9a488888896600264653001300800198041804800cc0200092225980099b8748008c01cdd500144ca60026018003300c300d0019b87480012223322598009801800c566002601c6ea802600516403d15980099b87480080062b3001300e37540130028b201e8b201840302b30013001300b3754005132332259800980218071baa00289991192cc004cdc3a400860226ea8006264b3001300830123754003132323298009bae30190019bad30190039bad3019002488966002603a00915980099199119801001000912cc00400629422b30013371e6eb8c07c00400e2946266004004604000280d101d1bac301d301e301e301e301e301e301e301e301e00e375c601260326ea802e2b3001300e3018375402914a315980099b89375a603860326ea802cdd6980e180c9baa007899b89375a601460326ea802cdd69805180c9baa0078a50405c80ba294101745901a0c064004c060004c04cdd5000c59011180a98091baa0018b2020300130113754600460226ea8c050c044dd500211809980a00091809980a180a000c5900d19198008009bac30110022259800800c530103d87a80008992cc004cdd7980998081baa001007899ba548000cc0480052f5c11330030033014002403860240028080c040c034dd500198061baa0058b2014300b375400e30083754005164018300800130033754011149a26cac8009",
+      "hash": "769aef20121ae5d5af4a12c44082e4accb56e29a14753eb861e0ab6b"
+    },
+    {
+      "title": "tests/confirm_status.confirm_status.else",
       "redeemer": {
         "schema": {}
       },
@@ -70,6 +95,47 @@
       ]
     },
     "confirm_status/Redeemer": {
+      "title": "Redeemer",
+      "anyOf": [
+        {
+          "title": "Update",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "Withdraw",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        }
+      ]
+    },
+    "tests/confirm_status/Datum": {
+      "title": "Datum",
+      "anyOf": [
+        {
+          "title": "Datum",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "temperator",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "huminity",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "owner",
+              "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
+            }
+          ]
+        }
+      ]
+    },
+    "tests/confirm_status/Redeemer": {
       "title": "Redeemer",
       "anyOf": [
         {

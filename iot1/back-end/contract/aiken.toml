@@ -20,4 +20,9 @@ name = "logical-mechanism/assist"
 version = "v0.5.1"
 source = "github"
 
+[[dependencies]]
+name = "sidan-lab/vodka"
+version = "0.1.16"
+source = "github"
+
 [config]

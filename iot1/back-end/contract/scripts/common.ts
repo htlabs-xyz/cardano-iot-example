@@ -1,53 +1,12 @@
-import { BlockfrostProvider } from '@meshsdk/core';
-import { decodeFirst, Tagged } from 'cbor';
+import { Network } from '@meshsdk/core';
 import { config } from 'dotenv';
 config();
-export const blockfrostProvider = new BlockfrostProvider(
-  process.env.BLOCKFROST_API_KEY || '',
-);
 
-export function convertToJSON(decoded: any) {
-  if (Buffer.isBuffer(decoded)) {
-    return { bytes: decoded.toString('hex') };
-  } else if (typeof decoded === 'number') {
-    return { int: decoded };
-  } else if (typeof decoded === 'bigint') {
-    return { int: decoded.toString() };
-  } else if (decoded instanceof Tagged) {
-    const fields = decoded.value.map(function (item: any) {
-      if (Buffer.isBuffer(item)) {
-        return { bytes: item.toString('hex') };
-      } else if (typeof item === 'number') {
-        return { int: item };
-      } else {
-        return null;
-      }
-    });
+const BLOCKFROST_API_KEY = process.env.BLOCKFROST_API_KEY || '';
+const KOIOS_TOKEN = process.env.KOIOS_TOKEN || '';
+const NETWORK: Network =
+    (process.env.NETWORK?.toLowerCase() as Network) || 'preview';
+const NETWORK_ID = NETWORK === 'mainnet' ? 1 : 0;
+const MNEMONIC = process.env.MNEMONIC || '';
 
-    return {
-      fields: fields.filter(function (item: any) {
-        return item !== null;
-      }),
-      constructor: decoded.tag,
-    };
-  }
-}
-
-
-export const convertInlineDatum = async function ({
-  inlineDatum,
-}: {
-  inlineDatum: string;
-}) {
-  try {
-    const cborDatum: Buffer = Buffer.from(inlineDatum, 'hex');
-    const decoded = await decodeFirst(cborDatum);
-    const jsonStructure = {
-      fields: decoded.value.map((item: any) => convertToJSON(item)),
-      constructor: decoded.tag,
-    };
-    return jsonStructure;
-  } catch (error) {
-    return null;
-  }
-};
+export { NETWORK, NETWORK_ID, BLOCKFROST_API_KEY, KOIOS_TOKEN, MNEMONIC };

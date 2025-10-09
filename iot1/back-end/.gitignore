@@ -54,3 +54,11 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+
+# Aiken compilation artifacts
+artifacts/
+# Aiken's project working directory
+build/
+# Aiken's default documentation export
+docs/
