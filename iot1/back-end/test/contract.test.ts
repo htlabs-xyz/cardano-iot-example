@@ -84,7 +84,7 @@ describe('Sensor Monitoring Project', function () {
                 wallet: wallet,
             });
         const unsignedTx: string = await confirmStatusContract.withdraw({
-            title: 'Temperature',
+            title: 'Sensor 1',
             value: 40000000,
         });
 
