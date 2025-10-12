@@ -16,11 +16,42 @@ import {
 import { DeviceDetailsDto } from './models/dtos/deviceDetails.dto';
 import { ProductOrderModel } from './models/payment.model';
 import { AppGateway } from './app.gateway';
+
+/**
+ * @description AppService — core business logic service for IoT vending machine operations with Cardano blockchain integration.
+ *
+ * Responsibilities:
+ * - Manages device, product, and inventory data operations
+ * - Processes customer orders and validates payment through Cardano UTXOs
+ * - Integrates with Blockfrost API for blockchain transaction verification
+ * - Provides real-time updates via WebSocket gateway for device state changes
+ * - Handles data seeding and database transaction management
+ *
+ * Notes:
+ * - Uses TypeORM repositories for database operations with transactional support
+ * - Implements time-based UTXO validation for payment confirmation
+ * - Emits real-time events for inventory updates to connected clients
+ */
 @Injectable()
 export class AppService {
   private blockfrostProvider: BlockfrostProvider;
   private blockfrostAPI: BlockFrostAPI;
   private acceptedSecond: number;
+
+  /**
+   * @constructor
+   * @description Initializes a new instance of AppService with required repositories and blockchain providers.
+   *
+   * @param {Repository<ProductEntity>} productRepository - Repository for product data operations.
+   * @param {Repository<DeviceEntity>} deviceRepository - Repository for device management operations.
+   * @param {Repository<DeviceDetailsEntity>} deviceDetailsRepository - Repository for device inventory details.
+   * @param {DataSource} dataSource - TypeORM data source for transaction management.
+   * @param {AppGateway} appGateway - WebSocket gateway for real-time communication.
+   *
+   * @example
+   * // Automatically injected by NestJS dependency injection
+   * const appService = new AppService(productRepo, deviceRepo, detailsRepo, dataSource, gateway);
+   */
   constructor(
     @InjectRepository(ProductEntity)
     private readonly productRepository: Repository<ProductEntity>,
@@ -41,6 +72,20 @@ export class AppService {
       Number(process.env.LAST_TRANSACTION_OFFSET_SECONDS) || 120;
   }
 
+  /**
+   * @description Initializes the database with seed data from JSON files for devices, products, and inventory details.
+   *
+   * Details:
+   * 1. Parses JSON seed data and adds timestamps
+   * 2. Clears existing data in transaction
+   * 3. Inserts fresh seed data atomically
+   *
+   * @returns {Promise<string>} Returns 'OK' when seeding operation completes successfully.
+   *
+   * @example
+   * const result = await appService.seedingData();
+   * console.log(result); // 'OK'
+   */
   async seedingData() {
     const parsedDeviceData: DeviceEntity[] = JSON.parse(
       JSON.stringify(device_data),
@@ -82,10 +127,33 @@ export class AppService {
     return 'OK';
   }
 
+  /**
+   * @description Retrieves all registered IoT vending devices from the database.
+   *
+   * @returns {Promise<DeviceEntity[]>} Array of all device entities with their basic information.
+   *
+   * @example
+   * const devices = await appService.findAllDevices();
+   */
   findAllDevices() {
     return this.deviceRepository.find();
   }
 
+  /**
+   * @description Retrieves comprehensive device information including inventory details and product data.
+   *
+   * Details:
+   * 1. Fetches device basic information
+   * 2. Retrieves associated product inventory details
+   * 3. Enriches product data with quantity and position information
+   *
+   * @param {number} device_id - Unique identifier of the device to retrieve.
+   * @returns {Promise<DeviceDetailsModel>} Complete device model with products, quantities, and positioning data.
+   *
+   * @example
+   * const deviceInfo = await appService.findByDeviceId(123);
+   * console.log(deviceInfo.products.length); // Number of products in device
+   */
   async findByDeviceId(device_id: number) {
     const deviceInfo = await this.deviceRepository.findOneBy({ device_id });
     const lstDetails = await this.deviceDetailsRepository.find({
@@ -118,6 +186,26 @@ export class AppService {
     return deviceDetail;
   }
 
+  /**
+   * @description Processes a customer order by validating payment, updating inventory, and notifying connected clients.
+   *
+   * Details:
+   * 1. Validates order data and product availability
+   * 2. Calculates total price and checks inventory quantities
+   * 3. Verifies Cardano payment through UTXO validation
+   * 4. Updates device inventory and broadcasts changes via WebSocket
+   *
+   * @param {Partial<ProductOrderModel>} orderData - Order information containing device ID and product selections.
+   * @returns {Promise<void>} Completes when order is processed and inventory updated.
+   *
+   * @throws {HttpException} When device/products not found, insufficient inventory, or payment validation fails.
+   *
+   * @example
+   * await appService.createOrder({
+   *   device_id: 1,
+   *   order_product: [{ product_id: 5, quantity: 2 }]
+   * });
+   */
   async createOrder(orderData: Partial<ProductOrderModel>) {
     if (!orderData.device_id || !orderData.order_product)
       throw new HttpException(
@@ -185,7 +273,7 @@ export class AppService {
     }
 
     for (const detail of updatedDetails) {
-      this.updateDeviceDetails(
+      await this.updateDeviceDetails(
         orderData.device_id,
         detail.product_id,
         detail.updated_quantity,
@@ -195,6 +283,22 @@ export class AppService {
     this.appGateway.server.emit('onUpdatedProduct', updatedDetails);
   }
 
+  /**
+   * @description Validates if a Cardano wallet address has sufficient recent payment for the order amount.
+   *
+   * Details:
+   * 1. Retrieves wallet UTXOs using MeshWallet
+   * 2. Checks if latest UTXO contains sufficient ADA amount
+   * 3. Validates transaction timestamp within acceptable time window
+   *
+   * @param {string} walletAddress - Cardano wallet address to check for payment.
+   * @param {number} amount_ada - Required payment amount in ADA.
+   * @returns {Promise<boolean>} True if valid payment found within time limit, false otherwise.
+   *
+   * @example
+   * const isValid = await appService.checkIfAddressHasValidUTXO('addr1...', 5.5);
+   * if (isValid) { // Process order }
+   */
   async checkIfAddressHasValidUTXO(
     walletAddress: string,
     amount_ada: number,
@@ -226,6 +330,23 @@ export class AppService {
     }
   }
 
+  /**
+   * @description Updates the inventory quantity for a specific product in a device and returns the updated record.
+   *
+   * Details:
+   * 1. Updates the product quantity in device details table
+   * 2. Sets updated timestamp to current time
+   * 3. Returns the freshly updated device detail record
+   *
+   * @param {number} device_id - Identifier of the device containing the product.
+   * @param {number} product_id - Identifier of the product to update.
+   * @param {number} product_quantity - New quantity value for the product.
+   * @returns {Promise<DeviceDetailsEntity | null>} Updated device detail entity or null if not found.
+   *
+   * @example
+   * const updated = await appService.updateDeviceDetails(1, 5, 10);
+   * console.log(updated.product_quantity); // 10
+   */
   async updateDeviceDetails(
     device_id: number,
     product_id: number,
@@ -243,6 +364,16 @@ export class AppService {
     return this.deviceDetailsRepository.findOneBy({ device_id, product_id });
   }
 
+  /**
+   * @description Creates a MeshWallet instance for interacting with a Cardano wallet address.
+   *
+   * @param {string} walletAddress - Cardano wallet address to create wallet instance for.
+   * @returns {MeshWallet} Configured MeshWallet instance for testnet operations.
+   *
+   * @example
+   * const wallet = appService.getWallet('addr1test...');
+   * const utxos = await wallet.getUtxos();
+   */
   getWallet(walletAddress: string) {
     return new MeshWallet({
       networkId: 0,

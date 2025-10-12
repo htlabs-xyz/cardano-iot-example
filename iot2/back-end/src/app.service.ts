@@ -21,15 +21,54 @@ import {
   parseLockStatus,
   SubmitTxModel,
 } from './models/lock.model';
+
+/**
+ * @description AppService — provides core business logic for IoT lock management, user authentication, and blockchain interactions.
+ *
+ * Responsibilities:
+ * - Handles lock registration, status updates, and authorization flows
+ * - Interfaces with Cardano blockchain via BlockFrost and Mesh SDK
+ * - Manages user authentication and access control for IoT devices
+ * - Emits real-time events to connected clients through WebSocket gateway
+ *
+ * Notes:
+ * - Depends on AppGateway for WebSocket communication
+ * - Utilizes BlockFrostAPI for blockchain queries and transaction monitoring
+ */
 @Injectable()
 export class AppService {
   private blockFrostAPI: BlockFrostAPI;
+  /**
+   * @constructor
+   * @description Initializes a new instance of AppService with WebSocket gateway and blockchain API.
+   *
+   * @param {AppGateway} appGateway - WebSocket gateway for real-time event broadcasting to clients.
+   *
+   * @example
+   * const service = new AppService(appGateway);
+   */
   constructor(private readonly appGateway: AppGateway) {
     this.blockFrostAPI = new BlockFrostAPI({
       projectId: process.env.BLOCKFROST_API_KEY ?? '',
     });
   }
 
+  /**
+   * @description Authenticates a user for a specific lock and determines their access role.
+   *
+   * Details:
+   * 1. Retrieves contract UTXOs for the specified lock
+   * 2. Validates user permissions against lock ownership and authority
+   * 3. Returns appropriate access role and current lock status
+   *
+   * @param {LoginRequestModel} loginModel - Contains user address, owner address, and lock name for authentication.
+   * @returns {Promise<LoginResponseModel>} User's access role and current lock status if authorized.
+   *
+   * @throws {Error} When the lock is not found or not registered.
+   *
+   * @example
+   * const response = await appService.login({ user_addr, owner_addr, lock_name });
+   */
   async login(loginModel: LoginRequestModel) {
     const utxos = await ContractHelper.GetContractUTXO(
       loginModel.owner_addr,
@@ -61,6 +100,22 @@ export class AppService {
     } satisfies LoginResponseModel;
   }
 
+  /**
+   * @description Registers a new IoT lock on the blockchain if it doesn't already exist.
+   *
+   * Details:
+   * 1. Checks for existing lock with the same name and owner
+   * 2. Creates new lock contract instance with specified configuration
+   * 3. Submits lock registration transaction to blockchain
+   *
+   * @param {RegisterNewLockRequestModel} registerModel - Contains owner address and lock name for registration.
+   * @returns {Promise<any>} Transaction result from lock contract creation.
+   *
+   * @throws {Error} When a lock with the same name already exists for the owner.
+   *
+   * @example
+   * const result = await appService.registerNewLock({ owner_addr, lock_name });
+   */
   async registerNewLock(registerModel: RegisterNewLockRequestModel) {
     const utxos = await ContractHelper.GetContractUTXO(
       registerModel.owner_addr,
@@ -80,6 +135,22 @@ export class AppService {
     });
   }
 
+  /**
+   * @description Updates the status of a lock device (open/close) by generating an unsigned transaction.
+   *
+   * Details:
+   * 1. Validates unlocker address is provided
+   * 2. Creates appropriate contract instance for the user
+   * 3. Generates unsigned transaction for lock status change
+   *
+   * @param {LockRequestModel} lockRequestModel - Contains lock details, unlocker address, and desired status.
+   * @returns {Promise<string>} Unsigned transaction for the status change operation.
+   *
+   * @throws {HttpException} When unlocker address is empty or invalid.
+   *
+   * @example
+   * const unsignedTx = await appService.updateStatusDevice(lockRequest);
+   */
   async updateStatusDevice(lockRequestModel: LockRequestModel) {
     if (lockRequestModel.unlocker_addr.trim() == '')
       throw new HttpException(
@@ -107,6 +178,20 @@ export class AppService {
     return unsignedTx;
   }
 
+  /**
+   * @description Generates an unsigned transaction to authorize a new user for lock access.
+   *
+   * Details:
+   * 1. Creates contract instance with owner's wallet
+   * 2. Builds authorization transaction for the specified licensee
+   * 3. Returns unsigned transaction for owner to sign
+   *
+   * @param {AuthorizeRequestModel} authorizeRequestModel - Contains owner address, lock name, and licensee address.
+   * @returns {Promise<string>} Unsigned authorization transaction.
+   *
+   * @example
+   * const unsignedTx = await appService.requestAuthorize(authorizeRequest);
+   */
   async requestAuthorize(authorizeRequestModel: AuthorizeRequestModel) {
     const confirmStatusContract = new StatusManagement({
       meshWallet: ContractHelper.GetWalletClient(
@@ -121,6 +206,22 @@ export class AppService {
     return unsignedTx;
   }
 
+  /**
+   * @description Submits a signed transaction to the blockchain and emits real-time status updates.
+   *
+   * Details:
+   * 1. Submits the signed transaction to the blockchain
+   * 2. Waits for transaction confirmation
+   * 3. Emits lock status update event to connected clients
+   *
+   * @param {SubmitTxModel} submitModel - Contains user address, signed transaction, and status data.
+   * @returns {Promise<{tx_hash: string, tx_ref: string}>} Transaction hash and reference URL.
+   *
+   * @throws {Error} When transaction submission fails or has invalid hash length.
+   *
+   * @example
+   * const result = await appService.submitTransaction(submitModel);
+   */
   async submitTransaction(submitModel: SubmitTxModel) {
     console.log(
       `Submitting transaction for user: ${JSON.stringify(submitModel)}`,
@@ -147,6 +248,22 @@ export class AppService {
     };
   }
 
+  /**
+   * @description Retrieves the current status of a specified lock device.
+   *
+   * Details:
+   * 1. Fetches contract UTXOs for the lock
+   * 2. Extracts and parses lock status from blockchain data
+   * 3. Returns formatted status response with timestamp and transaction reference
+   *
+   * @param {LockInfoRequestModel} lockInfoModel - Contains owner address and lock name for status lookup.
+   * @returns {Promise<LockStatusResponseModel>} Current lock status with timestamp and transaction reference.
+   *
+   * @throws {Error} When the lock is not found or not registered.
+   *
+   * @example
+   * const status = await appService.getLockStatus(lockInfoModel);
+   */
   async getLockStatus(lockInfoModel: LockInfoRequestModel) {
     const utxos = await ContractHelper.GetContractUTXO(
       lockInfoModel.owner_addr,
@@ -168,6 +285,20 @@ export class AppService {
     return lockStatus;
   }
 
+  /**
+   * @description Retrieves the complete history of status changes for a specified lock device.
+   *
+   * Details:
+   * 1. Fetches all transactions associated with the lock's asset
+   * 2. Processes each transaction to extract status and user data
+   * 3. Returns chronologically sorted list of lock status changes
+   *
+   * @param {LockInfoRequestModel} lockInfoModel - Contains owner address and lock name for history lookup.
+   * @returns {Promise<LockStatusResponseModel[]>} Array of lock status changes sorted by timestamp (most recent first).
+   *
+   * @example
+   * const history = await appService.getAllLockHistory(lockInfoModel);
+   */
   async getAllLockHistory(lockInfoModel: LockInfoRequestModel) {
     const encodedAssetName = ContractHelper.GetAssetName(
       lockInfoModel.owner_addr,

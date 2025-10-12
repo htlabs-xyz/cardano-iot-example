@@ -19,6 +19,18 @@ import {
   TemperatureResponseModel,
 } from './models/temperature.model';
 
+/**
+ * @description AppService — orchestrates IoT temperature data lifecycle on Cardano blockchain.
+ *
+ * Responsibilities:
+ * - Store and retrieve temperature readings from IoT devices
+ * - Aggregate and process temperature data using in-memory cache
+ * - Interact with Cardano smart contracts for data persistence and asset minting
+ * - Manage blockchain transactions and asset policies
+ *
+ * Notes:
+ * - Depends on MeshWallet, BlockFrostAPI, and MemoryCacheService
+ */
 @Injectable()
 export class AppService extends MeshAdapter {
   private blockFrostAPI: BlockFrostAPI;
@@ -30,6 +42,15 @@ export class AppService extends MeshAdapter {
     10,
   );
 
+  /**
+   * @constructor
+   * @description Initializes a new instance of AppService.
+   *
+   * @param {MemoryCacheService} memoryCacheService - Provides in-memory caching for temperature data aggregation and batching.
+   *
+   * @example
+   * const service = new AppService(memoryCacheService);
+   */
   constructor(private readonly memoryCacheService: MemoryCacheService) {
     super({ wallet: undefined });
     this.wallet = new MeshWallet({
@@ -50,6 +71,16 @@ export class AppService extends MeshAdapter {
     this.policyId = resolveScriptHash(forgingScript);
   }
 
+  /**
+   * @description Fetches all historical temperature readings from Cardano blockchain for the configured sensor.
+   *
+   * Details:
+   * 1. Queries asset transactions using the sensor's policy ID
+   * 2. Deserializes datum to extract temperature and humidity values
+   * 3. Returns readings with timestamps and transaction references
+   *
+   * @returns {Promise<TemperatureResponseModel[]>} Array of temperature readings with blockchain transaction references
+   */
   async getAllTemperature() {
     const encodedAssetName = this.policyId + stringToHex(this.SENSOR_NAME);
     const transactions =
@@ -79,6 +110,12 @@ export class AppService extends MeshAdapter {
     return listTemperature;
   }
 
+  /**
+   * @description Stores a new temperature reading in the in-memory cache for later batch processing.
+   *
+   * @param {TemperatureRequestModel} temperature - Contains device ID, timestamp, temperature, and humidity values.
+   * @returns {Promise<string>} Confirmation message on successful cache storage.
+   */
   async submitTemperature(temperature: TemperatureRequestModel) {
     const existingTemperatures =
       (await this.memoryCacheService.get<TemperatureRequestModel[]>(
@@ -89,6 +126,17 @@ export class AppService extends MeshAdapter {
     return 'Ok';
   }
 
+  /**
+   * @description Aggregates cached temperature readings and persists summary data to the blockchain.
+   *
+   * Details:
+   * 1. Retrieves cached readings
+   * 2. Groups by device and selects latest per device
+   * 3. Calculates averages within allowed time offset
+   * 4. Saves aggregated data via smart contract
+   *
+   * @returns {Promise<void>} Resolves when aggregation and persistence are complete, or if no data exists.
+   */
   async updateTemperature() {
     const existingTemperatures =
       (await this.memoryCacheService.get<TemperatureRequestModel[]>(
@@ -136,6 +184,19 @@ export class AppService extends MeshAdapter {
     });
   }
 
+  /**
+   * @description Persists temperature and humidity data to Cardano blockchain using a smart contract.
+   *
+   * Details:
+   * 1. Creates and submits a transaction with temperature and humidity values
+   * 2. Waits for transaction confirmation
+   * 3. Returns response with saved data and transaction reference
+   *
+   * @param {TemperatureRequestModel} req - Contains device ID, timestamp, temperature, and humidity.
+   * @returns {Promise<TemperatureResponseModel>} Response with saved data and blockchain transaction reference.
+   *
+   * @throws {Error} If transaction signing or submission fails.
+   */
   async saveTemperature(req: TemperatureRequestModel) {
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
@@ -163,6 +224,19 @@ export class AppService extends MeshAdapter {
     return temperatureResponseModel;
   }
 
+  /**
+   * @description Withdraws temperature data from Cardano blockchain using a smart contract transaction.
+   *
+   * Details:
+   * 1. Creates and submits a withdrawal transaction referencing stored temperature data
+   * 2. Waits for transaction confirmation
+   * 3. Returns response with withdrawal confirmation and transaction reference
+   *
+   * @param {TemperatureRequestModel} req - Contains device ID, timestamp, temperature, and humidity to withdraw.
+   * @returns {Promise<TemperatureResponseModel>} Response with withdrawal confirmation and transaction reference.
+   *
+   * @throws {Error} If transaction signing or submission fails.
+   */
   async widthdrawTemperature(req: TemperatureRequestModel) {
     const confirmStatusContract: ConfirmStatusContract =
       new ConfirmStatusContract({
