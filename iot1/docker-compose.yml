@@ -6,7 +6,7 @@ services:
       context: ./back-end
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "8001:8001"
     environment:
       - NODE_ENV=development
     env_file:
@@ -28,8 +28,6 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_ENDPOINT=http://localhost:3000
-      - NEXT_PUBLIC_WEBSOCKET=http://localhost:3000
     env_file:
       - ./front-end/.env
     volumes:
@@ -41,17 +39,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - iot-network
-    restart: unless-stopped
-    command: redis-server --appendonly yes
 
 networks:
   iot-network:
