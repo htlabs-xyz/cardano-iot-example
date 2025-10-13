@@ -39,6 +39,6 @@ async function bootstrap() {
     origin: process.env.FRONT_END_HOST ?? '*',
     credentials: true,
   });
-  await app.listen(process.env.SERVER_PORT ?? 3004);
+  await app.listen(process.env.SERVER_PORT ?? 8003);
 }
 bootstrap();
