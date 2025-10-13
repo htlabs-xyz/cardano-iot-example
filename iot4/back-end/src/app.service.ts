@@ -24,16 +24,16 @@ import {
 export class AppService {
   private wallet: MeshWallet;
 
-    /**
-     * @constructor
-     * @description Initializes a new instance of AppService.
-     *
-     * Sets up the MeshWallet for Cardano blockchain operations using environment mnemonic and Blockfrost provider.
-     *
-     * @example
-     * const service = new AppService();
-     */
-    constructor() {
+  /**
+   * @constructor
+   * @description Initializes a new instance of AppService.
+   *
+   * Sets up the MeshWallet for Cardano blockchain operations using environment mnemonic and Blockfrost provider.
+   *
+   * @example
+   * const service = new AppService();
+   */
+  constructor() {
     this.wallet = new MeshWallet({
       networkId: 0,
       fetcher: blockfrostProvider,
