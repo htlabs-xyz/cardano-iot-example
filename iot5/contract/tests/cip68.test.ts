@@ -22,7 +22,7 @@ describe("Mint, Burn, Update, Remove Assets (NFT/TOKEN) CIP68", function () {
     jest.setTimeout(6000000);
 
     test("Mint", async function () {
-        // return;
+        return;
         const assets = [
             {
                 assetName: "hcd009",

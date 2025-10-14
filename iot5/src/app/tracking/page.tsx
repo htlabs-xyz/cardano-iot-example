@@ -54,8 +54,8 @@ const Step: React.FC<StepProps> = ({ title, description, isCompleted, isActive, 
         <div className="flex items-center w-full relative">
             <button
                 className={cn(
-                    "flex items-center cursor-pointer transition-all duration-300 hover:bg-gray-800/70 p-3 rounded-lg flex-1 z-10",
-                    isActive && "bg-indigo-900/30 shadow-lg shadow-indigo-500/30 ring-1 ring-indigo-500/50",
+                    "flex items-center cursor-pointer transition-all duration-300 hover:bg-[#13161B]/70 p-3 rounded-lg flex-1 z-10",
+                    isActive && "bg-[#ff9345]/30 shadow-lg shadow-[#ff9345]/30 ring-1 ring-[#ff9345]/50",
                     !hasTransaction && "opacity-60 cursor-not-allowed",
                 )}
                 onClick={hasTransaction ? onClick : undefined}
@@ -63,11 +63,11 @@ const Step: React.FC<StepProps> = ({ title, description, isCompleted, isActive, 
                 <div className="relative flex items-center justify-center flex-shrink-0">
                     <div
                         className={cn(
-                            "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 bg-gray-900",
+                            "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 bg-[#13161B]",
                             isCompleted
-                                ? "border-indigo-500 bg-indigo-500 text-white"
+                                ? "border-[#ff9345] bg-[#ff9345] text-[#fff]"
                                 : isActive
-                                  ? "border-indigo-400 bg-indigo-400/30 text-indigo-200"
+                                  ? "border-[#ff9345]/80 bg-[#ff9345]/30 text-[#ff9345]"
                                   : "border-gray-600 text-gray-400",
                         )}
                     >
@@ -82,16 +82,18 @@ const Step: React.FC<StepProps> = ({ title, description, isCompleted, isActive, 
                     <p
                         className={cn(
                             "text-sm font-semibold text-wrap break-words",
-                            isActive || isCompleted ? "text-gray-100" : "text-gray-500",
+                            isActive || isCompleted ? "text-[#fff]" : "text-[rgb(119,119,118)]",
                         )}
                     >
                         {title}
                     </p>
-                    {description && <p className="text-xs text-gray-400 text-wrap break-words">{description}</p>}
+                    {description && (
+                        <p className="text-xs text-[rgb(119,119,118)] text-wrap break-words">{description}</p>
+                    )}
                 </div>
             </button>
             {!isLast && (
-                <div className="hidden md:block text-gray-400 w-4 h-4 mx-2 flex-shrink-0">
+                <div className="hidden md:block text-[rgb(119,119,118)] w-4 h-4 mx-2 flex-shrink-0">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -115,7 +117,7 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep, selectedStep, onS
         <div className="w-full max-w-5xl mx-auto">
             {/* Desktop: Horizontal with line */}
             <div className="hidden md:flex items-center justify-between relative mb-10">
-                <div className="absolute top-5 left-0 w-full h-0.5 bg-gradient-to-r from-gray-700 to-indigo-500/50 z-0" />
+                <div className="absolute top-5 left-0 w-full h-0.5 bg-gradient-to-r from-[#13161B] to-[#ff9345]/50 z-0" />
                 {steps.map((step, index) => (
                     <Step
                         key={index}
@@ -131,7 +133,7 @@ const Stepper: React.FC<StepperProps> = ({ steps, currentStep, selectedStep, onS
             </div>
             {/* Mobile: Vertical with line */}
             <div className="md:hidden flex flex-col gap-6 relative">
-                <div className="absolute left-5 top-0 w-0.5 h-full bg-gradient-to-b from-gray-700 to-indigo-500/50 z-0" />
+                <div className="absolute left-5 top-0 w-0.5 h-full bg-gradient-to-b from-[#13161B] to-[#ff9345]/50 z-0" />
                 {steps.map((step, index) => (
                     <Step
                         key={step.title}
@@ -217,7 +219,7 @@ export default function TrackingPage() {
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
-        setSelectedStep(0); // Reset selectedStep when searching
+        setSelectedStep(0); 
     };
 
     const handleStepClick = (index: number) => {
@@ -229,25 +231,25 @@ export default function TrackingPage() {
 
     if (!searchQuery) {
         return (
-            <main className="relative min-h-screen overflow-x-hidden bg-gray-900 flex flex-col items-center justify-center">
+            <main className="relative min-h-screen overflow-x-hidden bg-[#0d0e12] flex flex-col items-center justify-center">
                 <Header />
                 <div className="text-center mt-20 pt-24 max-w-2xl mx-auto">
-                    <MapPin className="w-12 h-12 text-indigo-400 mx-auto mb-4" />
-                    <h2 className="text-4xl sm:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+                    <MapPin className="w-12 h-12 text-[#ff9345] mx-auto mb-4" />
+                    <h2 className="text-4xl sm:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[#ff9345] to-[#ff9345]/50">
                         NFT Journey Tracking
                     </h2>
-                    <p className="text-gray-300 text-lg sm:text-xl mx-auto leading-relaxed mb-6">
+                    <p className="text-[#fff] text-lg sm:text-xl mx-auto leading-relaxed mb-6">
                         Enter an NFT unit to track its journey on the Cardano blockchain.
                     </p>
                     <div className="w-full max-w-md mx-auto">
                         <div className="relative flex items-center gap-2">
-                            <Search className="absolute left-4 text-gray-400 w-5 h-5" />
+                            <Search className="absolute left-4 text-[rgb(119,119,118)] w-5 h-5" />
                             <input
                                 type="text"
                                 placeholder="Enter NFT unit (e.g., policyID + assetName)"
                                 value={searchQuery}
                                 onChange={handleSearch}
-                                className="w-full rounded-full pl-12 pr-4 py-3 text-gray-100 placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800 transition-all"
+                                className="w-full rounded-full pl-12 pr-4 py-3 text-[#fff] placeholder-[rgb(119,119,118)] border border-[rgb(119,119,118)] focus:outline-none focus:ring-2 focus:ring-[#ff9345] bg-[#13161B] transition-all"
                                 aria-label="Search by NFT unit"
                             />
                         </div>
@@ -264,7 +266,7 @@ export default function TrackingPage() {
 
     if (error || !data) {
         return (
-            <main className="relative min-h-screen overflow-x-hidden bg-gray-900 flex flex-col items-center justify-center">
+            <main className="relative min-h-screen overflow-x-hidden bg-[#13161B] flex flex-col items-center justify-center">
                 <Header />
                 <div className="text-center mt-20 pt-24">
                     <MapPin className="w-12 h-12 text-red-400 mx-auto mb-4" />
@@ -273,7 +275,7 @@ export default function TrackingPage() {
                     </p>
                     <button
                         onClick={() => setSearchQuery("")}
-                        className="mt-6 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-full text-white transition-colors"
+                        className="mt-6 px-6 py-2 bg-[#ff9345] hover:bg-[#ff9345]/80 rounded-full text-[#fff] transition-colors"
                     >
                         Search Again
                     </button>
@@ -284,7 +286,7 @@ export default function TrackingPage() {
     }
 
     return (
-        <main className="relative min-h-screen overflow-x-hidden bg-gray-900 flex flex-col">
+        <main className="relative min-h-screen overflow-x-hidden bg-[#13161B] flex flex-col">
             <Head>
                 <title>Hydra Pact Tracking | Journey on Cardano</title>
                 <meta
@@ -296,23 +298,23 @@ export default function TrackingPage() {
             <div className="max-w-[1200px] mx-auto mt-20 pt-24 flex flex-col flex-1 px-4 sm:px-6 lg:px-8">
                 {/* Header Section */}
                 <div className="text-center mb-8">
-                    <h2 className="text-3xl sm:text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+                    <h2 className="text-3xl sm:text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-[#ff9345] to-[#ff9345]/50">
                         NFT Journey Tracking
                     </h2>
-                    <p className="text-gray-300 text-sm sm:text-base mx-auto leading-relaxed max-w-3xl">
-                        From <span className="text-indigo-400">{data.metadata.startLocation || "Unknown"}</span> to{" "}
-                        <span className="text-indigo-400">{data.metadata.endLocation || "Unknown"}</span>. Current:{" "}
-                        <span className="text-purple-400 font-semibold">{data.metadata.location || "Unknown"}</span>.
+                    <p className="text-[#fff] text-sm sm:text-base mx-auto leading-relaxed max-w-3xl">
+                        From <span className="text-[#ff9345]">{data.metadata.startLocation || "Unknown"}</span> to{" "}
+                        <span className="text-[#ff9345]">{data.metadata.endLocation || "Unknown"}</span>. Current:{" "}
+                        <span className="text-[#ff9345] font-semibold">{data.metadata.location || "Unknown"}</span>.
                     </p>
                     <div className="mt-6 w-full max-w-md mx-auto">
                         <div className="relative flex items-center gap-2">
-                            <Search className="absolute left-4 text-gray-400 w-5 h-5" />
+                            <Search className="absolute left-4 text-[rgb(119,119,118)] w-5 h-5" />
                             <input
                                 type="text"
                                 placeholder="Update NFT unit"
                                 value={searchQuery}
                                 onChange={handleSearch}
-                                className="w-full rounded-full pl-12 pr-4 py-2 text-gray-100 placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-800 transition-all"
+                                className="w-full rounded-full pl-12 pr-4 py-2 text-[#fff] placeholder-[rgb(119,119,118)] border border-[rgb(119,119,118)] focus:outline-none focus:ring-2 focus:ring-[#ff9345] bg-[#13161B] transition-all"
                                 aria-label="Update search by NFT unit"
                             />
                         </div>
@@ -321,7 +323,7 @@ export default function TrackingPage() {
 
                 {/* Journey Progress */}
                 <div className="mb-12">
-                    <h3 className="text-xl font-bold mb-6 text-center text-gray-100">Journey Progress</h3>
+                    <h3 className="text-xl font-bold mb-6 text-center text-[#fff]">Journey Progress</h3>
                     {steps.length > 0 ? (
                         <Stepper
                             steps={steps}
@@ -331,26 +333,26 @@ export default function TrackingPage() {
                             transactionLocations={transactionLocations}
                         />
                     ) : (
-                        <p className="text-center text-gray-400">No journey data available.</p>
+                        <p className="text-center text-[rgb(119,119,118)]">No journey data available.</p>
                     )}
                 </div>
 
                 {/* Selected Transaction Details */}
                 <div className=" grid md:grid-cols-2 gap-8 mb-12">
-                    <div className="p-6 bg-gray-800 rounded-lg shadow-lg border border-indigo-500/30">
-                        <h3 className="text-lg font-semibold text-gray-100 mb-4 flex items-center gap-2">
-                            <MapPin className="w-5 h-5 text-indigo-400" />
+                    <div className="p-6 bg-[#13161B] rounded-lg shadow-lg border border-[#ff9345]/30">
+                        <h3 className="text-lg font-semibold text-[#fff] mb-4 flex items-center gap-2">
+                            <MapPin className="w-5 h-5 text-[#ff9345]" />
                             Details for {steps[selectedStep]?.title || "Selected Step"}
                         </h3>
                         {selectedTransaction ? (
-                            <div className="space-y-2 text-sm text-gray-300">
+                            <div className="space-y-2 text-sm text-[#fff]">
                                 <p>
                                     <span className="font-medium">Tx Hash:</span>{" "}
                                     <a
                                         href={`https://cardanoscan.io/transaction/${selectedTransaction.txHash}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-indigo-400 hover:underline break-all"
+                                        className="text-[#ff9345] hover:underline break-all"
                                         title={selectedTransaction.txHash}
                                     >
                                         {selectedTransaction.txHash.slice(0, 10)}...
@@ -373,22 +375,24 @@ export default function TrackingPage() {
                                 </p>
                             </div>
                         ) : (
-                            <p className="text-gray-400 text-sm">No transaction details available for this step.</p>
+                            <p className="text-[rgb(119,119,118)] text-sm">
+                                No transaction details available for this step.
+                            </p>
                         )}
                     </div>
 
                     {/* Transaction History */}
-                    <div className="p-6 bg-gray-800 rounded-lg shadow-lg border border-indigo-500/30 overflow-x-auto">
-                        <h3 className="text-lg font-semibold text-gray-100 mb-4 flex items-center gap-2">
-                            <MapPin className="w-5 h-5 text-gray-400" />
+                    <div className="p-6 bg-[#13161B] rounded-lg shadow-lg border border-[#ff9345]/30 overflow-x-auto">
+                        <h3 className="text-lg font-semibold text-[#fff] mb-4 flex items-center gap-2">
+                            <MapPin className="w-5 h-5 text-[rgb(119,119,118)]" />
                             Transaction History
                         </h3>
                         {transactionLocations.length > 0 ? (
                             <>
                                 {/* Desktop Table */}
-                                <table className="hidden md:table w-full text-sm text-gray-300">
+                                <table className="hidden md:table w-full text-sm text-[#fff]">
                                     <thead>
-                                        <tr className="border-b border-gray-700">
+                                        <tr className="border-b border-[rgb(119,119,118)]">
                                             <th className="text-left py-2">Location</th>
                                             <th className="text-left py-2">Tx Hash</th>
                                             <th className="text-left py-2">Date</th>
@@ -401,14 +405,14 @@ export default function TrackingPage() {
                                                 (tx): tx is NonNullable<typeof tx> => !!tx && !!tx.metadata?.location,
                                             )
                                             .map((tx, index) => (
-                                                <tr key={index} className="border-b border-gray-700/50">
+                                                <tr key={index} className="border-b border-[rgb(119,119,118)]/50">
                                                     <td className="py-2">{tx.metadata?.location}</td>
                                                     <td className="py-2">
                                                         <a
                                                             href={`https://cardanoscan.io/transaction/${tx.txHash}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-indigo-400 hover:underline"
+                                                            className="text-[#ff9345] hover:underline"
                                                             title={tx.txHash}
                                                         >
                                                             {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)}
@@ -423,13 +427,13 @@ export default function TrackingPage() {
                                     </tbody>
                                 </table>
                                 {/* Mobile List */}
-                                <ul className="md:hidden space-y-4 text-sm text-gray-300">
+                                <ul className="md:hidden space-y-4 text-sm text-[#fff]">
                                     {data.transaction_history
                                         .filter((tx): tx is NonNullable<typeof tx> => !!tx && !!tx.location)
                                         .map((tx, index) => (
                                             <li
                                                 key={index}
-                                                className="border-b border-gray-700/50 pb-4 last:border-b-0"
+                                                className="border-b border-[rgb(119,119,118)]/50 pb-4 last:border-b-0"
                                             >
                                                 <p>
                                                     <span className="font-medium">Location:</span> {tx.location}
@@ -440,7 +444,7 @@ export default function TrackingPage() {
                                                         href={`https://cardanoscan.io/transaction/${tx.txHash}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-indigo-400 hover:underline"
+                                                        className="text-[#ff9345] hover:underline"
                                                         title={tx.txHash}
                                                     >
                                                         {tx.txHash.slice(0, 8)}...{tx.txHash.slice(-6)}
@@ -458,7 +462,7 @@ export default function TrackingPage() {
                                 </ul>
                             </>
                         ) : (
-                            <p className="text-gray-400 text-sm">No transaction history available.</p>
+                            <p className="text-[rgb(119,119,118)] text-sm">No transaction history available.</p>
                         )}
                     </div>
                 </div>

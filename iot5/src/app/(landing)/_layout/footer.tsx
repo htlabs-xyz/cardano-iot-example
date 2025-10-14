@@ -10,7 +10,7 @@ import { appImage } from "@/public/images";
 
 const Footer = function ({ className = "" }: { className?: string }) {
     return (
-        <div className={cn(className, "pb-[50px] mt-[100px] w-full")}>
+        <div className={cn(className, "pb-[50px] mt-[100px] w-full bg-[#13161b]")}>
             <div className="mx-auto my-0 w-full max-w-[1200px]">
                 {/*  footer-begin */}
                 <section className="mt-[100px] max-md:my-[50px] flex justify-between max-md:flex-col">

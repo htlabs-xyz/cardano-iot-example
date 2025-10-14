@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
             submitter: blockfrostProvider,
             key: {
                 type: "mnemonic",
-                words: process.env.BOB_APP_MNEMONIC?.split(" ") || [],
+                words: process.env.APP_MNEMONIC?.split(" ") || [],
             },
         });
 
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
             });
         });
 
-        return NextResponse.json({ message: `https://preview.cexplorer.io/tx/${txHash}` }, { status: 201 });
+        return NextResponse.json({ message: `https://preprod.cexplorer.io/tx/${txHash}` }, { status: 201 });
     } catch (error) {
         console.error("Error in POST /api/users:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
