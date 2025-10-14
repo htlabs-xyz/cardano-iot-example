@@ -1,60 +1,41 @@
-services:
-  kubo:
-    image: ipfs/kubo:latest
-    container_name: cip68_kubo
-    env_file:
-      - .env
-    volumes:
-      - ${KUBO_STAGING}:/export
-      - ${KUBO_DATA}:/data/ipfs
-    ports:
-      - "${KUBO_PORT}:5001"
-    networks:
-      - cip68
-    restart: unless-stopped
+version: '3.8'
 
-  postgres:
-    container_name: cip68_postgres
-    image: postgres:latest
-    env_file:
-      - .env
-    volumes:
-      - ${POSTGRES_DATA}:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_PORT}:5432"
-    networks:
-      - cip68
-    restart: unless-stopped
-  
-  migrate:
-    container_name: cip68_migrate
+services:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-    entrypoint: ["npx", "prisma", "migrate", "deploy"]
-    env_file:
-      - .env
-    depends_on:
-      - postgres
-    networks:
-      - cip68
-    restart: "no"
-
-  app:
-    container_name: cip68_app
-    env_file:
-      - .env
-    build:
-      context: .
-      dockerfile: Dockerfile.portainer
     ports:
-      - "${APP_PORT}:3000"
-    depends_on:
-      - postgres
+      - "3005:3005"
+    environment:
+      - NODE_ENV=production
+      # - DATABASE_URL=postgresql://user:password@db:5432/mydb?schema=public
+    env_file:
+      - .env
+    # depends_on:
+    #   - db
+    volumes:
+      - .:/app
+      - /app/node_modules
     networks:
-      - cip68
-    restart: always
+      - app-network
+
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     - POSTGRES_USER=user
+  #     - POSTGRES_PASSWORD=password
+  #     - POSTGRES_DB=mydb
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - db-data:/var/lib/postgresql/data
+  #   networks:
+  #     - app-network
 
 networks:
-  cip68:
+  app-network:
     driver: bridge
+
+volumes:
+  db-data:
