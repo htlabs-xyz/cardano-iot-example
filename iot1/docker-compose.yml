@@ -1,18 +1,28 @@
 version: '3.8'
 
 services:
-  backend:
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - iot-network
+
+  server:
     build:
-      context: ./back-end
+      context: ./server
       dockerfile: Dockerfile
+    container_name: iot-server
     ports:
       - "8001:8001"
     environment:
       - NODE_ENV=development
     env_file:
-      - ./back-end/.env
+      - ./server/.env
     volumes:
-      - ./back-end:/app
+      - ./server:/app
       - /app/node_modules
     networks:
       - iot-network
@@ -20,24 +30,25 @@ services:
       - redis
     restart: unless-stopped
 
-  frontend:
+  client:
     build:
-      context: ./front-end
+      context: ./client
       dockerfile: Dockerfile
+    container_name: iot-client
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=development
     env_file:
-      - ./front-end/.env
+      - ./client/.env
     volumes:
-      - ./front-end:/app
+      - ./client:/app
       - /app/node_modules
       - /app/.next
     networks:
       - iot-network
     depends_on:
-      - backend
+      - server
     restart: unless-stopped
 
 networks:

@@ -1,8 +1,8 @@
 
 import { createContext } from 'react';
 import { io, Socket } from 'socket.io-client';
-import envConfig from '../config';
 
-export const socket = io(envConfig.NEXT_PUBLIC_WEBSOCKET);
+
+export const socket = io(process.env.NEXT_PUBLIC_API_ENDPOINT);
 export const WebsocketContext = createContext<Socket>(socket);
 export const WebsocketProvider = WebsocketContext.Provider;

@@ -1,14 +1,16 @@
 version: '3.8'
+
 services:
-  io1-backend:
+  iot1-client:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8001:8001"
+      - "3001:3001"
     env_file:
       - .env
-    volumes:
-      - .:/app
-      - /app/node_modules
+    environment:
+      - NODE_ENV=production
     restart: unless-stopped
+
+
