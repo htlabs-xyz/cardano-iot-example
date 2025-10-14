@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { blockfrostProvider } from "@/lib/cardano";
 import { describe, test, expect, beforeEach, jest } from "@jest/globals";
-import { BlockfrostProvider, BrowserWallet, deserializeAddress, MeshWallet } from "@meshsdk/core";
+import { deserializeAddress, MeshWallet } from "@meshsdk/core";
 import { Cip68Contract } from "../script";
-import { APP_WALLET_ADDRESS } from "../script/constants";
-import { UtXO } from "@/types";
+import { APP_WALLET_ADDRESS } from "../script/common";
 
 describe("Mint, Burn, Update, Remove Assets (NFT/TOKEN) CIP68", function () {
     let wallet: MeshWallet;

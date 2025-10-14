@@ -1,6 +1,6 @@
 import { BlockfrostProvider, UTxO } from "@meshsdk/core";
 import crypto from "crypto";
-import plutus from "../../plutus.json";
+import plutus from "../plutus.json";
 
 /**
  * @description Read validator compilecode from plutus

@@ -4,7 +4,7 @@ import { AssetType } from "@/types";
 import { convertToKeyValue } from "@/utils";
 import { parseError } from "@/utils/error/parse-error";
 import { hexToString } from "@meshsdk/core";
-import { APP_WALLET_ADDRESS } from "../../../contract/script/constants";
+import { APP_WALLET_ADDRESS } from "../../../contract/script/common";
 
 export async function getAssets({
     query = "",

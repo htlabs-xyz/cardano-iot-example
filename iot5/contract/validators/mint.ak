@@ -3,8 +3,8 @@ use aiken/crypto.{ScriptHash, VerificationKeyHash}
 use cardano/address
 use cardano/assets.{PolicyId, without_lovelace}
 use cardano/transaction.{Transaction}
-use cip68generator/types.{Burn, Mint, MintRedeemer}
-use cip68generator/utils
+use contract/types.{Burn, Mint, MintRedeemer}
+use contract/utils
 use types/cip68
 
 // @validator: Mint

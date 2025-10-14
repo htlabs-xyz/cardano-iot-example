@@ -5,8 +5,8 @@ use cardano/transaction.{
   InlineDatum, Output, OutputReference, Transaction, find_input,
 }
 use cardano/tx
-use cip68generator/types.{Remove, StoreRedeemer, Update}
-use cip68generator/utils
+use contract/types.{Remove, StoreRedeemer, Update}
+use contract/utils
 use types/cip68.{CIP68}
 use validation/find.{output_by_addr_value}
 

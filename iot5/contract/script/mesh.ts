@@ -11,9 +11,9 @@ import {
     serializePlutusScript,
     UTxO,
 } from "@meshsdk/core";
-import { Plutus } from "../types";
-import { APP_WALLET_ADDRESS, title } from "../constants";
-import plutus from "../../plutus.json";
+import { Plutus } from "./index.d";
+import { APP_WALLET_ADDRESS, title } from "./common";
+import plutus from "../plutus.json";
 import { appNetworkId } from "@/constants";
 import { blockfrostProvider } from "@/lib/cardano";
 
