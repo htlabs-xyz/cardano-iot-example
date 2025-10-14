@@ -11,7 +11,7 @@ import {
     stringToHex,
 } from '@meshsdk/core';
 import { Injectable } from '@nestjs/common';
-import { MeshAdapter } from 'contract/scripts/mesh';
+import { MeshAdapter } from '../contract/scripts/mesh';
 import { ConfirmStatusContract } from '../contract/scripts';
 import {
     ALLOWED_TIME_OFFSET,
