@@ -219,7 +219,7 @@ export default function TrackingPage() {
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
-        setSelectedStep(0); 
+        setSelectedStep(0);
     };
 
     const handleStepClick = (index: number) => {

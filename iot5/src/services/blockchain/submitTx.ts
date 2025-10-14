@@ -14,9 +14,9 @@ export async function submitTx(tx: string): Promise<{
 
         await new Promise<void>((resolve, reject) => {
             blockfrostProvider.onTxConfirmed(txHash, () => {
-                resolve()
-            })
-        })
+                resolve();
+            });
+        });
         return {
             data: txHash,
             result: true,
