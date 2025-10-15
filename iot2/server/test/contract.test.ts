@@ -9,7 +9,7 @@ import {
     NETWORK,
     NETWORK_ID,
     OWNER,
-} from 'contract/scripts/common';
+} from '../contract/scripts/common';
 
 describe('Status Management', function () {
     let meshWallet: MeshWallet;

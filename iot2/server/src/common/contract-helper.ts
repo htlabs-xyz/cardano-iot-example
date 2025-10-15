@@ -8,8 +8,8 @@ import {
     serializePlutusScript,
     stringToHex,
 } from '@meshsdk/core';
-import { BLOCKFROST_API_KEY, title } from 'contract/scripts/common';
-import blueprint from 'contract/plutus.json';
+import { BLOCKFROST_API_KEY, title } from '../../contract/scripts/common';
+import blueprint from '../../contract/plutus.json';
 export class ContractHelper {
     private static blockfrostProvider: BlockfrostProvider;
     private static readonly plutusVersion: 'V3' | 'V2' = 'V3';
