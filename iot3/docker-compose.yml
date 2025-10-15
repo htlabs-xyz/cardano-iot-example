@@ -29,7 +29,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: iot-server
     ports:
-      - "8003:3004"
+      - "8003:8003"
       - "9229:9229"  # Debug port
     environment:
       - NODE_ENV=development
@@ -40,7 +40,7 @@ services:
       - DB_PASSWORD=iot3password
       - BLOCKFROST_API_KEY=preprodkbcHzNgig5FoZ2J0bduOdIVBrl4lMYHp
       - LAST_TRANSACTION_OFFSET_SECONDS=120
-      - SERVER_PORT=3004
+      - SERVER_PORT=8003
       - FRONT_END_HOST=http://localhost:3003
     volumes:
       - ./server:/app
@@ -59,7 +59,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: iot-client
     ports:
-      - "3003:3005"
+      - "3003:3003"
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_ENDPOINT=http://localhost:8003/api

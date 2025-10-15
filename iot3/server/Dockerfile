@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Set working directory
 WORKDIR /app
 
@@ -23,12 +26,12 @@ RUN adduser -S nestjs -u 1001
 RUN chown -R nestjs:nodejs /app
 USER nestjs
 
-# Expose port
-EXPOSE 3004
+# Expose port (matches the SERVER_PORT from env)
+EXPOSE 8003
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3004/api || exit 1
+  CMD curl -f http://localhost:8003/api || exit 1
 
 # Start the application
 CMD ["node", "dist/src/main"]
