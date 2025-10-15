@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  backend:
+  iot2-server:
     build:
       context: ./server
       dockerfile: Dockerfile
@@ -20,7 +20,7 @@ services:
       - redis
     restart: unless-stopped
 
-  frontend:
+  iot2-client:
     build:
       context: ./client
       dockerfile: Dockerfile
@@ -37,7 +37,7 @@ services:
     networks:
       - iot-network
     depends_on:
-      - backend
+      - iot2-server
     restart: unless-stopped
 
   redis:
