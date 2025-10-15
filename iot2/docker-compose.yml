@@ -6,7 +6,7 @@ services:
       context: ./server
       dockerfile: Dockerfile
     ports:
-      - "3002:3002"
+      - "8002:8002"
     environment:
       - NODE_ENV=development
     env_file:
@@ -17,7 +17,7 @@ services:
     networks:
       - iot-network
     depends_on:
-      - redis
+      - iot2-redis
     restart: unless-stopped
 
   iot2-client:
@@ -25,7 +25,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "3003:3003"
+      - "3002:3002"
     environment:
       - NODE_ENV=development
     env_file:
@@ -40,7 +40,7 @@ services:
       - iot2-server
     restart: unless-stopped
 
-  redis:
+  iot2-redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
