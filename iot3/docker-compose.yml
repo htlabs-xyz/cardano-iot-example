@@ -23,10 +23,10 @@ services:
       timeout: 20s
       retries: 10
 
-  # Back-end API Service
-  backend:
+  # server API Service
+  iot4-server:
     build:
-      context: ./back-end
+      context: ./server
       dockerfile: Dockerfile
     container_name: iot3-backend
     restart: unless-stopped
@@ -55,16 +55,9 @@ services:
     networks:
       - iot3-network
     volumes:
-      - ./back-end/data:/app/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3004/api"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
+      - ./server/data:/app/data
   # Front-end Web Application
-  frontend:
+  iot4-client:
     build:
       context: ./front-end
       dockerfile: Dockerfile
