@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # NestJS Backend Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: cardano-iot-server
+    ports:
+      - "8004:8004"
+    environment:
+      - NODE_ENV=production
+      - SERVER_PORT=8004
+      - FRONT_END_HOST=http://localhost:3004
+      - APP_WALLET=abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon beef crack
+      - BLOCKFROST_API_KEY=preprodKHoPHW2dEwEipSjarMNsnA5oAWPSTZgM
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - /app/dist
+    networks:
+      - cardano-iot-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Next.js Frontend Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: cardano-iot-client
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_ENDPOINT=http://localhost:8004/api
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - cardano-iot-network
+    depends_on:
+      - server
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3004"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  cardano-iot-network:
+    driver: bridge
+
+volumes:
+  server_node_modules:
+  client_node_modules:
+  server_dist:
+  client_next:
