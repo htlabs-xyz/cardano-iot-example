@@ -3,16 +3,16 @@ version: '3.8'
 services:
   backend:
     build:
-      context: ./back-end
+      context: ./server
       dockerfile: Dockerfile
     ports:
       - "3002:3002"
     environment:
       - NODE_ENV=development
     env_file:
-      - ./back-end/.env
+      - ./server/.env
     volumes:
-      - ./back-end:/app
+      - ./server:/app
       - /app/node_modules
     networks:
       - iot-network
@@ -22,18 +22,16 @@ services:
 
   frontend:
     build:
-      context: ./front-end
+      context: ./client
       dockerfile: Dockerfile
     ports:
       - "3003:3003"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_ENDPOINT=http://localhost:3002
-      - NEXT_PUBLIC_WEBSOCKET=http://localhost:3002
     env_file:
-      - ./front-end/.env
+      - ./client/.env
     volumes:
-      - ./front-end:/app
+      - ./client:/app
       - /app/node_modules
       - /app/.next
     networks:
