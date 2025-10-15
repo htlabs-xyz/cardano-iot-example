@@ -1,0 +1,22 @@
+# Docker ignore file for the client
+node_modules
+npm-debug.log
+.nyc_output
+coverage
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.next
+out
+.git
+.gitignore
+README.md
+.eslintcache
+.DS_Store
+*.log
+.vscode
+.idea
+Dockerfile
+.dockerignore

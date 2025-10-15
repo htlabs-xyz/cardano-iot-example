@@ -1,0 +1,21 @@
+# Docker development override
+version: '3.8'
+
+services:
+  server:
+    build:
+      target: development
+    volumes:
+      - ./server/src:/app/src:ro
+      - ./server/test:/app/test:ro
+    environment:
+      - NODE_ENV=development
+
+  client:
+    build:
+      target: development
+    volumes:
+      - ./client/src:/app/src:ro
+      - ./client/public:/app/public:ro
+    environment:
+      - NODE_ENV=development
