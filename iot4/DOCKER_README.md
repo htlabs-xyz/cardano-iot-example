@@ -1,131 +1,112 @@
 # Cardano IoT Example - Docker Setup
 
-This project consists of a NestJS backend server and a Next.js frontend client, both containerized with Docker.
+This directory contains a Docker Compose setup for the Cardano IoT Example application, which includes:
 
-## Project Structure
-
-```
-iot4/
-├── server/           # NestJS backend API
-├── client/           # Next.js frontend
-├── docker-compose.yml
-├── docker-compose.dev.yml
-└── DOCKER_README.md
-```
+- **Server**: NestJS backend API (Port 8004)
+- **Client**: Next.js frontend application (Port 3004)
 
 ## Prerequisites
 
-- Docker Desktop (version 20.10+)
-- Docker Compose (version 2.0+)
-
-## Quick Start
-
-### Production Build
-
-1. **Build and start both services:**
-   ```bash
-   docker-compose up --build
-   ```
-
-2. **Access the applications:**
-   - Frontend: http://localhost:3004
-   - Backend API: http://localhost:8004
-   - API Documentation: http://localhost:8004/api
-
-3. **Stop the services:**
-   ```bash
-   docker-compose down
-   ```
-
-### Development Mode
-
-For development with hot reloading:
-
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
-```
-
-Or use the profile approach:
-
-```bash
-docker-compose --profile dev up --build
-```
-
-This will:
-- Start development containers with source code mounted as volumes
-- Enable hot reloading for both services
-- Server available at: http://localhost:8005
-- Client available at: http://localhost:3005
-
-## Individual Service Commands
-
-### Server Only
-
-```bash
-# Build server image
-docker build -t cardano-iot-server ./server
-
-# Run server container
-docker run -p 8004:8004 --env-file ./server/.env cardano-iot-server
-```
-
-### Client Only
-
-```bash
-# Build client image
-docker build -t cardano-iot-client ./client
-
-# Run client container
-docker run -p 3004:3004 -e NEXT_PUBLIC_API_ENDPOINT=http://localhost:8004 cardano-iot-client
-```
+- Docker and Docker Compose installed on your system
+- Make sure ports 3004 and 8004 are available
 
 ## Environment Variables
 
-### Server (.env)
-```
-APP_WALLET=abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon beef crack
-BLOCKFROST_API_KEY=preprodKHoPHW2dEwEipSjarMNsnA5oAWPSTZgM
+Before running the application, you need to set up environment variables:
+
+### Server Environment Variables
+
+Create a `.env` file in the `server` directory with the following variables:
+
+```bash
+APP_WALLET="your_wallet_mnemonic_here"
+BLOCKFROST_API_KEY="your_blockfrost_api_key"
 SERVER_PORT=8004
-FRONT_END_HOST=http://localhost:3004
+FRONT_END_HOST="http://localhost:3004"
 ```
 
-### Client (.env.local)
+### Client Environment Variables
+
+Create a `.env.local` file in the `client` directory with:
+
+```bash
+NEXT_PUBLIC_API_ENDPOINT="http://localhost:8004/api"
 ```
-NEXT_PUBLIC_API_ENDPOINT=http://localhost:8004
+
+## Running the Application
+
+### Using Docker Compose (Recommended)
+
+1. Clone the repository and navigate to the project root
+2. Set up environment variables as described above
+3. Run the following command:
+
+```bash
+docker-compose up --build
 ```
 
-## Docker Compose Services
+This will:
+- Build both the server and client Docker images
+- Start the containers
+- Set up networking between them
+- Make the applications available at:
+  - Frontend: http://localhost:3004
+  - Backend API: http://localhost:8004
+  - API Documentation: http://localhost:8004/api
 
-| Service | Port | Description |
-|---------|------|-------------|
-| server | 8004 | NestJS API server with Swagger docs at /api |
-| client | 3004 | Next.js frontend application |
-| server-dev | 8005 | Development server with hot reload |
-| client-dev | 3005 | Development client with hot reload |
+### Development Mode
 
-## Health Checks
+For development with hot reloading, you can override the default commands:
 
-Both services include health checks:
-- **Server**: Checks the `/api` endpoint
-- **Client**: Checks the root endpoint
+```bash
+# Run in development mode
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
 
-## Networking
+### Running Individual Services
 
-Services communicate through a custom Docker network (`cardano-iot-network`) which allows:
-- Internal service-to-service communication
-- Proper dependency management (client waits for server to be healthy)
+To run only specific services:
 
-## Volume Mounts (Development)
+```bash
+# Run only the server
+docker-compose up server
 
-In development mode, source code is mounted as read-only volumes:
-- `./server/src:/app/src:ro`
-- `./client/src:/app/src:ro`
-- `./client/public:/app/public:ro`
+# Run only the client
+docker-compose up client
+```
+
+## Stopping the Application
+
+```bash
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes
+docker-compose down -v
+
+# Stop and remove everything (containers, networks, images)
+docker-compose down --rmi all -v
+```
+
+## Building Individual Images
+
+If you want to build images separately:
+
+```bash
+# Build server image
+cd server
+docker build -t cardano-iot-server .
+
+# Build client image
+cd client
+docker build -t cardano-iot-client .
+```
 
 ## Troubleshooting
 
 ### Common Issues
 
+<<<<<<< HEAD
 1. **Port conflicts**: Ensure ports 3004 and 8004 are not used by other applications
 2. **Build failures**: Clear Docker cache with `docker system prune -a`
 3. **Environment variables**: Verify all required environment variables are set
@@ -138,10 +119,26 @@ View logs for specific services:
 docker-compose logs
 
 # Specific service
+=======
+1. **Port conflicts**: Make sure ports 3004 and 8004 are not in use
+2. **Environment variables**: Ensure all required environment variables are set
+3. **Docker permissions**: On Linux, you might need to run with `sudo`
+
+### Logs
+
+To view logs from the containers:
+
+```bash
+# View all logs
+docker-compose logs
+
+# View logs from specific service
+>>>>>>> 5046dc447137b5eebd79f96be31b52c5ff623c62
 docker-compose logs server
 docker-compose logs client
 
 # Follow logs in real-time
+<<<<<<< HEAD
 docker-compose logs -f server
 ```
 
@@ -171,3 +168,41 @@ This approach provides:
 - Minimal base images (Alpine Linux)
 - Health checks for monitoring
 - Proper file permissions and ownership
+=======
+docker-compose logs -f
+```
+
+### Health Checks
+
+Both services include health checks. You can check the status:
+
+```bash
+docker-compose ps
+```
+
+## Project Structure
+
+```
+├── docker-compose.yml          # Main Docker Compose configuration
+├── server/
+│   ├── Dockerfile             # Server Docker image definition
+│   ├── .dockerignore          # Files to ignore in Docker build
+│   └── ...                    # NestJS application files
+├── client/
+│   ├── Dockerfile             # Client Docker image definition
+│   ├── .dockerignore          # Files to ignore in Docker build
+│   └── ...                    # Next.js application files
+└── README.md                  # This file
+```
+
+## Production Deployment
+
+For production deployment, consider:
+
+1. Using environment-specific Docker Compose files
+2. Setting up proper secrets management
+3. Configuring reverse proxy (nginx, traefik)
+4. Setting up SSL certificates
+5. Implementing proper logging and monitoring
+6. Using Docker Swarm or Kubernetes for orchestration
+>>>>>>> 5046dc447137b5eebd79f96be31b52c5ff623c62

@@ -1,12 +1,11 @@
 version: '3.8'
 
 services:
-  # Server (NestJS API)
+  # NestJS Backend Server
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
-      target: production
     container_name: cardano-iot-server
     ports:
       - "8004:8004"
@@ -16,96 +15,51 @@ services:
       - FRONT_END_HOST=http://localhost:3004
       - APP_WALLET=abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon beef crack
       - BLOCKFROST_API_KEY=preprodKHoPHW2dEwEipSjarMNsnA5oAWPSTZgM
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - /app/dist
     networks:
       - cardano-iot-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8004/api"]
+      test: ["CMD", "curl", "-f", "http://localhost:8004/api"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
 
-  # Client (Next.js Frontend)
+  # Next.js Frontend Client
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
-      target: production
     container_name: cardano-iot-client
     ports:
       - "3004:3004"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_ENDPOINT=http://localhost:8004
-      - PORT=3004
-      - HOSTNAME=0.0.0.0
-      - NEXT_TELEMETRY_DISABLED=1
-    depends_on:
-      server:
-        condition: service_healthy
+      - NEXT_PUBLIC_API_ENDPOINT=http://localhost:8004/api
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+      - /app/.next
     networks:
       - cardano-iot-network
+    depends_on:
+      - server
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3004"]
+      test: ["CMD", "curl", "-f", "http://localhost:3004"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
-
-  # Development services (optional - can be used with docker-compose -f docker-compose.yml -f docker-compose.dev.yml up)
-  server-dev:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-      target: development
-    container_name: cardano-iot-server-dev
-    ports:
-      - "8005:8004"
-    environment:
-      - NODE_ENV=development
-      - SERVER_PORT=8004
-      - FRONT_END_HOST=http://localhost:3005
-      - APP_WALLET=abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon beef crack
-      - BLOCKFROST_API_KEY=preprodKHoPHW2dEwEipSjarMNsnA5oAWPSTZgM
-    volumes:
-      - ./server/src:/app/src:ro
-      - ./server/test:/app/test:ro
-    networks:
-      - cardano-iot-network
-    profiles:
-      - dev
-
-  client-dev:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-      target: development
-    container_name: cardano-iot-client-dev
-    ports:
-      - "3005:3004"
-    environment:
-      - NODE_ENV=development
-      - NEXT_PUBLIC_API_ENDPOINT=http://localhost:8005
-      - PORT=3004
-      - HOSTNAME=0.0.0.0
-      - NEXT_TELEMETRY_DISABLED=1
-    volumes:
-      - ./client/src:/app/src:ro
-      - ./client/public:/app/public:ro
-    depends_on:
-      - server-dev
-    networks:
-      - cardano-iot-network
-    profiles:
-      - dev
 
 networks:
   cardano-iot-network:
     driver: bridge
 
-# Volumes for persistent data (if needed in the future)
 volumes:
-  server_data:
-  client_data:
+  server_node_modules:
+  client_node_modules:
+  server_dist:
+  client_next:

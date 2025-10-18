@@ -1,21 +1,38 @@
+<<<<<<< HEAD
 # Docker ignore file for the server
 node_modules
 npm-debug.log
 .nyc_output
 coverage
+=======
+node_modules
+npm-debug.log
+dist
+>>>>>>> 5046dc447137b5eebd79f96be31b52c5ff623c62
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+<<<<<<< HEAD
 dist
+=======
+>>>>>>> 5046dc447137b5eebd79f96be31b52c5ff623c62
 .git
 .gitignore
 README.md
 .eslintcache
+<<<<<<< HEAD
 .next
 out
 .DS_Store
 *.log
 .vscode
 .idea
+=======
+.nyc_output
+coverage
+.vscode
+.DS_Store
+*.log
+>>>>>>> 5046dc447137b5eebd79f96be31b52c5ff623c62

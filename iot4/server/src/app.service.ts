@@ -1,7 +1,12 @@
 import { MeshWallet } from '@meshsdk/core';
 import { Injectable } from '@nestjs/common';
+<<<<<<< HEAD
 import { SupplyChainManagementContract } from './contract/scripts';
 import { blockfrostProvider } from './contract/scripts/common';
+=======
+import { SupplyChainManagementContract } from '../contract/scripts';
+import { blockfrostProvider } from '../contract/scripts/common';
+>>>>>>> 5046dc447137b5eebd79f96be31b52c5ff623c62
 import {
   parseUserMetadata,
   UserInfoRequestModel,

@@ -1,71 +1,35 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: iot-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: iot3_vending_machine
-      MYSQL_USER: iot3user
-      MYSQL_PASSWORD: iot3password
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-      - ./server/data:/docker-entrypoint-initdb.d:ro
-    networks:
-      - iot-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
-      timeout: 20s
-      retries: 10
-      interval: 30s
-
-  server:
+  iot3-server:
     build:
       context: ./server
-      dockerfile: Dockerfile.dev
-    container_name: iot-server
+      dockerfile: Dockerfile
     ports:
       - "8003:8003"
-      - "9229:9229"  # Debug port
     environment:
       - NODE_ENV=development
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_NAME=iot3_vending_machine
-      - DB_USER=iot3user
-      - DB_PASSWORD=iot3password
-      - BLOCKFROST_API_KEY=preprodkbcHzNgig5FoZ2J0bduOdIVBrl4lMYHp
-      - LAST_TRANSACTION_OFFSET_SECONDS=120
-      - SERVER_PORT=8003
-      - FRONT_END_HOST=http://localhost:3003
+    env_file:
+      - ./server/.env
     volumes:
       - ./server:/app
       - /app/node_modules
-      - ./server/data:/app/data
     networks:
       - iot-network
     depends_on:
-      mysql:
-        condition: service_healthy
+      - iot3-redis
     restart: unless-stopped
 
-  client:
+  iot3-client:
     build:
       context: ./client
-      dockerfile: Dockerfile.dev
-    container_name: iot-client
+      dockerfile: Dockerfile
     ports:
       - "3003:3003"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_ENDPOINT=http://localhost:8003/api
-      - NEXT_PUBLIC_WEBSOCKET=ws://localhost:8003
-      - NEXT_PUBLIC_PAYMENT_DURATION_SECONDS=120
-      - NEXT_PUBLIC_PAYMENT_CHECK_INTERVAL_SECONDS=6
+    env_file:
+      - ./client/.env
     volumes:
       - ./client:/app
       - /app/node_modules
@@ -73,12 +37,23 @@ services:
     networks:
       - iot-network
     depends_on:
-      - server
+      - iot3-server
     restart: unless-stopped
+
+  iot3-redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - iot-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
 
 networks:
   iot-network:
     driver: bridge
 
 volumes:
-  mysql_data:
+  redis_data:
