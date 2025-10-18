@@ -16,8 +16,6 @@ services:
       - /app/node_modules
     networks:
       - iot-network
-    depends_on:
-      - iot4-redis
     restart: unless-stopped
 
   iot4-client:
@@ -40,20 +38,6 @@ services:
       - iot4-server
     restart: unless-stopped
 
-  iot4-redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - iot-network
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-
 networks:
   iot-network:
     driver: bridge
-
-volumes:
-  redis_data:
