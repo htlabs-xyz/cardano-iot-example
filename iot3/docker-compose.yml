@@ -17,11 +17,18 @@ services:
       - ./server/data:/docker-entrypoint-initdb.d:ro
     networks:
       - iot3-network
+    # <<< THÊM HEALTHCHECK ĐỂ depends_on service_healthy hoạt động >>>
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "iot3user", "-piot3password"]
+      interval: 30s
+      timeout: 20s
+      retries: 10
+      start_period: 10s
 
   server:
     build:
       context: ./server
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile   
     container_name: iot3-server
     restart: unless-stopped
     ports:
@@ -46,12 +53,12 @@ services:
       - iot3-network
     depends_on:
       mysql:
-        condition: service_healthy
+        condition: service_healthy  
 
   client:
     build:
       context: ./client
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile   
     container_name: iot3-client
     restart: unless-stopped
     ports:
