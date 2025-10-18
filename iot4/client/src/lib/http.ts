@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import envConfig from "@/config";
 import { assertApiResponse } from "@/lib/utils";
 
 type CustomOptions = RequestInit & {
@@ -24,7 +23,7 @@ const request = async <T>(
   // Nếu truyền baseUrl thì lấy giá trị truyền vào, truyền vào '' thì đồng nghĩa với việc chúng ta gọi API đến Next.js Server
   const baseUrl =
     options?.baseUrl === undefined
-      ? envConfig.NEXT_PUBLIC_API_ENDPOINT
+      ? process.env.NEXT_PUBLIC_API_ENDPOINT
       : options.baseUrl;
 
   const fullUrl = url.startsWith("/")
