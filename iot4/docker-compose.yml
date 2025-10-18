@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:latest
@@ -48,7 +46,7 @@ services:
     networks:
       - iot4-network
     depends_on:
-      - iot4-server
+      - server
     restart: unless-stopped
 
 networks:
