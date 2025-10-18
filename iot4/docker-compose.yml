@@ -8,13 +8,13 @@ services:
     volumes:
       - redis_data:/data
     networks:
-      - iot1-network
+      - iot4-network
 
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: iot1-server
+    container_name: iot4-server
     ports:
       - "8004:8004"
     environment:
@@ -25,7 +25,7 @@ services:
       - ./server:/app
       - /app/node_modules
     networks:
-      - iot1-network
+      - iot4-network
     depends_on:
       - redis
     restart: unless-stopped
@@ -34,7 +34,7 @@ services:
     build:
       context: ./client
       dockerfile: Dockerfile
-    container_name: iot1-client
+    container_name: iot4-client
     ports:
       - "3004:3004"
     environment:
@@ -46,13 +46,13 @@ services:
       - /app/node_modules
       - /app/.next
     networks:
-      - iot1-network
+      - iot4-network
     depends_on:
-      - iot1-server
+      - iot4-server
     restart: unless-stopped
 
 networks:
-  iot1-network:
+  iot4-network:
     driver: bridge
 
 volumes:
