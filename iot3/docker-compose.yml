@@ -21,7 +21,7 @@ services:
   server:
     build:
       context: ./server
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: iot3-server
     restart: unless-stopped
     ports:
