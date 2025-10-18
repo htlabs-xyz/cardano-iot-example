@@ -5,5 +5,5 @@ RUN npm install
 COPY . .
 COPY .env .env
 RUN npm run build
-EXPOSE 8001
+EXPOSE 8004
 CMD ["npm", "run", "start:prod"]
