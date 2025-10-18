@@ -6,7 +6,7 @@ services:
       context: ./server
       dockerfile: Dockerfile
     ports:
-      - "8002:8002"
+      - "8004:8004"
     environment:
       - NODE_ENV=development
     env_file:
@@ -23,7 +23,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "3002:3002"
+      - "3004:3004"
     environment:
       - NODE_ENV=development
     env_file:
