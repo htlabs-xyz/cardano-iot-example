@@ -1,0 +1,46 @@
+{
+  "name": "dht22-realtime-monitor",
+  "version": "1.0.0",
+  "description": "Real-time temperature and humidity monitoring with DHT22 sensor on Raspberry Pi",
+  "main": "main.ts",
+  "type": "module",
+  "scripts": {
+    "sensor": "tsx main.ts --sensor",
+    "write": "tsx main.ts --write",
+    "monitor": "tsx main.ts --monitor",
+    "help": "tsx main.ts --help",
+    "test": "python3 dht22.py"
+  },
+  "keywords": [
+    "dht22",
+    "raspberry-pi",
+    "iot",
+    "temperature",
+    "humidity",
+    "sensor",
+    "gpio",
+    "real-time",
+    "monitoring"
+  ],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=14.0.0",
+    "python": ">=3.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "dependencies": {
+    "@blockfrost/blockfrost-js": "^6.0.0",
+    "@meshsdk/core": "^1.9.0-beta.86",
+    "dotenv": "^17.2.3",
+    "python-shell": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
