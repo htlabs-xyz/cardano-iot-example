@@ -1,65 +1,56 @@
-# iot2
+IoT2 is a Cardano smart contract project for managing IoT device lock/unlock states on-chain. It uses Aiken for smart contracts and TypeScript with Mesh SDK for off-chain interactions.
 
-Write validators in the `validators` folder, and supporting functions in the `lib` folder using `.ak` as a file extension.
+## Commands
 
-```aiken
-validator my_first_validator {
-  spend(_datum: Option<Data>, _redeemer: Data, _output_reference: Data, _context: Data) {
-    True
-  }
-}
-```
-
-## Building
-
+### Smart Contract (Aiken)
 ```sh
-aiken build
+aiken build          # Compile validators to plutus.json
+aiken check          # Run all tests
+aiken check -m foo   # Run tests matching "foo"
 ```
 
-## Configuring
-
-**aiken.toml**
-```toml
-[config.default]
-network_id = 41
-```
-
-Or, alternatively, write conditional environment modules under `env`.
-
-## Testing
-
-You can write tests in any module using the `test` keyword. For example:
-
-```aiken
-use config
-
-test foo() {
-  config.network_id + 1 == 42
-}
-```
-
-To run all tests, simply do:
-
+### Off-chain (TypeScript/npm)
 ```sh
-aiken check
+npm install          # Install dependencies
+npm run index.ts     # Execute main script (currently runs unlock())
+npm run monitor.ts   # Monitor locker status by asset unit
 ```
 
-To run only tests matching the string `foo`, do:
+## Architecture
 
-```sh
-aiken check -m foo
-```
+### Smart Contract Layer (`validators/contract.ak`)
+- **Datum**: Stores `authority` (Address) and `is_locked` (Int: 0=unlocked, 1=locked)
+- **Redeemers**:
+  - `Status`: Toggle lock state (requires owner OR authority signature)
+  - `Authorize`: Transfer authority (requires owner signature only)
+- **Validators**:
+  - `locker.mint`: Owner-only minting policy
+  - `locker.spend`: State transition logic with role-based access control
 
-## Documentation
+### Off-chain Layer (`script/`)
+- **MeshAdapter** (`mesh.ts`): Base class that initializes Plutus scripts from `plutus.json`, parameterizes them with owner's pubKeyHash, and provides UTxO utilities
+- **LockerContract** (`offchain.ts`): High-level contract operations:
+  - `init()`: Mint new status token
+  - `lock()`: Set status to locked (is_locked=1)
+  - `unLock()`: Set status to unlocked (is_locked=0)
+  - `authorize()`: Transfer authority to new address
+- **monitor** (`monitor.ts`): Query current locker state via Blockfrost API
 
-If you're writing a library, you might want to generate an HTML documentation for it.
+### Key Dependencies
+- Aiken libs: `aiken-lang/stdlib`, `logical-mechanism/assist`, `sidan-lab/vodka`
+- TypeScript: `@meshsdk/core`, `@blockfrost/blockfrost-js`
 
-Use:
+## Configuration
 
-```sh
-aiken docs
-```
+Copy `.env.example` to `.env` and set:
+- `BLOCKFROST_API_KEY`: Preprod network API key
+- `MNEMONIC`: Wallet mnemonic phrase
 
-## Resources
+Network is hardcoded to `preprod` (testnet).
 
-Find more on the [Aiken's user manual](https://aiken-lang.org).
+## Data Flow
+
+1. Owner deploys contract → mints status token with initial datum
+2. Owner/Authority calls `lock()` or `unLock()` → spends UTxO, creates new UTxO with updated `is_locked`
+3. Owner calls `authorize()` → transfers control to new authority address
+4. Monitor queries Blockfrost for current state via asset transactions
