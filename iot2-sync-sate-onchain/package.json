@@ -1,0 +1,17 @@
+{
+  "name": "iot2",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@blockfrost/blockfrost-js": "^6.0.0",
+    "@meshsdk/core": "^1.9.0-beta.86",
+    "dotenv": "^17.2.3"
+  }
+}
