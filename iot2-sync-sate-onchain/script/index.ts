@@ -23,7 +23,7 @@ export const init = async () => {
     });
 
     const unsignedTx: string = await lockerContract.init({
-        title: 'Locker_12345',
+        title: '17112003',
     });
 
     const signedTx = await wallet.signTx(unsignedTx, true);
@@ -44,7 +44,7 @@ export const lock = async () => {
     });
 
     const unsignedTx: string = await lockerContract.lock({
-        title: 'Locker_12345',
+        title: '17112003',
     });
 
     const signedTx = await wallet.signTx(unsignedTx, true);
@@ -68,7 +68,7 @@ export const unlock = async () => {
     });
 
     const unsignedTx: string = await lockerContract.unLock({
-        title: 'Locker_12345',
+        title: '17112003',
     });
 
     const signedTx = await wallet.signTx(unsignedTx, true);
@@ -88,7 +88,7 @@ export const authority = async () => {
     });
 
     const unsignedTx: string = await lockerContract.authorize({
-        title: 'Locker_12345',
+        title: '17112003',
         authority: 'addr_test1qrv637xpe50vza430d0wa9gvff7d0sh6m5plwqhg6v7fjarqt7gag4c7fepupml5eu9z054z5ystx5uz8f4kahlcpmwqhhvq5e',
     });
 

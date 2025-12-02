@@ -1,4 +1,7 @@
 import { init, lock, unlock, authority } from "./script";
 
-unlock()
+init();
+lock();
+unlock();
+authority()
 

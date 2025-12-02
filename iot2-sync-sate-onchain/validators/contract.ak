@@ -1,13 +1,43 @@
 use aiken/collection/list
 use aiken/crypto.{VerificationKeyHash}
-use cardano/address.{Address}
 use cardano/assets.{PolicyId, flatten, without_lovelace}
 use cardano/transaction.{
   InlineDatum, Output, OutputReference, Transaction, find_input,
 }
 use cardano/tx
-use cocktail/vodka_address.{address_pub_key}
 use validation/find.{output_by_addr_value}
+
+// --------------------------------------
+//  Type: Address
+// --------------------------------------
+//  Purpose:
+//  Defines the structure used to represent an address within this validator.
+//  Instead of using Cardano's built-in address format, this simplified type
+//  separates the payment and stake verification key hashes, enabling easier
+//  signature and authority validation within the smart contract.
+//
+//  Structure:
+//  - payment: VerificationKeyHash
+//      The hash of the public key used for transaction payment validation.
+//      This key must sign transactions to prove control over UTxOs.
+//  - stake: VerificationKeyHash
+//      The hash of the staking key associated with the same address.
+//      Used primarily for on-chain identity consistency or future delegation logic.
+//
+//  Behavior:
+//  - Both `payment` and `stake` must correspond to a valid address used
+//    in the Cardano network.
+//  - When checking signatures, only the `payment` key is validated via
+//    `tx.verify_signature(...)`.
+//  - The stake key is retained for potential use in governance or staking rules.
+//
+//  Security Notes:
+//  - Provides clear separation between payment authority and staking ownership.
+//  - Prevents ambiguity in authority verification within Datum structures.
+pub type Address {
+  payment: VerificationKeyHash,
+  stake: VerificationKeyHash,
+}
 
 // --------------------------------------
 //  Type: Datum
@@ -160,8 +190,8 @@ validator locker(owner: VerificationKeyHash) {
     expect InlineDatum(datum_output_inline) = input.output.datum
     expect datum_output: Datum = datum_output_inline
     let owner_sign = tx.verify_signature(extra_signatories, owner)
-    expect Some(authority_pkh) = address_pub_key(datum_input.authority)
-    let authority_sign = tx.verify_signature(extra_signatories, authority_pkh)
+    let authority_sign =
+      tx.verify_signature(extra_signatories, datum_input.authority.payment)
     let change_authority = datum_input.authority == datum_output.authority
     let utxo_output = output_by_addr_value(outputs, script_address, token)
 
