@@ -7,3 +7,12 @@ docs/
 
 **/.env
 **/node_modules
+
+.claude
+.opencode
+**/docs
+**/plans
+**/CLAUDE.md
+**/.repomixignore
+**/repomix-output.xml
+**/ssh
