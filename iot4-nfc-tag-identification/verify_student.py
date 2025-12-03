@@ -1,42 +1,28 @@
 #!/usr/bin/env python3
-import json
+import os
 import sys
+import time
+from datetime import datetime
 from nfc import init_pn532, read_json_from_nfc
-from cardano import query_asset, get_asset_metadata, check_connection
+from cardano import query_asset, check_connection
 from config import validate_config
 
 
-def read_nfc_data(pn532):
-    print("\n=== Reading NFC Tag ===")
-    print("Place student card on reader...")
-    data = read_json_from_nfc(pn532, num_blocks=8, debug=False)
-    return data
+def clear_screen():
+    os.system('clear' if os.name != 'nt' else 'cls')
 
 
 def verify_on_blockchain(policy_id, asset_name_hex, student_id):
-    print("\n=== Querying Blockchain ===")
-    print(f"Policy ID: {policy_id}")
-    print(f"Asset Name Hex: {asset_name_hex}")
-
     asset = query_asset(policy_id, asset_name_hex)
 
     if not asset:
-        return {
-            "verified": False,
-            "error": "NFT not found on blockchain",
-            "student_id": student_id,
-        }
+        return {"verified": False, "error": "NFT not found", "student_id": student_id}
 
     metadata = asset.get("onchain_metadata", {})
     onchain_student_id = metadata.get("student_id", "")
 
     if str(onchain_student_id) != str(student_id):
-        return {
-            "verified": False,
-            "error": "Student ID mismatch",
-            "nfc_student_id": student_id,
-            "blockchain_student_id": onchain_student_id,
-        }
+        return {"verified": False, "error": "ID mismatch", "student_id": student_id}
 
     return {
         "verified": True,
@@ -44,109 +30,140 @@ def verify_on_blockchain(policy_id, asset_name_hex, student_id):
         "student_name": metadata.get("student_name", ""),
         "department": metadata.get("department", ""),
         "issued_at": metadata.get("issued_at", ""),
-        "policy_id": policy_id,
-        "asset_name": asset.get("asset_name", ""),
-        "mint_quantity": asset.get("quantity", ""),
     }
 
 
-def verify_student():
-    errors = validate_config()
-    if errors:
-        print("Configuration errors:")
-        for e in errors:
-            print(f"  - {e}")
-        return None
+def display_result(result, last_scan_time):
+    clear_screen()
+    print("=" * 50)
+    print("  STUDENT VERIFICATION SYSTEM")
+    print("=" * 50)
+    print(f"  Last scan: {last_scan_time}")
+    print("=" * 50)
 
-    print("Checking blockchain connection...")
-    if not check_connection():
-        print("ERROR: Cannot connect to Blockfrost API")
-        return None
-    print("✓ Connected to Blockfrost")
-
-    pn532 = init_pn532()
-    nfc_data = read_nfc_data(pn532)
-
-    if not nfc_data:
-        print("ERROR: Could not read NFC tag")
-        return None
-
-    required_fields = ["p", "a", "s"]
-    missing = [f for f in required_fields if f not in nfc_data]
-    if missing:
-        print(f"ERROR: Invalid NFC data - missing fields: {missing}")
-        return None
-
-    policy_id = nfc_data["p"]
-    asset_name_hex = nfc_data["a"]
-    student_id = nfc_data["s"]
-
-    if len(policy_id) < 56:
-        print("WARNING: Policy ID appears truncated, attempting lookup...")
-
-    result = verify_on_blockchain(policy_id, asset_name_hex, student_id)
+    if result is None:
+        print("\n  Waiting for card...\n")
+        print("  Place student NFC card on reader")
+    elif result["verified"]:
+        print("\n  ✓ VERIFIED\n")
+        print(f"  ID:         {result['student_id']}")
+        print(f"  Name:       {result['student_name']}")
+        print(f"  Department: {result['department']}")
+        print(f"  Issued:     {result['issued_at']}")
+    else:
+        print("\n  ✗ FAILED\n")
+        print(f"  Error: {result.get('error', 'Unknown')}")
+        if result.get('student_id'):
+            print(f"  Card ID: {result['student_id']}")
 
     print("\n" + "=" * 50)
-    if result["verified"]:
-        print("✓ STUDENT VERIFIED")
-        print("=" * 50)
-        print(f"  Student ID: {result['student_id']}")
-        print(f"  Name: {result['student_name']}")
-        print(f"  Department: {result['department']}")
-        print(f"  Issued: {result['issued_at']}")
-    else:
-        print("✗ VERIFICATION FAILED")
-        print("=" * 50)
-        print(f"  Error: {result.get('error', 'Unknown error')}")
+    print("  Press Ctrl+C to exit")
+    print("=" * 50)
 
-    return result
+
+def try_read_card(pn532):
+    uid = pn532.read_passive_target(timeout=0.5)
+    if uid is None:
+        return None, None
+
+    uid_str = "".join(f"{b:02X}" for b in uid)
+    data = read_json_from_nfc(pn532, num_blocks=8, debug=False)
+    return uid_str, data
 
 
 def continuous_verify():
     errors = validate_config()
     if errors:
-        print("Configuration errors:")
-        for e in errors:
-            print(f"  - {e}")
+        print("Config errors:", errors)
         return
 
-    print("Checking blockchain connection...")
     if not check_connection():
-        print("ERROR: Cannot connect to Blockfrost API")
+        print("Cannot connect to Blockfrost")
         return
-    print("✓ Connected to Blockfrost")
 
     pn532 = init_pn532()
-    print("\n=== Continuous Verification Mode ===")
-    print("Place student cards on reader (Ctrl+C to exit)\n")
+
+    last_result = None
+    last_scan_time = "Never"
+    last_uid = None
+
+    display_result(None, last_scan_time)
 
     while True:
         try:
-            nfc_data = read_nfc_data(pn532)
-            if nfc_data and all(f in nfc_data for f in ["p", "a", "s"]):
-                result = verify_on_blockchain(
-                    nfc_data["p"], nfc_data["a"], nfc_data["s"]
-                )
-                print("\n" + "=" * 50)
-                if result["verified"]:
-                    print("✓ VERIFIED:", result["student_name"])
+            uid_str, nfc_data = try_read_card(pn532)
+
+            if uid_str and uid_str != last_uid:
+                if nfc_data and all(f in nfc_data for f in ["p", "a", "s"]):
+                    last_result = verify_on_blockchain(
+                        nfc_data["p"], nfc_data["a"], nfc_data["s"]
+                    )
+                    last_scan_time = datetime.now().strftime("%H:%M:%S")
+                    last_uid = uid_str
+                    display_result(last_result, last_scan_time)
                 else:
-                    print("✗ FAILED:", result.get("error", "Unknown"))
-                print("=" * 50 + "\n")
+                    last_result = {"verified": False, "error": "Invalid card data"}
+                    last_scan_time = datetime.now().strftime("%H:%M:%S")
+                    last_uid = uid_str
+                    display_result(last_result, last_scan_time)
+
+            time.sleep(0.3)
+
         except KeyboardInterrupt:
-            print("\nExiting...")
+            print("\n\nExiting...")
             break
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"\nError: {e}")
+            time.sleep(1)
+
+
+def verify_student():
+    errors = validate_config()
+    if errors:
+        print("Config errors:", errors)
+        return None
+
+    if not check_connection():
+        print("Cannot connect to Blockfrost")
+        return None
+
+    pn532 = init_pn532()
+
+    print("\nPlace student card on reader...")
+    data = read_json_from_nfc(pn532, num_blocks=8, debug=False)
+
+    if not data:
+        print("Could not read NFC tag")
+        return None
+
+    if not all(f in data for f in ["p", "a", "s"]):
+        print("Invalid NFC data")
+        return None
+
+    print("Querying blockchain...")
+    result = verify_on_blockchain(data["p"], data["a"], data["s"])
+
+    print("\n" + "=" * 50)
+    if result["verified"]:
+        print("✓ STUDENT VERIFIED")
+        print("=" * 50)
+        print(f"  ID:         {result['student_id']}")
+        print(f"  Name:       {result['student_name']}")
+        print(f"  Department: {result['department']}")
+        print(f"  Issued:     {result['issued_at']}")
+    else:
+        print("✗ VERIFICATION FAILED")
+        print("=" * 50)
+        print(f"  Error: {result.get('error', 'Unknown')}")
+    print("=" * 50)
+
+    return result
 
 
 if __name__ == "__main__":
     import argparse
-
     parser = argparse.ArgumentParser(description="Verify student via NFC + blockchain")
-    parser.add_argument(
-        "--continuous", "-c", action="store_true", help="Continuous verification mode"
-    )
+    parser.add_argument("-c", "--continuous", action="store_true", help="Daemon mode")
     args = parser.parse_args()
 
     if args.continuous:
