@@ -7,3 +7,11 @@ docs/
 
 **/.env
 **/node_modules
+
+.claude
+.opencode
+**/docs
+**/plans
+**/CLAUDE.md
+**/.repomixignore
+iot1-sensor-data-store/repomix-output.xml
