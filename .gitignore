@@ -14,4 +14,5 @@ docs/
 **/plans
 **/CLAUDE.md
 **/.repomixignore
-iot1-sensor-data-store/repomix-output.xml
+**/repomix-output.xml
+**/ssh
