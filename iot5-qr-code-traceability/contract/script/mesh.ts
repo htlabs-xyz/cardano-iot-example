@@ -49,93 +49,51 @@ import blueprint from '../plutus.json';
  * ```
  */
 export class MeshAdapter {
-    // ---------------------------------------------
-    // Properties
-    // ---------------------------------------------
-    public policyId!: string;
     protected wallet: MeshWallet
     protected fetcher: IFetcher;
+
     protected mintCompileCode: string;
     protected mintScriptCbor!: string;
     protected mintScript!: PlutusScript;
-    protected meshTxBuilder: MeshTxBuilder;
+
+    protected spendCompileCode: string;
+    protected spendScriptCbor!: string;
+    protected spendScript!: PlutusScript;
+
+    public policyId!: string;
     protected contractAddress!: string;
-    protected contractScript!: PlutusScript;
-    protected contractScriptCbor!: string;
-    protected contractCompileCode: string;
+    protected meshTxBuilder: MeshTxBuilder;
 
-    /**
-     * Constructor
-     *
-     * Initializes the adapter by binding the wallet, Blockfrost provider,
-     * and transaction builder. Loads, parameterizes, and serializes
-     * both minting and spending Plutus scripts.
-     *
-     * @param {Object} params - Configuration object.
-     * @param {wallet} [params.wallet] - The Mesh wallet used for signing and UTxO management.
-     * @param {string} [params.ownerAddress] - Optional bech32 address to derive the owner’s pubKeyHash.
-     *
-     * @throws {Error} If the specified validator cannot be found in the blueprint.
-     */
+
+
     constructor({
-        wallet = null!,
-        provider = null!,
-
+        wallet,
+        provider,
     }: {
-        wallet?: MeshWallet
-        provider?: BlockfrostProvider;
+        wallet: MeshWallet
+        provider: BlockfrostProvider;
     }) {
+
         this.wallet = wallet;
-        this.fetcher = provider
+        this.fetcher = provider;
         this.meshTxBuilder = new MeshTxBuilder({
             fetcher: provider
         });
-        this.contractCompileCode = this.readValidator(
-            blueprint,
-            "contract.contract.spend",
-        );
+        const walletAddress = this.wallet.getChangeAddress()
+        const pubKeyOwner = deserializeAddress(walletAddress).pubKeyHash
 
-        this.mintCompileCode = this.readValidator(
-            blueprint,
-            "contract.contract.mint",
-        );
-
-        this.initialize();
-    }
-
-    private async initialize() {
-        const changeAddress = await this.wallet.getChangeAddress();
-        const pubKeyOwner = deserializeAddress(changeAddress).pubKeyHash
-
-        this.contractScriptCbor = applyParamsToScript(
-            this.contractCompileCode,
-            [pubKeyOwner],
-        );
-        this.contractScript = {
-            code: this.contractScriptCbor,
-            version: 'V3',
-        };
-
-        this.mintScriptCbor = applyParamsToScript(
-            this.mintCompileCode,
-            [pubKeyOwner],
-        );
-
-        this.contractAddress = serializePlutusScript(
-            this.contractScript,
-            undefined,
-            0,
-            false,
-        ).address;
-
-        this.mintScript = {
-            code: this.mintScriptCbor,
-            version: 'V3',
-        };
-
+        this.mintCompileCode = this.readValidator(blueprint, "contract.contract.mint",);
+        this.mintScriptCbor = applyParamsToScript(this.mintCompileCode, [pubKeyOwner],);
+        this.mintScript = { code: this.mintScriptCbor, version: 'V3' };
         this.policyId = resolveScriptHash(this.mintScriptCbor, 'V3');
-    }
+        console.log("Policyid: ", this.policyId)
 
+        this.spendCompileCode = this.readValidator(blueprint, "contract.contract.spend");
+        this.spendScriptCbor = applyParamsToScript(this.spendCompileCode, [pubKeyOwner]);
+        this.spendScript = { code: this.spendCompileCode, version: 'V3' };
+        this.contractAddress = serializePlutusScript(this.spendScript, undefined, 0, false).address;
+        console.log("Contract Address: ", this.contractAddress)
+    }
     /**
      * Retrieve wallet information required to build a transaction.
      *
@@ -240,28 +198,4 @@ export class MeshAdapter {
      * - `authorized`: Bech32 address derived from datum's pubKeyHash and stakeCredentialHash.
      * - `isLock`: Integer flag indicating locked (1) or unlocked (0) status.
      */
-    protected convertDatum = ({
-        plutusData,
-    }: {
-        plutusData: string;
-    }): {
-        authorized: string;
-        isLock: number;
-    } => {
-        const datum = deserializeDatum(plutusData);
-        const authority = serializeAddressObj(
-            pubKeyAddress(
-                datum.fields[0].fields[0].bytes,
-                datum.fields[0].fields[1].bytes,
-                false,
-            ),
-            0,
-        );
-        const isLocked = datum.fields[1].int;
-
-        return {
-            authorized: authority,
-            isLock: isLocked,
-        };
-    };
 }
