@@ -149,11 +149,10 @@ export class Contract extends MeshAdapter {
 
         const userUnit = this.policyId + CIP68_222(stringToHex(assetName))
         const referenceUnit = this.policyId + CIP68_100(stringToHex(assetName))
-        console.log(this.contractAddress,referenceUnit)
         const userUtxos = await this.getAddressUTXOAssets(walletAddress, userUnit); 
         const referenceUtxo = await this.getAddressUTXOAsset(this.contractAddress, referenceUnit);
-
         if (!referenceUtxo) throw new Error("Reference Utxo Not Found");
+
         const amount = userUtxos
             .flatMap(u => u.output.amount)
             .filter(a => a.unit === userUnit)

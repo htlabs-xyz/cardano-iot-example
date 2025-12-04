@@ -17,12 +17,12 @@ export const mint = async () => {
         wallet: wallet,
         provider: provider,
     });
-    const assetName = 'box_gsdf'
+    const assetName = 'box_dfg'
     const unsignedTx: string = await contract.mint({
         assetName: assetName,
         metadata: {
             name: assetName,
-            description: 'Traceability asset for box_gsdf',
+            description: 'Traceability asset for box_dfg',
             locate: "locate 1",
             key1: "value1",
             key2: "value2"
@@ -43,19 +43,18 @@ export const update = async () => {
         wallet: wallet,
         provider: provider,
     });
-    const assetName = "box_gsdf"
+    const assetName = "box_dfg"
     const unsignedTx: string = await contract.update({
         assetName: assetName,
         newMetadata: {
             name: assetName,
-            description: 'Traceability asset for box_gsdf',
+            description: 'Traceability asset for box_dfg',
             locate: "locate 2",
             key1: "value10",
             key2: "value20"
         }
     });
     const signedTx = await wallet.signTx(unsignedTx, true);
-    console.log(signedTx)
     const txHash = await wallet.submitTx(signedTx);
     console.log(`https://preprod.cexplorer.io/tx/` + txHash);
     await new Promise(() => {
@@ -70,7 +69,7 @@ export const burn = async () => {
         wallet: wallet,
         provider: provider,
     });
-    const assetName = "box_gsdf"
+    const assetName = "box_dfg"
     const unsignedTx: string = await contract.burn({
         assetName: assetName
     });

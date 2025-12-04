@@ -90,7 +90,7 @@ export class MeshAdapter {
 
         this.spendCompileCode = this.readValidator(blueprint, "contract.contract.spend");
         this.spendScriptCbor = applyParamsToScript(this.spendCompileCode, [pubKeyOwner]);
-        this.spendScript = { code: this.spendCompileCode, version: 'V3' };
+        this.spendScript = { code: this.spendScriptCbor, version: 'V3' };
         this.contractAddress = serializePlutusScript(this.spendScript, undefined, 0, false).address;
         console.log("Contract Address: ", this.contractAddress)
     }
