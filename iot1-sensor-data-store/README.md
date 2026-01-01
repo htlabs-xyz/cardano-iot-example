@@ -17,9 +17,9 @@ This repository provides a complete, working example of:
 - Smart home automation with blockchain verification
 - IoT device data provenance and audit trails
 
-## � Demo
+## 📹 Demo
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/khH-3ZzBanU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+[![Watch the video](https://img.youtube.com/vi/khH-3ZzBanU/0.jpg)](https://www.youtube.com/watch?v=khH-3ZzBanU&feature=youtu.be)
 
 ## �🔄 How It Works
 
