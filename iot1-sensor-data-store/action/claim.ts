@@ -22,7 +22,7 @@ export const claim = async () => {
         provider: provider,
     });
     const unsignedTx: string = await sensorContract.withdraw({
-        title: 'dht22_01',
+        title: 'dht22_sensor_01',
         value: 40000000,
     });
 

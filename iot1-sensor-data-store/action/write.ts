@@ -41,7 +41,7 @@ export const writeDataToContract = async () => {
   const humidityOnChain = Math.round(sensorData.humidity * 1000);
   
   console.log('🔨 Step 2/5: Building transaction...');
-  console.log('   • Sensor Name: dht22_01');
+  console.log('   • Sensor Name: dht22_sensor_01');
   console.log('   • Temperature (on-chain):', tempOnChain, `(${sensorData.temperature.toFixed(1)}°C × 1000)`);
   console.log('   • Humidity (on-chain):', humidityOnChain, `(${sensorData.humidity.toFixed(1)}% × 1000)\n`);
   
@@ -50,7 +50,7 @@ export const writeDataToContract = async () => {
       new SensorContract({ wallet: wallet, provider: provider });
     
     const unsignedTx: string = await sensorContract.write({
-      sensorName: 'dht22_01',
+      sensorName: 'dht22_sensor_01',
       temperature: tempOnChain,
       humidity: humidityOnChain,
     });

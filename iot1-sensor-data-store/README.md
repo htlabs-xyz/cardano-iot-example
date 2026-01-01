@@ -17,7 +17,11 @@ This repository provides a complete, working example of:
 - Smart home automation with blockchain verification
 - IoT device data provenance and audit trails
 
-## 🔄 How It Works
+## � Demo
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/khH-3ZzBanU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+## �🔄 How It Works
 
 ```
       ┌─────────────────┐
@@ -325,7 +329,7 @@ npm start -- --write
    ✓ Humidity: 78.6%
 
 🔨 Step 2/5: Building transaction...
-   • Sensor Name: dht22_01
+   • Sensor Name: dht22_sensor_01
    • Temperature (on-chain): 23900 (23.9°C × 1000)
    • Humidity (on-chain): 78600 (78.6% × 1000)
 
@@ -359,7 +363,7 @@ npm start -- --write
 ```typescript
 // Data format in smart contract
 {
-  sensorName: 'dht22_01',
+  sensorName: 'dht22_sensor_01',
   temperature: 23900,  // = 23.9°C × 1000
   humidity: 78600      // = 78.6% × 1000
 }
@@ -394,7 +398,7 @@ npm run monitor
 ╚══════════════════════════════════════════════════════════╝
 
 �🔍 Querying Cardano blockchain...
-   • Sensor: dht22_01
+   • Sensor: dht22_sensor_01
    • Policy ID: d5e6f7a8b9c0d1e2f3...
 
 � Fetching transactions...

@@ -15,7 +15,7 @@ let wallet = new MeshWallet({
   },
 });
 export const readDataFromContract = async () => {
-  const sensorName = 'dht22_01';
+  const sensorName = 'dht22_sensor_01';
   const forgingScript = ForgeScript.withOneSignature(await wallet.getChangeAddress());
   const policyId = resolveScriptHash(forgingScript);
   const assetFeed = policyId + stringToHex(sensorName);
