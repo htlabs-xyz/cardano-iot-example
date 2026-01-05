@@ -23,8 +23,8 @@ export const mint = async () => {
         metadata: {
             name: assetName,
             description: 'Traceability asset for box_dfg',
-            locate: "locate 1",
-            key1: "value1",
+            image: "",
+            
             key2: "value2"
         }
     });
