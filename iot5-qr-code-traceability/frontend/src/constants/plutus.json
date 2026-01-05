@@ -1,0 +1,119 @@
+{
+  "preamble": {
+    "title": "htlabs/traceability",
+    "description": "Aiken contracts for project 'htlabs/traceability'",
+    "version": "0.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.19+e525483"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "contract.contract.spend",
+      "datum": {
+        "title": "_datum",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/contract~1StoreRedeemer"
+        }
+      },
+      "parameters": [
+        {
+          "title": "_issuer",
+          "schema": {
+            "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
+          }
+        }
+      ],
+      "compiledCode": "590109010100229800aba2aba1aab9faab9eaab9dab9a9bae0024888888966002646465300130063754003370e90004dc3a400530090039804801244444b300130030058994c004c03c006601e6020003300c3754005159800980298061baa0028a518a51402c91112cc004c02400a2b30013011375400d0018b20248acc004c02000a2b30013011375400d0018b20248b201e403c300c375400d1598009802002c660026eb8c038c030dd50034566002600860166ea80062946294500a4c02cdd5000a444b300130070018acc004c03cdd5002400a2c80822b300130060018acc004c03cdd5002400a2c80822c806900d22c805100a0c020c024004c020004c010dd5004452689b2b200401",
+      "hash": "c858f8f422e41b49daa68b709d6c18fb441d83296cb66c46dcb182d6"
+    },
+    {
+      "title": "contract.contract.mint",
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/contract~1MintRedeemer"
+        }
+      },
+      "parameters": [
+        {
+          "title": "_issuer",
+          "schema": {
+            "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
+          }
+        }
+      ],
+      "compiledCode": "590109010100229800aba2aba1aab9faab9eaab9dab9a9bae0024888888966002646465300130063754003370e90004dc3a400530090039804801244444b300130030058994c004c03c006601e6020003300c3754005159800980298061baa0028a518a51402c91112cc004c02400a2b30013011375400d0018b20248acc004c02000a2b30013011375400d0018b20248b201e403c300c375400d1598009802002c660026eb8c038c030dd50034566002600860166ea80062946294500a4c02cdd5000a444b300130070018acc004c03cdd5002400a2c80822b300130060018acc004c03cdd5002400a2c80822c806900d22c805100a0c020c024004c020004c010dd5004452689b2b200401",
+      "hash": "c858f8f422e41b49daa68b709d6c18fb441d83296cb66c46dcb182d6"
+    },
+    {
+      "title": "contract.contract.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "parameters": [
+        {
+          "title": "_issuer",
+          "schema": {
+            "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
+          }
+        }
+      ],
+      "compiledCode": "590109010100229800aba2aba1aab9faab9eaab9dab9a9bae0024888888966002646465300130063754003370e90004dc3a400530090039804801244444b300130030058994c004c03c006601e6020003300c3754005159800980298061baa0028a518a51402c91112cc004c02400a2b30013011375400d0018b20248acc004c02000a2b30013011375400d0018b20248b201e403c300c375400d1598009802002c660026eb8c038c030dd50034566002600860166ea80062946294500a4c02cdd5000a444b300130070018acc004c03cdd5002400a2c80822b300130060018acc004c03cdd5002400a2c80822c806900d22c805100a0c020c024004c020004c010dd5004452689b2b200401",
+      "hash": "c858f8f422e41b49daa68b709d6c18fb441d83296cb66c46dcb182d6"
+    }
+  ],
+  "definitions": {
+    "Data": {
+      "title": "Data",
+      "description": "Any Plutus data."
+    },
+    "aiken/crypto/VerificationKeyHash": {
+      "title": "VerificationKeyHash",
+      "dataType": "bytes"
+    },
+    "contract/MintRedeemer": {
+      "title": "MintRedeemer",
+      "anyOf": [
+        {
+          "title": "Mint",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "Burn",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        }
+      ]
+    },
+    "contract/StoreRedeemer": {
+      "title": "StoreRedeemer",
+      "anyOf": [
+        {
+          "title": "Update",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "Remove",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        }
+      ]
+    }
+  }
+}

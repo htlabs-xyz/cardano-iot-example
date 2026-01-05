@@ -1,59 +1,55 @@
-// app/create/page.tsx
 'use client';
 
 import { useState } from 'react';
 import QRCode from 'qrcode';
-import { nanoid } from 'nanoid';
 import { QrCode, Download, ExternalLink, Sparkles } from 'lucide-react';
 
-export default function CreateProduct() {
+export default function CreateNFTProductQR() {
   const [formData, setFormData] = useState({
-    name: '',
-    origin: '',
-    manufacture_date: '',
-    manufacturer: '',
-    description: '',
+    policyId: '',
+    assetName: '',
   });
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [productUrl, setProductUrl] = useState<string | null>(null);
   const [productId, setProductId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setQrCodeUrl(null); 
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim()) return;
+    if (!formData.policyId.trim() || !formData.assetName.trim()) return;
 
-    setLoading(true);
-
-    const id = nanoid(10);
-    setProductId(id);
-
-    // Save to database
-    const res = await fetch('/api/product', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, ...formData }),
-    });
-
-    if (!res.ok) {
-      alert('Error saving product data. Please try again.');
-      setLoading(false);
+    const policy = formData.policyId.trim().toLowerCase();
+    if (!/^[0-9a-f]{56}$/.test(policy)) {
+      alert('Policy ID must be a valid 56-character hexadecimal string!');
       return;
     }
 
-    // Generate QR code pointing to product detail page
-    const url = `${window.location.origin}/product/${id}`;
-    const qr = await QRCode.toDataURL(url, {
-      errorCorrectionLevel: 'H',
-      width: 512,
-      margin: 4,
-      color: { dark: '#1e293b', light: '#ffffff' },
-    });
+    setLoading(true);
 
-    setQrCodeUrl(qr);
+    const assetName = formData.assetName.trim();
+    const id = policy + assetName; 
+    setProductId(id);
+
+    const url = `${window.location.origin}/product/${id}`;
+    setProductUrl(url);
+
+    try {
+      const qr = await QRCode.toDataURL(url, {
+        errorCorrectionLevel: 'H',
+        width: 512,
+        margin: 4,
+        color: { dark: '#1e293b', light: '#ffffff' },
+      });
+      setQrCodeUrl(qr);
+    } catch (err) {
+      alert('Error generating QR code!');
+    }
+
     setLoading(false);
   };
 
@@ -70,13 +66,13 @@ export default function CreateProduct() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-white/50">
             <QrCode className="w-6 h-6 text-blue-600" />
-            <span className="font-semibold text-slate-700">Create Product QR Code</span>
+            <span className="font-semibold text-slate-700">Generate Cardano NFT QR Code</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">
-            Register a New Product
+            QR Code Linking to Your Product Page
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Fill in product details to generate a secure, traceable QR code for consumers
+            The QR code will directly link to product on this website
           </p>
         </div>
 
@@ -86,69 +82,37 @@ export default function CreateProduct() {
             <form onSubmit={handleSubmit} className="space-y-7">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Product Name <span className="text-red-500">*</span>
+                  Policy ID <span className="text-red-500">*</span>
                 </label>
                 <input
-                  name="name"
+                  name="policyId"
                   type="text"
                   required
-                  value={formData.name}
+                  value={formData.policyId}
                   onChange={handleChange}
                   className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                  placeholder="e.g., Premium ST25 Rice"
+                  placeholder="e.g., 0e14267a8020229adc0184dd25fa3174c3f7d6caadcb4425c70e7c04"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Origin</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Asset Name (text) <span className="text-red-500">*</span>
+                </label>
                 <input
-                  name="origin"
+                  name="assetName"
                   type="text"
-                  value={formData.origin}
+                  required
+                  value={formData.assetName}
                   onChange={handleChange}
                   className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                  placeholder="e.g., Soc Trang, Vietnam"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Manufacture Date</label>
-                <input
-                  name="manufacture_date"
-                  type="date"
-                  value={formData.manufacture_date}
-                  onChange={handleChange}
-                  className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Manufacturer</label>
-                <input
-                  name="manufacturer"
-                  type="text"
-                  value={formData.manufacturer}
-                  onChange={handleChange}
-                  className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                  placeholder="e.g., ABC Food Corporation"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Description</label>
-                <textarea
-                  name="description"
-                  rows={5}
-                  value={formData.description}
-                  onChange={handleChange}
-                  className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all resize-none"
-                  placeholder="Certifications, production process, sustainability info..."
+                  placeholder="e.g., unsig26071 or SpaceBud3269"
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={loading || !formData.name.trim()}
+                disabled={loading}
                 className="w-full py-5 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold text-lg rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
               >
                 {loading ? (
@@ -168,8 +132,8 @@ export default function CreateProduct() {
             {qrCodeUrl ? (
               <div className="text-center space-y-8">
                 <div>
-                  <p className="text-lg font-medium text-slate-600 mb-2">Product ID</p>
-                  <p className="text-2xl font-bold text-blue-600 font-mono tracking-wider">
+                  <p className="text-lg font-medium text-slate-600 mb-2">Product ID (policy + asset name)</p>
+                  <p className="text-xl font-bold text-blue-600 font-mono tracking-wider break-all">
                     {productId}
                   </p>
                 </div>
@@ -177,7 +141,7 @@ export default function CreateProduct() {
                 <div className="p-6 bg-white rounded-2xl shadow-inner">
                   <img
                     src={qrCodeUrl}
-                    alt="Product QR Code"
+                    alt="NFT QR Code"
                     className="w-80 h-80 mx-auto"
                   />
                 </div>
@@ -193,7 +157,7 @@ export default function CreateProduct() {
                   </a>
 
                   <a
-                    href={`/product/${productId}`}
+                    href={productUrl!}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-semibold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300"
@@ -209,13 +173,10 @@ export default function CreateProduct() {
                   <QrCode className="w-32 h-32 text-blue-400" />
                 </div>
                 <p className="text-xl font-medium text-slate-600">
-                  Fill in the product details and click
-                </p>
-                <p className="text-2xl font-bold text-slate-800 mt-2">
-                  "Generate QR Code"
+                  Enter Policy ID + Asset Name and click generate
                 </p>
                 <p className="text-slate-500 mt-4">
-                  Your unique traceable QR code will appear here instantly
+                  The QR code will link directly to the product on your website
                 </p>
               </div>
             )}
