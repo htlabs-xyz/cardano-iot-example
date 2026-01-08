@@ -1,16 +1,21 @@
-import { BlockfrostProvider } from '@meshsdk/core';
-import { BlockFrostAPI } from '@blockfrost/blockfrost-js';
+import { BlockfrostProvider } from "@meshsdk/core";
 
-const BLOCKFROST_API_KEY = process.env.BLOCKFROST_API_KEY;
+const blockfrostProviderSingleton = () => {
+  const projectId = process.env.BLOCKFROST_API_KEY;
+  if (!projectId) {
+    throw new Error("BLOCKFROST_PROJECT_ID is not defined");
+  }
+  return new BlockfrostProvider(projectId);
+};
 
-if (!BLOCKFROST_API_KEY) {
-  console.warn('BLOCKFROST_API_KEY not set - API routes will fail');
+declare const globalThis: {
+  blockfrostProviderGlobal: ReturnType<typeof blockfrostProviderSingleton>;
+} & typeof global;
+
+const blockfrostProvider = globalThis.blockfrostProviderGlobal ?? blockfrostProviderSingleton();
+
+if (process.env.NODE_ENV !== "production") {
+  globalThis.blockfrostProviderGlobal = blockfrostProvider;
 }
 
-// MeshSDK provider (for TX building and UTxO fetching)
-export const meshProvider = new BlockfrostProvider(BLOCKFROST_API_KEY || '');
-
-// Blockfrost-js API (for asset queries)
-export const blockfrostApi = new BlockFrostAPI({
-  projectId: BLOCKFROST_API_KEY || '',
-});
+export { blockfrostProvider };

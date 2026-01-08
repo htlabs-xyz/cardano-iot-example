@@ -2,16 +2,18 @@
 
 import useSWR from 'swr';
 import { useWallet } from '@/components/common/cardano-wallet/use-wallets';
+import { useLockerTitle } from '@/hooks/use-locker-title';
 import type { LockStatus } from '@/lib/types';
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function useLockStatus() {
   const { walletName, address } = useWallet();
+  const title = useLockerTitle();
   const connected = walletName !== null;
 
   const { data, error, isLoading, mutate } = useSWR<LockStatus>(
-    address ? `/api/status?owner=${address}` : null,
+    address && title ? `/api/status?owner=${address}&title=${encodeURIComponent(title)}` : null,
     fetcher,
     {
       refreshInterval: 15000, // Poll every 15 seconds

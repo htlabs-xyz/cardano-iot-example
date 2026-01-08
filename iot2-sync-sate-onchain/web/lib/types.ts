@@ -1,11 +1,25 @@
 import type { UTxO } from '@meshsdk/core';
 
-export interface TxBuildRequest {
+// Init uses title (creates new locker)
+export interface InitRequest {
   walletAddress: string;
+  title: string;
 }
 
-export interface AuthorityRequest extends TxBuildRequest {
+// Lock/Unlock uses unit (operates on existing locker)
+export interface UnitTxRequest {
+  walletAddress: string;
+  unit: string;
+}
+
+export interface AuthorityRequest extends UnitTxRequest {
   newAuthority: string;
+}
+
+// Legacy - for backward compatibility
+export interface TxBuildRequest {
+  walletAddress: string;
+  title: string;
 }
 
 export interface TxBuildResponse {

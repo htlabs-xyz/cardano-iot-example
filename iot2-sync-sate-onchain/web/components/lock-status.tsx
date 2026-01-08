@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLockStatus } from '@/hooks/use-lock-status';
-import { useWallet } from '@meshsdk/react';
 import { Lock, Unlock, AlertCircle } from 'lucide-react';
+import { useWallet } from './common/cardano-wallet/use-wallets';
 
 function truncateAddress(address: string, chars = 8) {
   if (!address) return '';
@@ -13,10 +13,10 @@ function truncateAddress(address: string, chars = 8) {
 }
 
 export function LockStatus() {
-  const { connected } = useWallet();
+  const { browserWallet } = useWallet();
   const { status, isLoading, error } = useLockStatus();
 
-  if (!connected) {
+  if (!browserWallet) {
     return (
       <Card>
         <CardContent className="pt-6">

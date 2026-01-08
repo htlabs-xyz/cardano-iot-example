@@ -1,6 +1,8 @@
 'use client';
 
 import { useWallet } from '@/components/common/cardano-wallet/use-wallets';
+import { useLockerTitle } from '@/hooks/use-locker-title';
+import { useLockStatus } from '@/hooks/use-lock-status';
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -13,6 +15,8 @@ interface UseTxOptions {
 
 export function useWalletTx(options: UseTxOptions = {}) {
   const { browserWallet, walletName, address } = useWallet();
+  const title = useLockerTitle();
+  const { status } = useLockStatus();
   const connected = walletName !== null;
   const [isLoading, setIsLoading] = useState(false);
   const [currentAction, setCurrentAction] = useState<TxAction | null>(null);
@@ -30,17 +34,31 @@ export function useWalletTx(options: UseTxOptions = {}) {
       setCurrentAction(action);
 
       try {
-        // 1. Get wallet address (already stored in Zustand)
         const walletAddress = address;
 
-        // 2. Build unsigned TX via API (server fetches UTXOs)
+        // Build request body based on action type
+        let body: Record<string, any>;
+        if (action === 'init') {
+          // Init uses title
+          body = { walletAddress, title, ...extraParams };
+        } else {
+          // Lock/Unlock/Authority uses unit and lockerAddress
+          if (!status?.assetUnit || !status?.lockerAddress) {
+            throw new Error('Locker status not available');
+          }
+          body = {
+            walletAddress,
+            unit: status.assetUnit,
+            lockerAddress: status.lockerAddress,
+            ...extraParams,
+          };
+        }
+
+        // Build unsigned TX via API
         const response = await fetch(`/api/tx/${action}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            walletAddress,
-            ...extraParams,
-          }),
+          body: JSON.stringify(body),
         });
 
         const data = await response.json();
@@ -49,14 +67,14 @@ export function useWalletTx(options: UseTxOptions = {}) {
           throw new Error(data.error || 'Failed to build transaction');
         }
 
-        // 3. Sign with wallet
+        // Sign with wallet
         toast.info('Please sign the transaction', {
           description: 'Check your wallet for the signing prompt',
         });
 
         const signedTx = await browserWallet.signTx(data.unsignedTx, true);
 
-        // 4. Submit transaction
+        // Submit transaction
         const txHash = await browserWallet.submitTx(signedTx);
 
         toast.success('Transaction submitted!', {
@@ -86,7 +104,7 @@ export function useWalletTx(options: UseTxOptions = {}) {
         setCurrentAction(null);
       }
     },
-    [browserWallet, connected, address, options]
+    [browserWallet, connected, address, title, status, options]
   );
 
   return {

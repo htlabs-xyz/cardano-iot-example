@@ -1,29 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ServerLockerContract } from '@/lib/server-locker-contract';
-import { withErrorHandling, corsHeaders } from '@/lib/api-handler';
-import { validateTxBuildRequest } from '@/lib/validation';
+import { validateInitRequest } from '@/lib/validation';
+import { MeshWallet } from '@meshsdk/core';
+import { blockfrostProvider } from '@/lib/blockfrost';
+import { LockerContract } from '@/contract/offchain';
 
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders() });
-}
+export const POST = async (request: NextRequest) => {
+  try {
+    const body = await request.json();
+    const { walletAddress, title } = validateInitRequest(body);
+    const wallet = new MeshWallet({
+      networkId: 0,
+      fetcher: blockfrostProvider,
+      submitter: blockfrostProvider,
+      key: {
+        type: 'address',
+        address: walletAddress,
+      },
+    });
+    const lockerContract = new LockerContract({
+      wallet: wallet,
+      provider: blockfrostProvider,
+    });
+    await lockerContract.ensureInitialized();
 
-export const POST = withErrorHandling(async (request: NextRequest) => {
-  const body = await request.json();
-  const { walletAddress } = validateTxBuildRequest(body);
+    const unsignedTx = await lockerContract.init({ title });
 
-  const contract = new ServerLockerContract({
-    ownerAddress: walletAddress,
-  });
-
-  const unsignedTx = await contract.buildInit(walletAddress);
-
-  return NextResponse.json(
-    {
+    return NextResponse.json({
       success: true,
       unsignedTx,
-      policyId: contract.policyId,
-      lockerAddress: contract.getLockerAddress(),
-    },
-    { headers: corsHeaders() }
-  );
-});
+    });
+  } catch (e) {
+    console.error(e);
+    return Response.json(
+      { data: null, message: e instanceof Error ? e.message : JSON.stringify(e) },
+      { status: 500 }
+    );
+  }
+};

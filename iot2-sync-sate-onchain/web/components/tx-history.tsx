@@ -3,19 +3,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTxHistory } from '@/hooks/use-tx-history';
-import { useWallet } from '@meshsdk/react';
 import { ExternalLink, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useWallet } from './common/cardano-wallet/use-wallets';
 
 function truncateHash(hash: string) {
   return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
 }
 
 export function TxHistory() {
-  const { connected } = useWallet();
+  const { browserWallet } = useWallet();
   const { history, isLoading, error } = useTxHistory(10);
 
-  if (!connected) {
+  if (!browserWallet) {
     return null;
   }
 
