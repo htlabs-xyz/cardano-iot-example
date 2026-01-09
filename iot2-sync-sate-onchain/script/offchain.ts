@@ -128,6 +128,10 @@ export class LockerContract extends MeshAdapter {
             const datum = this.convertDatum({
                 plutusData: utxo.output.plutusData as string,
             });
+            // Skip if already locked - Plutus validator requires state change
+            if (datum.isLock === 1) {
+                throw new Error('Locker is already locked. Use unLock() to unlock first.');
+            }
             unsignedTx
                 .spendingPlutusScriptV3()
                 .txIn(utxo.input.txHash, utxo.input.outputIndex)
