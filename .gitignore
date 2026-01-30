@@ -16,3 +16,14 @@ docs/
 **/.repomixignore
 **/repomix-output.xml
 **/ssh
+
+#claude
+.claude
+CLAUDE.md
+release-manifest.json
+plans/templates
+.repomixignore
+.opencode
+AGENTS.md
+repomix-output.xml
+.yarn/install-state.gz
