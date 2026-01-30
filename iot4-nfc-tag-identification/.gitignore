@@ -219,3 +219,14 @@ __marimo__/
 wallet/
 *.skey
 *.vkey
+
+#claude
+.claude
+CLAUDE.md
+release-manifest.json
+plans/templates
+.repomixignore
+.opencode
+AGENTS.md
+repomix-output.xml
+.yarn/install-state.gz

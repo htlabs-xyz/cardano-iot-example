@@ -5,36 +5,6 @@
 #include "datum_parser.h"
 
 unsigned long lastPollTime = 0;
-unsigned long unlockLedOnTime = 0;  // When LED turned on for unlock
-bool ledState = false;
-bool isLocked = false;
-
-#define UNLOCK_LED_DURATION_MS 3000  // LED on for 3s when unlocked
-
-// Update LED based on lock state
-void updateLED() {
-    if (isLocked) {
-        // LED off when locked
-        if (ledState) {
-            ledState = false;
-            digitalWrite(LED_PIN, LOW);
-        }
-    } else {
-        // LED on for 3s when unlocked
-        if (unlockLedOnTime > 0 && millis() - unlockLedOnTime < UNLOCK_LED_DURATION_MS) {
-            if (!ledState) {
-                ledState = true;
-                digitalWrite(LED_PIN, HIGH);
-            }
-        } else {
-            // Turn off after 3s
-            if (ledState) {
-                ledState = false;
-                digitalWrite(LED_PIN, LOW);
-            }
-        }
-    }
-}
 
 // Check asset state following monitor.ts approach
 void checkAssetState() {
@@ -48,14 +18,6 @@ void checkAssetState() {
     DatumResult datum = parseDatum(state.inlineDatum, 0); // 0=testnet
 
     if (datum.success) {
-        // Update lock state for LED control
-        if (isLocked != datum.isLocked) {
-            isLocked = datum.isLocked;
-            if (!isLocked) {
-                unlockLedOnTime = millis();  // Start 3s LED timer
-            }
-            Serial.printf(">>> State changed: %s\n", isLocked ? "LOCKED" : "UNLOCKED");
-        }
         Serial.printf("Authority: %s | Locked: %s\n",
             datum.authorityAddress.c_str(),
             datum.isLocked ? "true" : "false");
@@ -67,10 +29,6 @@ void checkAssetState() {
 void setup() {
     Serial.begin(115200);
     delay(1000);
-
-    // Initialize LED
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
 
     Serial.println("\n\n=== ESP32 Cardano Asset Monitor ===");
     Serial.println("===================================\n");
@@ -100,9 +58,6 @@ void loop() {
         checkAssetState();
         lastPollTime = millis();
     }
-
-    // Non-blocking LED update
-    updateLED();
 
     delay(10);
 }

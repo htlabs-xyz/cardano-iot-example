@@ -11,7 +11,15 @@ export const monitor = async (unit: string) => {
     const txs = await blockFrostAPI.assetsTransactions(unit)
     const utxo = await blockFrostAPI.txsUtxos(txs.slice(-1)[0].tx_hash);
     const datum = deserializeDatum(utxo.outputs[0].inline_datum || "")
-    const authority = serializeAddressObj(datum.fields[0], 0);
+    // Construct address object from datum fields (pubKeyHash, stakeCredentialHash)
+    const authority = serializeAddressObj(
+        pubKeyAddress(
+            datum.fields[0].fields[0].bytes,
+            datum.fields[0].fields[1].bytes,
+            false,
+        ),
+        0,
+    );
     const status = datum.fields[1].int == 1
     console.log("status", {
         authority: authority,
