@@ -1,75 +1,59 @@
 {
   "preamble": {
-    "title": "htlabs/traceability",
-    "description": "Aiken contracts for project 'htlabs/traceability'",
+    "title": "htlabs/contract",
+    "description": "Aiken contracts for project 'htlabs/contract'",
     "version": "0.0.0",
     "plutusVersion": "v3",
     "compiler": {
       "name": "Aiken",
-      "version": "v1.1.19+e525483"
+      "version": "v1.1.21+42babe5"
     },
     "license": "Apache-2.0"
   },
   "validators": [
     {
-      "title": "contract.contract.spend",
-      "datum": {
-        "title": "_datum",
-        "schema": {
-          "$ref": "#/definitions/Data"
-        }
-      },
+      "title": "traceability.mint.mint",
       "redeemer": {
         "title": "redeemer",
         "schema": {
-          "$ref": "#/definitions/contract~1StoreRedeemer"
+          "$ref": "#/definitions/contract~1types~1Mint"
         }
       },
-      "parameters": [
-        {
-          "title": "_issuer",
-          "schema": {
-            "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
-          }
-        }
-      ],
-      "compiledCode": "590109010100229800aba2aba1aab9faab9eaab9dab9a9bae0024888888966002646465300130063754003370e90004dc3a400530090039804801244444b300130030058994c004c03c006601e6020003300c3754005159800980298061baa0028a518a51402c91112cc004c02400a2b30013011375400d0018b20248acc004c02000a2b30013011375400d0018b20248b201e403c300c375400d1598009802002c660026eb8c038c030dd50034566002600860166ea80062946294500a4c02cdd5000a444b300130070018acc004c03cdd5002400a2c80822b300130060018acc004c03cdd5002400a2c80822c806900d22c805100a0c020c024004c020004c010dd5004452689b2b200401",
-      "hash": "c858f8f422e41b49daa68b709d6c18fb441d83296cb66c46dcb182d6"
+      "compiledCode": "58a001010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cdc3a400130070024888966002600460106ea800e33001375c601660126ea800e2b300130023008375400914a314a2803a60106ea8011222598009802800c56600260186ea801e00516403515980099b87480080062b3001300c375400f0028b201a8b201440288b200e180380098019baa0078a4d1365640041",
+      "hash": "33f18ffac0524155288df94e1e89c140768988af3b0b1d5e910096e7"
     },
     {
-      "title": "contract.contract.mint",
-      "redeemer": {
-        "title": "redeemer",
-        "schema": {
-          "$ref": "#/definitions/contract~1MintRedeemer"
-        }
-      },
-      "parameters": [
-        {
-          "title": "_issuer",
-          "schema": {
-            "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
-          }
-        }
-      ],
-      "compiledCode": "590109010100229800aba2aba1aab9faab9eaab9dab9a9bae0024888888966002646465300130063754003370e90004dc3a400530090039804801244444b300130030058994c004c03c006601e6020003300c3754005159800980298061baa0028a518a51402c91112cc004c02400a2b30013011375400d0018b20248acc004c02000a2b30013011375400d0018b20248b201e403c300c375400d1598009802002c660026eb8c038c030dd50034566002600860166ea80062946294500a4c02cdd5000a444b300130070018acc004c03cdd5002400a2c80822b300130060018acc004c03cdd5002400a2c80822c806900d22c805100a0c020c024004c020004c010dd5004452689b2b200401",
-      "hash": "c858f8f422e41b49daa68b709d6c18fb441d83296cb66c46dcb182d6"
-    },
-    {
-      "title": "contract.contract.else",
+      "title": "traceability.mint.else",
       "redeemer": {
         "schema": {}
       },
-      "parameters": [
-        {
-          "title": "_issuer",
-          "schema": {
-            "$ref": "#/definitions/aiken~1crypto~1VerificationKeyHash"
-          }
+      "compiledCode": "58a001010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cdc3a400130070024888966002600460106ea800e33001375c601660126ea800e2b300130023008375400914a314a2803a60106ea8011222598009802800c56600260186ea801e00516403515980099b87480080062b3001300c375400f0028b201a8b201440288b200e180380098019baa0078a4d1365640041",
+      "hash": "33f18ffac0524155288df94e1e89c140768988af3b0b1d5e910096e7"
+    },
+    {
+      "title": "traceability.store.spend",
+      "datum": {
+        "title": "datum_option",
+        "schema": {
+          "$ref": "#/definitions/types~1cip68~1CIP68"
         }
-      ],
-      "compiledCode": "590109010100229800aba2aba1aab9faab9eaab9dab9a9bae0024888888966002646465300130063754003370e90004dc3a400530090039804801244444b300130030058994c004c03c006601e6020003300c3754005159800980298061baa0028a518a51402c91112cc004c02400a2b30013011375400d0018b20248acc004c02000a2b30013011375400d0018b20248b201e403c300c375400d1598009802002c660026eb8c038c030dd50034566002600860166ea80062946294500a4c02cdd5000a444b300130070018acc004c03cdd5002400a2c80822b300130060018acc004c03cdd5002400a2c80822c806900d22c805100a0c020c024004c020004c010dd5004452689b2b200401",
-      "hash": "c858f8f422e41b49daa68b709d6c18fb441d83296cb66c46dcb182d6"
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/contract~1types~1Store"
+        }
+      },
+      "compiledCode": "58aa01010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144ca60026016003300b300c00198041baa0048acc004cdc3a400060106ea80122946294500724444b30013370e90000014566002601a6ea802200316403915980099b874800800a2b3001300d37540110018b201c8b2016402c3008375400516401830070013003375400f149a26cac80081",
+      "hash": "a6702addd8f5263a5f53c1fd2398395f7228903f201827f1c2727e9b"
+    },
+    {
+      "title": "traceability.store.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "58aa01010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144ca60026016003300b300c00198041baa0048acc004cdc3a400060106ea80122946294500724444b30013370e90000014566002601a6ea802200316403915980099b874800800a2b3001300d37540110018b201c8b2016402c3008375400516401830070013003375400f149a26cac80081",
+      "hash": "a6702addd8f5263a5f53c1fd2398395f7228903f201827f1c2727e9b"
     }
   ],
   "definitions": {
@@ -77,15 +61,24 @@
       "title": "Data",
       "description": "Any Plutus data."
     },
-    "aiken/crypto/VerificationKeyHash": {
-      "title": "VerificationKeyHash",
-      "dataType": "bytes"
+    "Int": {
+      "dataType": "integer"
     },
-    "contract/MintRedeemer": {
-      "title": "MintRedeemer",
+    "Pairs<Data,Data>": {
+      "title": "Pairs<Data, Data>",
+      "dataType": "map",
+      "keys": {
+        "$ref": "#/definitions/Data"
+      },
+      "values": {
+        "$ref": "#/definitions/Data"
+      }
+    },
+    "contract/types/Mint": {
+      "title": "Mint",
       "anyOf": [
         {
-          "title": "Mint",
+          "title": "Create",
           "dataType": "constructor",
           "index": 0,
           "fields": []
@@ -98,8 +91,8 @@
         }
       ]
     },
-    "contract/StoreRedeemer": {
-      "title": "StoreRedeemer",
+    "contract/types/Store": {
+      "title": "Store",
       "anyOf": [
         {
           "title": "Update",
@@ -112,6 +105,27 @@
           "dataType": "constructor",
           "index": 1,
           "fields": []
+        }
+      ]
+    },
+    "types/cip68/CIP68": {
+      "title": "CIP68",
+      "description": "The generic CIP68 metadatum type as defined in the CIP at\n https://cips.cardano.org/cips/cip68/.",
+      "anyOf": [
+        {
+          "title": "CIP68",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "metadata",
+              "$ref": "#/definitions/Pairs<Data,Data>"
+            },
+            {
+              "title": "version",
+              "$ref": "#/definitions/Int"
+            }
+          ]
         }
       ]
     }
