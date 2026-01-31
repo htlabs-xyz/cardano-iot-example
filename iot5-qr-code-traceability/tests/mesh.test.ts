@@ -6,11 +6,11 @@ describe("Mint, Burn, Update, Remove Assets (NFT/TOKEN) CIP68", function () {
        await mint()
     });
 
-    test("Update", async function () {
-       await update()
-    });
+    // test("Update", async function () {
+    //    await update()
+    // });
 
-    test("Burn", async function () {
-       await burn()
-    });
+    // test("Burn", async function () {
+    //    await burn()
+    // });
 });

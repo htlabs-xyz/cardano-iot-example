@@ -1,6 +1,32 @@
+import cbor from "cbor";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+}
+
+/**
+ * @description Convert inline datum from utxo to metadata
+ * 1. Converts a hex string into a buffer for decoding.
+ * 2. Decodes CBOR data from the buffer to a JavaScript object.
+ * 3. Outputs a JSON metadata ready for further use
+ *
+ * @param datum
+ * @returns metadata
+ */
+export async function deserializeDatum(
+    datum: string,
+): Promise<unknown> {
+    const cborDatum: Buffer = Buffer.from(datum, "hex");
+    const datumMap = (await cbor.decodeFirst(cborDatum)).value[0];
+    if (!(datumMap instanceof Map)) {
+        throw new Error("Invalid Datum");
+    }
+    const obj: Record<string, string> = {};
+    datumMap.forEach((value, key) => {
+        const keyStr = key.toString("utf-8");
+        obj[keyStr] = value.toString("utf-8");
+    });
+    return obj;
 }
