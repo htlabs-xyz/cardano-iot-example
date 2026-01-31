@@ -2,8 +2,9 @@ use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction}
 use contract/types.{Burn, Create, Mint, Remove, Store, Update}
 use types/cip68.{CIP68}
+use cardano/address.{Address}
 
-validator mint {
+validator mint(owner: Address) {
   mint(redeemer: Mint, policy_id: PolicyId, transaction: Transaction) {
     when redeemer is {
       Create -> True
@@ -16,7 +17,7 @@ validator mint {
   }
 }
 
-validator store {
+validator store(owner: Address) {
   spend(
     datum_option: Option<CIP68>,
     redeemer: Store,

@@ -2,12 +2,11 @@ import {
     applyParamsToScript,
     BlockfrostProvider,
     deserializeAddress,
-    deserializeDatum,
     type IFetcher,
     MeshTxBuilder,
     MeshWallet,
+    mPubKeyAddress,
     type PlutusScript,
-    pubKeyAddress,
     resolveScriptHash,
     serializeAddressObj,
     serializePlutusScript,
@@ -80,14 +79,12 @@ export class MeshAdapter {
             fetcher: provider
         });
         const walletAddress = this.wallet.getChangeAddress()
-        const pubKeyOwner = deserializeAddress(walletAddress).pubKeyHash
-
         this.mintCompileCode = this.readValidator(blueprint, "traceability.mint.mint",);
-        this.mintScriptCbor = applyParamsToScript(this.mintCompileCode, [pubKeyOwner],);
+        this.mintScriptCbor = applyParamsToScript(this.mintCompileCode, [mPubKeyAddress(deserializeAddress(walletAddress).pubKeyHash, deserializeAddress(walletAddress).stakeCredentialHash)],);
         this.mintScript = { code: this.mintScriptCbor, version: 'V3' };
         this.policyId = resolveScriptHash(this.mintScriptCbor, 'V3');
         this.spendCompileCode = this.readValidator(blueprint, "traceability.store.spend");
-        this.spendScriptCbor = applyParamsToScript(this.spendCompileCode, [pubKeyOwner]);
+        this.spendScriptCbor = applyParamsToScript(this.spendCompileCode, [mPubKeyAddress(deserializeAddress(walletAddress).pubKeyHash, deserializeAddress(walletAddress).stakeCredentialHash)]);
         this.spendScript = { code: this.spendScriptCbor, version: 'V3' };
         this.contractAddress = serializePlutusScript(this.spendScript, undefined, 0, false).address;
     }
@@ -108,7 +105,7 @@ export class MeshAdapter {
     }> => {
         const utxos = await this.wallet.getUtxos();
         const collaterals = await this.wallet.getCollateral();
-        const walletAddress = await this.wallet.getChangeAddress();
+        const walletAddress = this.wallet.getChangeAddress();
         if (!walletAddress)
             throw new Error(
                 'No wallet address found in getWalletForTx method.',
@@ -185,14 +182,4 @@ export class MeshAdapter {
     protected getAddressUTXOAssets = async (address: string, unit: string) => {
         return await this.fetcher.fetchAddressUTxOs(address, unit);
     };
-
-    /**
-     * Convert a serialized Plutus datum into a developer-friendly format.
-     *
-     * @param {Object} params
-     * @param {string} params.plutusData - Serialized Plutus datum in CBOR format.
-     * @returns {{ authorized: string; isLock: number }}
-     * - `authorized`: Bech32 address derived from datum's pubKeyHash and stakeCredentialHash.
-     * - `isLock`: Integer flag indicating locked (1) or unlocked (0) status.
-     */
 }

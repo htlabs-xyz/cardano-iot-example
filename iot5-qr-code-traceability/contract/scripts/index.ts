@@ -1,6 +1,7 @@
-import { BlockfrostProvider, CIP68_222, MeshWallet, stringToHex } from "@meshsdk/core";
-import { Contract } from "./offchain";
 
+
+import { BlockfrostProvider, MeshWallet } from "@meshsdk/core";
+import { Contract } from "./offchain";
 const provider = new BlockfrostProvider(process.env.BLOCKFROST_API_KEY || "");
 const wallet = new MeshWallet({
     networkId: 0,
@@ -17,23 +18,28 @@ export const mint = async () => {
         wallet: wallet,
         provider: provider,
     });
-    const assetName = 'box_dfg'
+     const assetName = 'Huawei Watch GT4 Pro'
     const unsignedTx: string = await contract.mint({
         assetName: assetName,
         metadata: {
-            name: assetName,
-            description: 'Traceability asset for box_dfg',
-            image: "",
-            
-            key2: "value2"
+            name: "Huawei Watch GT 4 Pro - Premium Titanium Smartwatch",
+            description: "The Huawei Watch GT 4 Pro is a high-end smartwatch featuring an aerospace-grade titanium case, spherical sapphire crystal glass, and a 1.5-inch LTPO AMOLED display (466×466 pixels, ~310 ppi). It offers up to 14 days of battery life (typical usage), HUAWEI TruSense health system (heart rate, SpO2, ECG, stress, sleep, skin temperature), 100+ sports modes, dual-band multi-system GPS, 5 ATM water resistance (50 meters), HarmonyOS, Bluetooth 5.2, NFC, and premium design for active, modern lifestyles.",
+            brand: "Huawei",
+            model: "Watch GT 4 Pro",
+            material: "Aerospace Titanium + Sapphire Glass",
+            battery: "Up to 14 days",
+            image: "ipfs://QmYourIPFSHashhuaweiwatchgt4frontpng",
+            mediaType: "image/png",
+            roadmap: "[Ha Noi, Hung Yen, Hai Duong, Hai Phong]",
+            location: "Hung Yen",
         }
     });
     const signedTx = await wallet.signTx(unsignedTx, true);
     const txHash = await wallet.submitTx(signedTx);
     console.log(`https://preprod.cexplorer.io/tx/` + txHash);
-    await new Promise(() => {
+    await new Promise<void>(function (resolve) {
         provider.onTxConfirmed(txHash, () => {
-            console.log("transaction confirmed");
+            resolve();
         });
     });
 }
@@ -43,23 +49,29 @@ export const update = async () => {
         wallet: wallet,
         provider: provider,
     });
-    const assetName = "box_dfg"
+    const assetName = 'Huawei Watch GT4 Pro'
+
     const unsignedTx: string = await contract.update({
         assetName: assetName,
-        newMetadata: {
-            name: assetName,
-            description: 'Traceability asset for box_dfg',
-            locate: "locate 2",
-            key1: "value10",
-            key2: "value20"
+        metadata: {
+            name: "Huawei Watch GT 4 Pro - Premium Titanium Smartwatch",
+            description: "The Huawei Watch GT 4 Pro is a high-end smartwatch featuring an aerospace-grade titanium case, spherical sapphire crystal glass, and a 1.5-inch LTPO AMOLED display (466×466 pixels, ~310 ppi). It offers up to 14 days of battery life (typical usage), HUAWEI TruSense health system (heart rate, SpO2, ECG, stress, sleep, skin temperature), 100+ sports modes, dual-band multi-system GPS, 5 ATM water resistance (50 meters), HarmonyOS, Bluetooth 5.2, NFC, and premium design for active, modern lifestyles.",
+            brand: "Huawei",
+            model: "Watch GT 4 Pro",
+            material: "Aerospace Titanium + Sapphire Glass",
+            battery: "Up to 14 days",
+            image: "ipfs://QmYourIPFSHashhuaweiwatchgt4frontpng",
+            mediaType: "image/png",
+            roadmap: "[Ha Noi, Hung Yen, Hai Duong, Hai Phong]",
+            location: "Hung Yen",
         }
     });
     const signedTx = await wallet.signTx(unsignedTx, true);
     const txHash = await wallet.submitTx(signedTx);
     console.log(`https://preprod.cexplorer.io/tx/` + txHash);
-    await new Promise(() => {
+    await new Promise<void>(function (resolve) {
         provider.onTxConfirmed(txHash, () => {
-            console.log("transaction confirmed");
+            resolve();
         });
     });
 
@@ -69,16 +81,16 @@ export const burn = async () => {
         wallet: wallet,
         provider: provider,
     });
-    const assetName = "box_dfg"
+    const assetName = 'GT4'
     const unsignedTx: string = await contract.burn({
         assetName: assetName
     });
     const signedTx = await wallet.signTx(unsignedTx, true);
     const txHash = await wallet.submitTx(signedTx);
     console.log(`https://preprod.cexplorer.io/tx/` + txHash);
-    await new Promise(() => {
+    await new Promise<void>(function (resolve) {
         provider.onTxConfirmed(txHash, () => {
-            console.log("transaction confirmed");
+            resolve();
         });
     });
 }

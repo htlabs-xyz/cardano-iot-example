@@ -51,6 +51,7 @@ export class Contract extends MeshAdapter {
     ) => {
         const { utxos, collateral, walletAddress } =
             await this.getWalletForTx();
+    
         const utxo = await this.getAddressUTXOAsset(
             this.contractAddress,
             this.policyId + CIP68_100(stringToHex(assetName)),
@@ -63,6 +64,7 @@ export class Contract extends MeshAdapter {
             .mint(quantity, this.policyId, CIP68_222(stringToHex(assetName)))
             .mintingScript(this.mintScriptCbor)
             .mintRedeemerValue(mConStr0([]))
+
             .mintPlutusScriptV3()
             .mint("1", this.policyId, CIP68_100(stringToHex(assetName)))
             .mintingScript(this.mintScriptCbor)
@@ -76,16 +78,11 @@ export class Contract extends MeshAdapter {
             .txOutInlineDatumValue(metadataToCip68(metadata))
             .txOut(receiver || walletAddress, [
                 {
-                    unit: "lovelace",
-                    quantity: "2000000",
-                },
-                {
                     unit: this.policyId + CIP68_222(stringToHex(assetName)),
                     quantity: quantity,
                 },
             ])
             .changeAddress(walletAddress)
-            .requiredSignerHash(deserializeAddress(walletAddress).pubKeyHash)
             .selectUtxosFrom(utxos)
             .txInCollateral(
                 collateral.input.txHash,
@@ -101,10 +98,10 @@ export class Contract extends MeshAdapter {
     update = async (
         {
             assetName,
-            newMetadata
+            metadata
         }: {
             assetName: string;
-            newMetadata: Record<string, string>
+            metadata: Record<string, string>
         },
     ) => {
         const { utxos, walletAddress, collateral } = await this.getWalletForTx();
@@ -124,7 +121,7 @@ export class Contract extends MeshAdapter {
                     quantity: "1",
                 },
             ])
-            .txOutInlineDatumValue(metadataToCip68(newMetadata))
+            .txOutInlineDatumValue(metadataToCip68(metadata))
             .changeAddress(walletAddress)
             .requiredSignerHash(deserializeAddress(walletAddress).pubKeyHash)
             .selectUtxosFrom(utxos)
