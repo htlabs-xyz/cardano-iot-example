@@ -82,17 +82,14 @@ export class MeshAdapter {
         const walletAddress = this.wallet.getChangeAddress()
         const pubKeyOwner = deserializeAddress(walletAddress).pubKeyHash
 
-        this.mintCompileCode = this.readValidator(blueprint, "contract.contract.mint",);
+        this.mintCompileCode = this.readValidator(blueprint, "traceability.mint.mint",);
         this.mintScriptCbor = applyParamsToScript(this.mintCompileCode, [pubKeyOwner],);
         this.mintScript = { code: this.mintScriptCbor, version: 'V3' };
         this.policyId = resolveScriptHash(this.mintScriptCbor, 'V3');
-        console.log("Policyid: ", this.policyId)
-
-        this.spendCompileCode = this.readValidator(blueprint, "contract.contract.spend");
+        this.spendCompileCode = this.readValidator(blueprint, "traceability.store.spend");
         this.spendScriptCbor = applyParamsToScript(this.spendCompileCode, [pubKeyOwner]);
         this.spendScript = { code: this.spendScriptCbor, version: 'V3' };
         this.contractAddress = serializePlutusScript(this.spendScript, undefined, 0, false).address;
-        console.log("Contract Address: ", this.contractAddress)
     }
     /**
      * Retrieve wallet information required to build a transaction.
