@@ -12,6 +12,7 @@
     "@meshsdk/core": "1.8.14",
     "@radix-ui/react-slot": "^1.2.4",
     "@yudiel/react-qr-scanner": "^2.5.1",
+    "cbor": "^10.0.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.563.0",
