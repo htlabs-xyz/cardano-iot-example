@@ -17,9 +17,6 @@ export function cn(...inputs: ClassValue[]) {
  */
 export async function deserializeDatum(
     datum: string,
-    option?: {
-        contain_pk?: boolean;
-    },
 ): Promise<unknown> {
     const cborDatum: Buffer = Buffer.from(datum, "hex");
     const datumMap = (await cbor.decodeFirst(cborDatum)).value[0];

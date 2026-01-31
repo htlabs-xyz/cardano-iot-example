@@ -1,18 +1,18 @@
 import {
-    applyParamsToScript,
-    BlockfrostProvider,
-    deserializeAddress,
-    type IFetcher,
-    MeshTxBuilder,
-    MeshWallet,
-    mPubKeyAddress,
-    type PlutusScript,
-    resolveScriptHash,
-    serializeAddressObj,
-    serializePlutusScript,
-    type UTxO,
-} from '@meshsdk/core';
-import blueprint from '../plutus.json';
+  applyParamsToScript,
+  BlockfrostProvider,
+  deserializeAddress,
+  type IFetcher,
+  MeshTxBuilder,
+  MeshWallet,
+  mPubKeyAddress,
+  type PlutusScript,
+  resolveScriptHash,
+  serializeAddressObj,
+  serializePlutusScript,
+  type UTxO,
+} from "@meshsdk/core";
+import blueprint from "../plutus.json";
 
 /**
  * Class: MeshAdapter
@@ -48,138 +48,156 @@ import blueprint from '../plutus.json';
  * ```
  */
 export class MeshAdapter {
-    protected wallet: MeshWallet
-    protected fetcher: IFetcher;
+  protected wallet: MeshWallet;
+  protected fetcher: IFetcher;
 
-    protected mintCompileCode: string;
-    protected mintScriptCbor!: string;
-    protected mintScript!: PlutusScript;
+  protected mintCompileCode: string;
+  protected mintScriptCbor!: string;
+  protected mintScript!: PlutusScript;
 
-    protected spendCompileCode: string;
-    protected spendScriptCbor!: string;
-    protected spendScript!: PlutusScript;
+  protected spendCompileCode: string;
+  protected spendScriptCbor!: string;
+  protected spendScript!: PlutusScript;
 
-    public policyId!: string;
-    protected contractAddress!: string;
-    protected meshTxBuilder: MeshTxBuilder;
+  public policyId!: string;
+  protected contractAddress!: string;
+  protected meshTxBuilder: MeshTxBuilder;
 
+  constructor({
+    wallet,
+    owners,
+    provider,
+  }: {
+    wallet: MeshWallet;
+    owners: Array<string>;
+    provider: BlockfrostProvider;
+  }) {
+    this.wallet = wallet;
+    this.fetcher = provider;
+    this.meshTxBuilder = new MeshTxBuilder({
+      fetcher: provider,
+    });
+    const walletAddress = this.wallet.getChangeAddress();
+    this.mintCompileCode = this.readValidator(
+      blueprint,
+      "traceability.mint.mint",
+    );
+    this.mintScriptCbor = applyParamsToScript(this.mintCompileCode, [
+      owners.map((owner) => mPubKeyAddress(
+        deserializeAddress(owner).pubKeyHash,
+        deserializeAddress(owner).stakeCredentialHash,
+      )),
+    ]);
+    this.mintScript = { code: this.mintScriptCbor, version: "V3" };
+    this.policyId = resolveScriptHash(this.mintScriptCbor, "V3");
+    this.spendCompileCode = this.readValidator(
+      blueprint,
+      "traceability.store.spend",
+    );
+    this.spendScriptCbor = applyParamsToScript(this.spendCompileCode, [
+      owners.map((owner) => mPubKeyAddress(
+        deserializeAddress(owner).pubKeyHash,
+        deserializeAddress(owner).stakeCredentialHash,
+      )),
+    ]);
+    this.spendScript = { code: this.spendScriptCbor, version: "V3" };
+    this.contractAddress = serializePlutusScript(
+      this.spendScript,
+      undefined,
+      0,
+      false,
+    ).address;
+  }
+  /**
+   * Retrieve wallet information required to build a transaction.
+   *
+   * @returns {Promise<{ utxos: UTxO[]; collateral: UTxO; walletAddress: string }>}
+   * - `utxos`: List of available UTxOs from the connected wallet.
+   * - `collateral`: A valid collateral UTxO required for Plutus script execution.
+   * - `walletAddress`: The change address of the connected wallet.
+   *
+   * @throws Error if wallet address, UTxOs, or collateral are missing.
+   */
+  protected getWalletForTx = async (): Promise<{
+    utxos: UTxO[];
+    collateral: UTxO;
+    walletAddress: string;
+  }> => {
+    const utxos = await this.wallet.getUtxos();
+    const collaterals = await this.wallet.getCollateral();
+    const walletAddress = this.wallet.getChangeAddress();
+    if (!walletAddress)
+      throw new Error("No wallet address found in getWalletForTx method.");
 
+    if (!utxos || utxos.length === 0)
+      throw new Error("No UTXOs found in getWalletForTx method.");
 
-    constructor({
-        wallet,
-        provider,
-    }: {
-        wallet: MeshWallet
-        provider: BlockfrostProvider;
-    }) {
+    if (!collaterals || collaterals.length === 0)
+      throw new Error("No collateral found in getWalletForTx method.");
 
-        this.wallet = wallet;
-        this.fetcher = provider;
-        this.meshTxBuilder = new MeshTxBuilder({
-            fetcher: provider
-        });
-        const walletAddress = this.wallet.getChangeAddress()
-        this.mintCompileCode = this.readValidator(blueprint, "traceability.mint.mint",);
-        this.mintScriptCbor = applyParamsToScript(this.mintCompileCode, [mPubKeyAddress(deserializeAddress(walletAddress).pubKeyHash, deserializeAddress(walletAddress).stakeCredentialHash)],);
-        this.mintScript = { code: this.mintScriptCbor, version: 'V3' };
-        this.policyId = resolveScriptHash(this.mintScriptCbor, 'V3');
-        this.spendCompileCode = this.readValidator(blueprint, "traceability.store.spend");
-        this.spendScriptCbor = applyParamsToScript(this.spendCompileCode, [mPubKeyAddress(deserializeAddress(walletAddress).pubKeyHash, deserializeAddress(walletAddress).stakeCredentialHash)]);
-        this.spendScript = { code: this.spendScriptCbor, version: 'V3' };
-        this.contractAddress = serializePlutusScript(this.spendScript, undefined, 0, false).address;
+    return { utxos, collateral: collaterals[0], walletAddress };
+  };
+
+  /**
+   * Fetch a specific UTxO from an address by its transaction hash.
+   *
+   * @param {string} address - The address where UTxOs will be searched.
+   * @param {string} txHash - The transaction hash of the desired UTxO.
+   * @returns {Promise<UTxO>} The UTxO that matches the provided transaction hash.
+   *
+   * @throws Error if no matching UTxO is found.
+   */
+  protected getUtxoForTx = async (address: string, txHash: string) => {
+    const utxos: UTxO[] = await this.fetcher.fetchAddressUTxOs(address);
+    const utxo = utxos.find(function (utxo: UTxO) {
+      return utxo.input.txHash === txHash;
+    });
+
+    if (!utxo) throw new Error("No UTXOs found in getUtxoForTx method.");
+    return utxo;
+  };
+
+  /**
+   * Read and return the compiled Plutus validator code by title.
+   *
+   * @param {Plutus} plutus - The Plutus JSON blueprint object.
+   * @param {string} title - The validator title to look up.
+   * @returns {string} The compiled validator code.
+   *
+   * @throws Error if the validator with the given title is not found.
+   */
+  protected readValidator = function (plutus: any, title: string): string {
+    const validator = plutus.validators.find(function (validator: any) {
+      return validator.title === title;
+    });
+
+    if (!validator) {
+      throw new Error(`${title} validator not found.`);
     }
-    /**
-     * Retrieve wallet information required to build a transaction.
-     *
-     * @returns {Promise<{ utxos: UTxO[]; collateral: UTxO; walletAddress: string }>}
-     * - `utxos`: List of available UTxOs from the connected wallet.
-     * - `collateral`: A valid collateral UTxO required for Plutus script execution.
-     * - `walletAddress`: The change address of the connected wallet.
-     *
-     * @throws Error if wallet address, UTxOs, or collateral are missing.
-     */
-    protected getWalletForTx = async (): Promise<{
-        utxos: UTxO[];
-        collateral: UTxO;
-        walletAddress: string;
-    }> => {
-        const utxos = await this.wallet.getUtxos();
-        const collaterals = await this.wallet.getCollateral();
-        const walletAddress = this.wallet.getChangeAddress();
-        if (!walletAddress)
-            throw new Error(
-                'No wallet address found in getWalletForTx method.',
-            );
 
-        if (!utxos || utxos.length === 0)
-            throw new Error('No UTXOs found in getWalletForTx method.');
+    return validator.compiledCode;
+  };
 
-        if (!collaterals || collaterals.length === 0)
-            throw new Error('No collateral found in getWalletForTx method.');
+  /**
+   * Fetch the most recent UTxO at a given address containing a specific asset unit.
+   *
+   * @param {string} address - The blockchain address to query.
+   * @param {string} unit - The asset unit (policyId + assetName).
+   * @returns {Promise<UTxO | undefined>} The latest matching UTxO, or undefined if none exist.
+   */
+  protected getAddressUTXOAsset = async (address: string, unit: string) => {
+    const utxos = await this.fetcher.fetchAddressUTxOs(address, unit);
+    return utxos[utxos.length - 1];
+  };
 
-        return { utxos, collateral: collaterals[0], walletAddress };
-    };
-
-    /**
-     * Fetch a specific UTxO from an address by its transaction hash.
-     *
-     * @param {string} address - The address where UTxOs will be searched.
-     * @param {string} txHash - The transaction hash of the desired UTxO.
-     * @returns {Promise<UTxO>} The UTxO that matches the provided transaction hash.
-     *
-     * @throws Error if no matching UTxO is found.
-     */
-    protected getUtxoForTx = async (address: string, txHash: string) => {
-        const utxos: UTxO[] = await this.fetcher.fetchAddressUTxOs(address);
-        const utxo = utxos.find(function (utxo: UTxO) {
-            return utxo.input.txHash === txHash;
-        });
-
-        if (!utxo) throw new Error('No UTXOs found in getUtxoForTx method.');
-        return utxo;
-    };
-
-    /**
-     * Read and return the compiled Plutus validator code by title.
-     *
-     * @param {Plutus} plutus - The Plutus JSON blueprint object.
-     * @param {string} title - The validator title to look up.
-     * @returns {string} The compiled validator code.
-     *
-     * @throws Error if the validator with the given title is not found.
-     */
-    protected readValidator = function (plutus: any, title: string): string {
-        const validator = plutus.validators.find(function (validator: any) {
-            return validator.title === title;
-        });
-
-        if (!validator) {
-            throw new Error(`${title} validator not found.`);
-        }
-
-        return validator.compiledCode;
-    };
-
-    /**
-     * Fetch the most recent UTxO at a given address containing a specific asset unit.
-     *
-     * @param {string} address - The blockchain address to query.
-     * @param {string} unit - The asset unit (policyId + assetName).
-     * @returns {Promise<UTxO | undefined>} The latest matching UTxO, or undefined if none exist.
-     */
-    protected getAddressUTXOAsset = async (address: string, unit: string) => {
-        const utxos = await this.fetcher.fetchAddressUTxOs(address, unit);
-        return utxos[utxos.length - 1];
-    };
-
-    /**
-     * Fetch all UTxOs at a given address containing a specific asset unit.
-     *
-     * @param {string} address - The blockchain address to query.
-     * @param {string} unit - The asset unit (policyId + assetName).
-     * @returns {Promise<UTxO[]>} List of all matching UTxOs.
-     */
-    protected getAddressUTXOAssets = async (address: string, unit: string) => {
-        return await this.fetcher.fetchAddressUTxOs(address, unit);
-    };
+  /**
+   * Fetch all UTxOs at a given address containing a specific asset unit.
+   *
+   * @param {string} address - The blockchain address to query.
+   * @param {string} unit - The asset unit (policyId + assetName).
+   * @returns {Promise<UTxO[]>} List of all matching UTxOs.
+   */
+  protected getAddressUTXOAssets = async (address: string, unit: string) => {
+    return await this.fetcher.fetchAddressUTxOs(address, unit);
+  };
 }
