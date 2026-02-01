@@ -3,3 +3,6 @@ lgpio
 pycardano
 python-dotenv
 requests
+fastapi
+uvicorn[standard]
+websockets
