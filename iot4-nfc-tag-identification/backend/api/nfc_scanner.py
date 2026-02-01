@@ -24,7 +24,10 @@ DEBOUNCE_SECONDS = 3.0
 
 def verify_on_blockchain(policy_id: str, asset_name_hex: str, student_id: str) -> dict:
     """Verify student NFT on Cardano blockchain."""
-    asset = query_asset(policy_id, asset_name_hex)
+    try:
+        asset = query_asset(policy_id, asset_name_hex)
+    except Exception as e:
+        return {"verified": False, "error": f"Blockchain error: {str(e)}", "student_id": student_id}
 
     if not asset:
         return {"verified": False, "error": "NFT not found", "student_id": student_id}
@@ -74,22 +77,41 @@ class NFCScanner:
             return False
         return True
 
-    def _try_read_card(self) -> tuple[Optional[str], Optional[dict]]:
+    async def _try_read_card(self) -> tuple[Optional[str], Optional[dict]]:
         """Attempt to read NFC card. Returns (uid_str, data) or (None, None)."""
         if not self.pn532:
             return None, None
 
         try:
-            uid = self.pn532.read_passive_target(timeout=0.5)
+            # Run blocking I/O in thread pool to avoid blocking event loop
+            uid = await asyncio.to_thread(
+                self.pn532.read_passive_target,
+                timeout=0.5
+            )
             if uid is None:
                 return None, None
 
             uid_str = "".join(f"{b:02X}" for b in uid)
-            data = read_json_from_nfc(self.pn532, num_blocks=8, debug=False)
+            data = await asyncio.to_thread(
+                read_json_from_nfc,
+                self.pn532,
+                num_blocks=8,
+                debug=False
+            )
             return uid_str, data
         except Exception as e:
             print(f"NFC read error: {e}")
             return None, None
+
+    async def read_card_once(self, timeout: float = 10.0) -> dict:
+        """Public method to read card with timeout. Returns verification result."""
+        start = time.time()
+        while (time.time() - start) < timeout:
+            uid_str, nfc_data = await self._try_read_card()
+            if uid_str:
+                return await self._process_scan(uid_str, nfc_data)
+            await asyncio.sleep(0.3)
+        raise TimeoutError("No card detected within timeout")
 
     async def _process_scan(self, uid_str: str, nfc_data: Optional[dict]) -> dict:
         """Process NFC scan and return result."""
@@ -127,7 +149,7 @@ class NFCScanner:
         print("NFC scanner started")
 
         while self.running:
-            uid_str, nfc_data = self._try_read_card()
+            uid_str, nfc_data = await self._try_read_card()
 
             if uid_str and self._should_process_card(uid_str):
                 self.last_uid = uid_str

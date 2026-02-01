@@ -59,9 +59,11 @@ async def lifespan(app: FastAPI):
         nfc_scanner.scanner.stop()
         scanner_task.cancel()
         try:
-            await scanner_task
+            await asyncio.wait_for(scanner_task, timeout=5.0)
         except asyncio.CancelledError:
-            pass
+            print("Scanner task cancelled")
+        except asyncio.TimeoutError:
+            print("Warning: Scanner task did not stop within timeout")
 
 
 app = FastAPI(

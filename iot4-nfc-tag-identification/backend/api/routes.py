@@ -45,19 +45,11 @@ async def manual_verify():
     if not nfc_scanner.scanner.pn532:
         raise HTTPException(status_code=503, detail="NFC reader not initialized")
 
-    # Try to read card with timeout
-    import time
-    start = time.time()
-    timeout = 10.0
-
-    while (time.time() - start) < timeout:
-        uid_str, nfc_data = nfc_scanner.scanner._try_read_card()
-        if uid_str:
-            result = await nfc_scanner.scanner._process_scan(uid_str, nfc_data)
-            return result
-        await asyncio.sleep(0.3)
-
-    raise HTTPException(status_code=408, detail="No card detected within timeout")
+    try:
+        result = await nfc_scanner.scanner.read_card_once(timeout=10.0)
+        return result
+    except TimeoutError:
+        raise HTTPException(status_code=408, detail="No card detected within timeout")
 
 
 @router.websocket("/ws/scan")
