@@ -26,7 +26,7 @@ Build Verification Kiosk UI (Next.js) + API layer (FastAPI) for Student NFC Iden
 | # | Phase | Status | Link |
 |---|-------|--------|------|
 | 1 | FastAPI Backend | **DONE** | [phase-01](./phase-01-fastapi-backend.md) |
-| 2 | Next.js Kiosk UI | pending | [phase-02](./phase-02-nextjs-kiosk-ui.md) |
+| 2 | Next.js Kiosk UI | **DONE** | [phase-02](./phase-02-nextjs-kiosk-ui.md) |
 | 3 | Integration & Testing | pending | [phase-03](./phase-03-integration-testing.md) |
 
 ## Timeline
