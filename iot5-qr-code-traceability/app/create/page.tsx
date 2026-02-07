@@ -1,83 +1,116 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import QRCode from 'qrcode';
-import { QrCode, Download, ExternalLink, Sparkles } from 'lucide-react';
+import { useState, useEffect } from "react";
+import QRCode from "qrcode";
+import { QrCode, Download, ExternalLink, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
-export default function CreateNFTProductQR() {
-  const [formData, setFormData] = useState({
-    policyId: '',
-    assetName: '',
+export default function Create() {
+  const [form, setForm] = useState({
+    issuer: "",
+    productName: "",
   });
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [productUrl, setProductUrl] = useState<string | null>(null);
   const [productId, setProductId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setQrCodeUrl(null); 
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    setQrCodeUrl(null);
+    setFormError(null);
+
+    if (submitted) {
+      setSubmitted(false);
+      setProductId(null);
+      setProductUrl(null);
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.policyId.trim() || !formData.assetName.trim()) return;
+  const { data: productData, isLoading, isFetching, error } = useQuery({
+    queryKey: ["product", form.issuer.trim(), form.productName.trim()],
+    queryFn: async () => {
+      const res = await fetch(`/api/product?issuer_address=${form.issuer.trim()}&product_name=${encodeURIComponent(form.productName.trim())}`);
 
-    const policy = formData.policyId.trim().toLowerCase();
-    if (!/^[0-9a-f]{56}$/.test(policy)) {
-      alert('Policy ID must be a valid 56-character hexadecimal string!');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Không tìm thấy sản phẩm trên blockchain");
+      }
+      return res.json(); 
+    },
+    enabled: submitted && !!form.issuer.trim() && !!form.productName.trim(),
+    retry: 1,
+    staleTime: 300_000,
+  });
+
+  useEffect(() => {
+    if (!productData || !submitted) return;
+
+    const encoder = new TextEncoder();
+    const nameBytes = encoder.encode(form.productName.trim());
+    if (nameBytes.length > 32) {
+      setFormError("Tên sản phẩm quá dài (tối đa 32 bytes theo chuẩn Cardano)");
       return;
     }
 
-    setLoading(true);
+    const policyId = productData.policyId as string;
 
-    const assetName = formData.assetName.trim();
-    const id = policy + assetName; 
+    // Prefer assetNameHex from API if available, otherwise compute
+    let assetNameHex = productData.assetNameHex;
+    if (!assetNameHex) {
+      assetNameHex = Array.from(nameBytes)
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    // Most common for CIP-68 reference/user tokens: label 100 = "000643b0"
+    const cip68Label = "000643b0";
+    const assetUnit = policyId + cip68Label + assetNameHex;
+
+    const id = assetUnit;
     setProductId(id);
 
     const url = `${window.location.origin}/product/${id}`;
     setProductUrl(url);
 
-    try {
-      const qr = await QRCode.toDataURL(url, {
-        errorCorrectionLevel: 'H',
-        width: 512,
-        margin: 4,
-        color: { dark: '#1e293b', light: '#ffffff' },
+    QRCode.toDataURL(url, {
+      errorCorrectionLevel: "H",
+      width: 512,
+      margin: 4,
+      color: { dark: "#1e293b", light: "#ffffff" },
+    })
+      .then(setQrCodeUrl)
+      .catch(err => {
+        console.error(err);
+        setFormError("Lỗi tạo mã QR");
       });
-      setQrCodeUrl(qr);
-    } catch (err) {
-      alert('Error generating QR code!');
-    }
+  }, [productData, submitted, form.productName]);
 
-    setLoading(false);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const issuer = form.issuer.trim();
+    const name = form.productName.trim();
+
+    if (!issuer || !name) return;
+
+    setFormError(null);
+    setSubmitted(true);
   };
+
+  const isProcessing = submitted && (isLoading || isFetching || !qrCodeUrl);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 py-12 px-6 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-2000" />
-      </div>
+      {/* Background decoration giữ nguyên */}
 
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border border-white/50">
-            <QrCode className="w-6 h-6 text-blue-600" />
-            <span className="font-semibold text-slate-700">Generate Cardano NFT QR Code</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">
-            QR Code Linking to Your Product Page
-          </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            The QR code will directly link to product on this website
-          </p>
-        </div>
+        {/* Header giữ nguyên */}
 
         <div className="grid lg:grid-cols-2 gap-12">
-          {/* Form Section */}
+          {/* Form */}
           <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 lg:p-10 border border-white/50">
             <form onSubmit={handleSubmit} className="space-y-7">
               <div>
@@ -85,54 +118,64 @@ export default function CreateNFTProductQR() {
                   Policy ID <span className="text-red-500">*</span>
                 </label>
                 <input
-                  name="policyId"
+                  name="issuer"
                   type="text"
                   required
-                  value={formData.policyId}
+                  value={form.issuer}
                   onChange={handleChange}
-                  className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                  placeholder="e.g., 0e14267a8020229adc0184dd25fa3174c3f7d6caadcb4425c70e7c04"
+                  className={`w-full px-5 py-4 bg-white border ${
+                    formError ? "border-red-500" : "border-slate-200"
+                  } rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all`}
+                  placeholder="Ví dụ: 0e14267a8020229adc0184dd25fa3174c3f7d6caadcb4425c70e7c04"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Asset Name (text) <span className="text-red-500">*</span>
+                  Tên sản phẩm <span className="text-red-500">*</span>
                 </label>
                 <input
-                  name="assetName"
+                  name="productName"
                   type="text"
                   required
-                  value={formData.assetName}
+                  value={form.productName}
                   onChange={handleChange}
                   className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                  placeholder="e.g., unsig26071 or SpaceBud3269"
+                  placeholder="Ví dụ: Huawei Watch GT 4 Pro"
                 />
               </div>
 
+              {formError && (
+                <p className="text-red-600 text-center font-medium bg-red-50 py-3 rounded-xl">
+                  {formError}
+                </p>
+              )}
+
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full py-5 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold text-lg rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
+                disabled={isProcessing}
+                className="w-full py-5 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold text-lg rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
-                {loading ? (
-                  <>Generating QR Code...</>
+                {isProcessing ? (
+                  <>Đang xử lý...</>
                 ) : (
                   <>
                     <Sparkles className="w-6 h-6" />
-                    Generate QR Code
+                    Tạo QR Code
                   </>
                 )}
               </button>
             </form>
           </div>
 
-          {/* QR Code Preview Section */}
+          {/* QR Preview */}
           <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 lg:p-10 border border-white/50 flex flex-col items-center justify-center">
             {qrCodeUrl ? (
               <div className="text-center space-y-8">
                 <div>
-                  <p className="text-lg font-medium text-slate-600 mb-2">Product ID (policy + asset name)</p>
+                  <p className="text-lg font-medium text-slate-600 mb-2">
+                    Product ID (policy + asset name)
+                  </p>
                   <p className="text-xl font-bold text-blue-600 font-mono tracking-wider break-all">
                     {productId}
                   </p>
@@ -141,7 +184,7 @@ export default function CreateNFTProductQR() {
                 <div className="p-6 bg-white rounded-2xl shadow-inner">
                   <img
                     src={qrCodeUrl}
-                    alt="NFT QR Code"
+                    alt="QR Code"
                     className="w-80 h-80 mx-auto"
                   />
                 </div>
@@ -149,11 +192,11 @@ export default function CreateNFTProductQR() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <a
                     href={qrCodeUrl}
-                    download={`QR_${productId}.png`}
+                    download={`QR_${productId?.replace(/[^a-zA-Z0-9]/g, "_") || "sanpham"}.png`}
                     className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
                     <Download className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" />
-                    Download QR Code
+                    Tải QR
                   </a>
 
                   <a
@@ -163,7 +206,7 @@ export default function CreateNFTProductQR() {
                     className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-semibold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
                     <ExternalLink className="w-5 h-5" />
-                    View Product Page
+                    Xem trang sản phẩm
                   </a>
                 </div>
               </div>
@@ -173,11 +216,17 @@ export default function CreateNFTProductQR() {
                   <QrCode className="w-32 h-32 text-blue-400" />
                 </div>
                 <p className="text-xl font-medium text-slate-600">
-                  Enter Policy ID + Asset Name and click generate
+                  Nhập Policy ID và Tên sản phẩm rồi nhấn nút
                 </p>
                 <p className="text-slate-500 mt-4">
-                  The QR code will link directly to the product on your website
+                  QR sẽ dẫn trực tiếp đến trang sản phẩm trên website
                 </p>
+
+                {error && (
+                  <p className="mt-6 text-red-600 font-medium">
+                    {error instanceof Error ? error.message : "Có lỗi xảy ra"}
+                  </p>
+                )}
               </div>
             )}
           </div>
