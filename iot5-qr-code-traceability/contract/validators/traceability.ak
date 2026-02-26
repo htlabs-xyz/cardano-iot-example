@@ -7,24 +7,28 @@ use cocktail/vodka_address.{address_pub_key}
 use contract/types.{Burn, Create, Mint, Remove, Store, Update}
 use types/cip68.{CIP68}
 
-validator mint(owners: List<Address>) {
+validator mint(owners: List<Address>, store: Address) {
   mint(redeemer: Mint, _policy_id: PolicyId, transaction: Transaction) {
     let Transaction { extra_signatories, .. } = transaction
-    
-    let is_authorized = 
-      list.any(owners, fn(owner) {
-        when address_pub_key(owner) is {
-          Some(key) -> list.has(extra_signatories, key)
-          None -> False
-        }
-      })
-
-
+    let is_authorized =
+      list.any(
+        owners,
+        fn(owner) {
+          when address_pub_key(owner) is {
+            Some(key) -> verify_signature(extra_signatories, key)
+            None -> False
+          }
+        },
+      )
 
     when redeemer is {
       Create -> is_authorized
       Burn -> is_authorized
     }
+  }
+
+  else(_) {
+    fail
   }
 }
 
@@ -36,13 +40,16 @@ validator store(owners: List<Address>) {
     transaction: Transaction,
   ) {
     let Transaction { inputs, outputs, extra_signatories, .. } = transaction
-     let is_authorized = 
-      list.any(owners, fn(owner) {
-        when address_pub_key(owner) is {
-          Some(key) -> list.has(extra_signatories, key)
-          None -> False
-        }
-      })
+    let is_authorized =
+      list.any(
+        owners,
+        fn(owner) {
+          when address_pub_key(owner) is {
+            Some(key) -> verify_signature(extra_signatories, key)
+            None -> False
+          }
+        },
+      )
     when redeemer is {
       Update -> is_authorized
       Remove -> is_authorized
