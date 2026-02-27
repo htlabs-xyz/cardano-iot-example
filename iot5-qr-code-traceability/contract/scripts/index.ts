@@ -13,17 +13,17 @@ const wallet = new MeshWallet({
   },
 });
 
-
-const owner =
-  "addr_test1qrrsqzvu048737jnqq7rd3ck07e7cnk75x5wmdlt9zv7ptmqwvk3ckjxl4wcf6ehtynh8lctuu85xxdg9c8v5pfnjn4shn35yc";
+const owners: Array<string> = [
+  "addr_test1qrrsqzvu048737jnqq7rd3ck07e7cnk75x5wmdlt9zv7ptmqwvk3ckjxl4wcf6ehtynh8lctuu85xxdg9c8v5pfnjn4shn35yc",
+];
 
 export const mint = async () => {
   const contract = new Contract({
     wallet: wallet,
     provider: provider,
-    owner: owner,
+    owners: owners,
   });
-  const assetName = "Huawei Watch GT5 Pro";
+  const assetName = "Huawei Watch GT4 Pro";
   const unsignedTx: string = await contract.mint({
     assetName: assetName,
     metadata: {
@@ -37,7 +37,7 @@ export const mint = async () => {
       image: "ipfs://QmYourIPFSHashhuaweiwatchgt4frontpng",
       mediaType: "image/png",
       roadmap: "[Ha Noi, Hung Yen, Hai Duong, Hai Phong]",
-      location: "Hung Yen",
+      location: "Ha Noi",
     },
   });
   const signedTx = await wallet.signTx(unsignedTx, true);
@@ -45,6 +45,7 @@ export const mint = async () => {
   console.log(`https://preprod.cexplorer.io/tx/` + txHash);
   await new Promise<void>(function (resolve) {
     provider.onTxConfirmed(txHash, () => {
+      console.log(`https://preprod.cexplorer.io/tx/` + txHash);
       resolve();
     });
   });
@@ -54,9 +55,9 @@ export const update = async () => {
   const contract = new Contract({
     wallet: wallet,
     provider: provider,
-    owner: owner,
+    owners: owners,
   });
-  const assetName = "Huawei Watch GT5 Pro";
+  const assetName = "Huawei Watch GT4 Pro";
   const unsignedTx: string = await contract.update({
     assetName: assetName,
     metadata: {
@@ -73,12 +74,12 @@ export const update = async () => {
       location: "Hai Phong",
     },
   });
-  
+
   const signedTx = await wallet.signTx(unsignedTx, true);
   const txHash = await wallet.submitTx(signedTx);
-  console.log(`https://preprod.cexplorer.io/tx/` + txHash);
   await new Promise<void>(function (resolve) {
     provider.onTxConfirmed(txHash, () => {
+      console.log(`https://preprod.cexplorer.io/tx/` + txHash);
       resolve();
     });
   });
@@ -88,7 +89,7 @@ export const burn = async () => {
   const contract = new Contract({
     wallet: wallet,
     provider: provider,
-    owner: owner,
+    owners: owners,
   });
   const assetName = "Huawei Watch GT4 Pro";
   const unsignedTx: string = await contract.burn({
@@ -96,9 +97,10 @@ export const burn = async () => {
   });
   const signedTx = await wallet.signTx(unsignedTx, true);
   const txHash = await wallet.submitTx(signedTx);
-  console.log(`https://preprod.cexplorer.io/tx/` + txHash);
+
   await new Promise<void>(function (resolve) {
     provider.onTxConfirmed(txHash, () => {
+      console.log(`https://preprod.cexplorer.io/tx/` + txHash);
       resolve();
     });
   });

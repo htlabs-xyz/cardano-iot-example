@@ -65,11 +65,11 @@ export class MeshAdapter {
 
   constructor({
     wallet,
-    owner,
+    owners,
     provider,
   }: {
     wallet: MeshWallet;
-    owner: string;
+    owners: Array<string>;
     provider: BlockfrostProvider;
   }) {
     this.wallet = wallet;
@@ -77,24 +77,7 @@ export class MeshAdapter {
     this.meshTxBuilder = new MeshTxBuilder({
       fetcher: provider,
     });
-    this.mintCompileCode = this.readValidator(
-      blueprint,
-      "traceability.mint.mint",
-    );
-    this.mintScriptCbor = applyParamsToScript(
-      this.mintCompileCode,
-      [
-        [
-          mPubKeyAddress(
-            deserializeAddress(owner).pubKeyHash,
-            deserializeAddress(owner).stakeCredentialHash,
-          ),
-        ],
-      ],
-      "Mesh",
-    );
-    this.mintScript = { code: this.mintScriptCbor, version: "V3" };
-    this.policyId = resolveScriptHash(this.mintScriptCbor, "V3");
+
     this.spendCompileCode = this.readValidator(
       blueprint,
       "traceability.store.spend",
@@ -102,12 +85,12 @@ export class MeshAdapter {
     this.spendScriptCbor = applyParamsToScript(
       this.spendCompileCode,
       [
-        [
+        owners.map((owner) =>
           mPubKeyAddress(
             deserializeAddress(owner).pubKeyHash,
             deserializeAddress(owner).stakeCredentialHash,
           ),
-        ],
+        ),
       ],
       "Mesh",
     );
@@ -118,6 +101,29 @@ export class MeshAdapter {
       0,
       false,
     ).address;
+
+    this.mintCompileCode = this.readValidator(
+      blueprint,
+      "traceability.mint.mint",
+    );
+    this.mintScriptCbor = applyParamsToScript(
+      this.mintCompileCode,
+      [
+        owners.map((owner) =>
+          mPubKeyAddress(
+            deserializeAddress(owner).pubKeyHash,
+            deserializeAddress(owner).stakeCredentialHash,
+          ),
+        ),
+        mPubKeyAddress(
+          deserializeAddress(this.contractAddress).scriptHash,
+          deserializeAddress(this.contractAddress).stakeCredentialHash,
+        ),
+      ],
+      "Mesh",
+    );
+    this.mintScript = { code: this.mintScriptCbor, version: "V3" };
+    this.policyId = resolveScriptHash(this.mintScriptCbor, "V3");
   }
 
   /**
