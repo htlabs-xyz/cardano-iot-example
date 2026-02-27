@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "mint": "bun run ./cli/mint.ts",
+    "update": "bun run ./cli/update.ts",
     "contract:fmt": "cd ./contract && aiken fmt",
     "contract:test": "cd ./contract && aiken check",
     "contract:build": "cd ./contract && aiken build"
