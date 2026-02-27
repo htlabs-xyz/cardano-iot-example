@@ -1,5 +1,8 @@
+import chalk from "chalk";
 import { BlockfrostProvider, MeshWallet } from "@meshsdk/core";
+
 import { Contract } from "./offchain";
+
 const provider = new BlockfrostProvider(process.env.BLOCKFROST_API_KEY || "");
 
 const wallet = new MeshWallet({
@@ -15,18 +18,60 @@ const wallet = new MeshWallet({
 
 const owners: Array<string> = [
   "addr_test1qrrsqzvu048737jnqq7rd3ck07e7cnk75x5wmdlt9zv7ptmqwvk3ckjxl4wcf6ehtynh8lctuu85xxdg9c8v5pfnjn4shn35yc",
+  "addr_test1qryamep6l09mtjswn000l3jd79pls9pt5aj0nsf5cyfdp3xmj9k859jpvfpqepllgqn02473mlhttcf3lyujlpzhrk3qcndhyw",
+  "addr_test1qrw7yktcc7wsscq46pfamt8t9yd2mlp7dtgjw3mq2hqplgvax05kaj8z5tgvtqd5q4xug4qqdgnzn2l8krm09c85f4psmzum9f",
+  "addr_test1qztthppkvnl2k2gk96r6v22qxvwyymh4dr4njclae8wwau8d3tp4cyr8p83gs3vjnhmldj8vzhkx3cvnr80gjdfvdfdqcr2qz4",
 ];
 
-export const mint = async () => {
-  const contract = new Contract({
-    wallet: wallet,
-    provider: provider,
-    owners: owners,
+const ASSET_NAME_UTF8 = "Huawei Watch GT4 Pro";
+const ASSET_NAME_HEX = Buffer.from(ASSET_NAME_UTF8, "utf8").toString("hex");
+
+const printHeader = (title: string) => {
+  console.log(chalk.bold.blue("┌──────────────────────────────────────────────┐"));
+  console.log(chalk.bold.blue(`│          ${title.padEnd(44 - title.length)}│`));
+  console.log(chalk.bold.blue("└──────────────────────────────────────────────┘"));
+  console.log("");
+};
+
+const printSuccessBox = (message: string) => {
+  console.log(chalk.bgGreen.black(" SUCCESS "));
+  console.log(chalk.green.bold(message));
+  console.log("");
+};
+
+const printErrorBox = (message: string) => {
+  console.log(chalk.bgRed.black(" ERROR "));
+  console.log(chalk.red.bold(message));
+  console.log("");
+};
+
+const waitForConfirmation = (txHash: string): Promise<void> =>
+  new Promise((resolve) => {
+    provider.onTxConfirmed(txHash, () => {
+      console.log("");
+      printSuccessBox("Transaction confirmed on-chain!");
+      console.log(chalk.cyan("Explorer:"), chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`));
+      resolve();
+    });
   });
-  const assetName = "Huawei Watch GT4 Pro";
-  const unsignedTx: string = await contract.mint({
-    assetName: assetName,
-    metadata: {
+
+export const mint = async () => {
+  const startTime = Date.now();
+  printHeader("MINT NEW PRODUCT NFT");
+
+  try {
+    const contract = new Contract({
+      wallet,
+      provider,
+      owners,
+    });
+
+    console.log(chalk.cyan("Asset:"), chalk.whiteBright(ASSET_NAME_UTF8));
+    console.log(chalk.cyan("Asset Name (hex):"), chalk.gray(ASSET_NAME_HEX));
+    console.log("");
+
+    console.log(chalk.yellow("Preparing metadata for mint..."));
+    const metadata = {
       name: "Huawei Watch GT 4 Pro - Premium Titanium Smartwatch",
       description:
         "The Huawei Watch GT 4 Pro is a high-end smartwatch featuring an aerospace-grade titanium case, spherical sapphire crystal glass, and a 1.5-inch LTPO AMOLED display (466×466 pixels, ~310 ppi). It offers up to 14 days of battery life (typical usage), HUAWEI TruSense health system (heart rate, SpO2, ECG, stress, sleep, skin temperature), 100+ sports modes, dual-band multi-system GPS, 5 ATM water resistance (50 meters), HarmonyOS, Bluetooth 5.2, NFC, and premium design for active, modern lifestyles.",
@@ -36,32 +81,68 @@ export const mint = async () => {
       battery: "Up to 14 days",
       image: "ipfs://QmYourIPFSHashhuaweiwatchgt4frontpng",
       mediaType: "image/png",
-      roadmap: "[Ha Noi, Hung Yen, Hai Duong, Hai Phong]",
-      location: "Ha Noi",
-    },
-  });
-  const signedTx = await wallet.signTx(unsignedTx, true);
-  const txHash = await wallet.submitTx(signedTx);
-  console.log(`https://preprod.cexplorer.io/tx/` + txHash);
-  await new Promise<void>(function (resolve) {
-    provider.onTxConfirmed(txHash, () => {
-      console.log(`https://preprod.cexplorer.io/tx/` + txHash);
-      resolve();
+       roadmap: "[Viet Nam, China, American, Russia]",
+      location: "Viet Nam", 
+    };
+
+    console.log(chalk.green("✓ Metadata prepared"));
+    console.log(chalk.dim(`Initial location: ${metadata.location}`));
+    console.log("");
+
+    console.log(chalk.yellow("Building mint transaction..."));
+    const unsignedTx = await contract.mint({
+      assetName: ASSET_NAME_UTF8, 
+      metadata: metadata
     });
-  });
+    console.log(chalk.green("✓ Unsigned tx created"));
+    console.log("");
+
+    console.log(chalk.yellow("Signing transaction..."));
+    const signedTx = await wallet.signTx(unsignedTx, true);
+    console.log(chalk.green("✓ Signed successfully"));
+    console.log("");
+
+    console.log(chalk.yellow("Submitting to network..."));
+    const txHash = await wallet.submitTx(signedTx);
+    console.log(chalk.green("✓ Tx submitted!"));
+    console.log("");
+    console.log(chalk.bold.magenta("Tx Hash:"), chalk.whiteBright(txHash));
+    console.log(chalk.cyan("Explorer:"), chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`));
+    console.log("");
+
+    console.log(chalk.yellow("Awaiting confirmation..."));
+    await waitForConfirmation(txHash);
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(chalk.bold.blue("┌──────────────────────────────────────────────┐"));
+    console.log(chalk.bold.blue(`│         MINT COMPLETED (${duration}s)          │`));
+    console.log(chalk.bold.blue("└──────────────────────────────────────────────┘"));
+  } catch (error) {
+    console.log("");
+    printErrorBox("Mint failed");
+    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
+    console.log(chalk.yellow("Check: mnemonic, balance, Blockfrost key, or contract logic."));
+  }
 };
 
 export const update = async () => {
-  const contract = new Contract({
-    wallet: wallet,
-    provider: provider,
-    owners: owners,
-  });
-  const assetName = "Huawei Watch GT4 Pro";
-  const unsignedTx: string = await contract.update({
-    assetName: assetName,
-    metadata: {
-      name: "Huawei Watch GT 4 Pro - Premium Titanium Smartwatch",
+  const startTime = Date.now();
+  printHeader("UPDATE PRODUCT METADATA");
+
+  try {
+    const contract = new Contract({
+      wallet,
+      provider,
+      owners,
+    });
+
+    console.log(chalk.cyan("Asset:"), chalk.whiteBright(ASSET_NAME_UTF8));
+    console.log(chalk.cyan("Asset Name (hex):"), chalk.gray(ASSET_NAME_HEX));
+    console.log("");
+
+    console.log(chalk.yellow("Preparing updated metadata..."));
+    const newMetadata = {
+      name: "Huawei Watch GT 4 Pro",
       description:
         "The Huawei Watch GT 4 Pro is a high-end smartwatch featuring an aerospace-grade titanium case, spherical sapphire crystal glass, and a 1.5-inch LTPO AMOLED display (466×466 pixels, ~310 ppi). It offers up to 14 days of battery life (typical usage), HUAWEI TruSense health system (heart rate, SpO2, ECG, stress, sleep, skin temperature), 100+ sports modes, dual-band multi-system GPS, 5 ATM water resistance (50 meters), HarmonyOS, Bluetooth 5.2, NFC, and premium design for active, modern lifestyles.",
       brand: "Huawei",
@@ -70,38 +151,96 @@ export const update = async () => {
       battery: "Up to 14 days",
       image: "ipfs://QmYourIPFSHashhuaweiwatchgt4frontpng",
       mediaType: "image/png",
-      roadmap: "[Ha Noi, Hung Yen, Hai Duong, Hai Phong]",
-      location: "Hai Phong",
-    },
-  });
+      roadmap: "[Viet Nam, China, American, Russia]",
+      location: "Russia", 
+    };
 
-  const signedTx = await wallet.signTx(unsignedTx, true);
-  const txHash = await wallet.submitTx(signedTx);
-  await new Promise<void>(function (resolve) {
-    provider.onTxConfirmed(txHash, () => {
-      console.log(`https://preprod.cexplorer.io/tx/` + txHash);
-      resolve();
+    console.log(chalk.green("✓ Metadata ready"));
+    console.log(chalk.dim(`New location: ${newMetadata.location}`));
+    console.log("");
+
+    console.log(chalk.yellow("Building update transaction..."));
+    const unsignedTx = await contract.update({
+      assetName: ASSET_NAME_UTF8, 
+      metadata: newMetadata,
     });
-  });
+    console.log(chalk.green("✓ Unsigned tx created"));
+    console.log("");
+
+    console.log(chalk.yellow("Signing transaction..."));
+    const signedTx = await wallet.signTx(unsignedTx, true);
+    console.log(chalk.green("✓ Signed successfully"));
+    console.log("");
+
+    console.log(chalk.yellow("Submitting to network..."));
+    const txHash = await wallet.submitTx(signedTx);
+    console.log(chalk.green("✓ Tx submitted!"));
+    console.log("");
+    console.log(chalk.bold.magenta("Tx Hash:"), chalk.whiteBright(txHash));
+    console.log(chalk.cyan("Explorer:"), chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`));
+    console.log("");
+
+    console.log(chalk.yellow("Awaiting confirmation..."));
+    await waitForConfirmation(txHash);
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(chalk.bold.blue("┌──────────────────────────────────────────────┐"));
+    console.log(chalk.bold.blue(`│      UPDATE COMPLETED (${duration}s)           │`));
+    console.log(chalk.bold.blue("└──────────────────────────────────────────────┘"));
+  } catch (error) {
+    console.log("");
+    printErrorBox("Update failed");
+    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
+    console.log(chalk.yellow("Check: ownership, balance, or contract permissions."));
+  }
 };
 
 export const burn = async () => {
-  const contract = new Contract({
-    wallet: wallet,
-    provider: provider,
-    owners: owners,
-  });
-  const assetName = "Huawei Watch GT4 Pro";
-  const unsignedTx: string = await contract.burn({
-    assetName: assetName,
-  });
-  const signedTx = await wallet.signTx(unsignedTx, true);
-  const txHash = await wallet.submitTx(signedTx);
+  const startTime = Date.now();
+  printHeader("BURN PRODUCT NFT");
 
-  await new Promise<void>(function (resolve) {
-    provider.onTxConfirmed(txHash, () => {
-      console.log(`https://preprod.cexplorer.io/tx/` + txHash);
-      resolve();
+  try {
+    const contract = new Contract({
+      wallet,
+      provider,
+      owners,
     });
-  });
+
+    console.log(chalk.cyan("Asset to burn:"), chalk.whiteBright(ASSET_NAME_UTF8));
+    console.log(chalk.cyan("Asset Name (hex):"), chalk.gray(ASSET_NAME_HEX));
+    console.log("");
+
+    console.log(chalk.yellow("Building burn transaction..."));
+    const unsignedTx = await contract.burn({
+      assetName: ASSET_NAME_UTF8,
+    });
+    console.log(chalk.green("✓ Unsigned tx created"));
+    console.log("");
+
+    console.log(chalk.yellow("Signing burn transaction..."));
+    const signedTx = await wallet.signTx(unsignedTx, true);
+    console.log(chalk.green("✓ Signed successfully"));
+    console.log("");
+
+    console.log(chalk.yellow("Submitting burn tx..."));
+    const txHash = await wallet.submitTx(signedTx);
+    console.log(chalk.green("✓ Tx submitted!"));
+    console.log("");
+    console.log(chalk.bold.magenta("Tx Hash:"), chalk.whiteBright(txHash));
+    console.log(chalk.cyan("Explorer:"), chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`));
+    console.log("");
+
+    console.log(chalk.yellow("Awaiting confirmation..."));
+    await waitForConfirmation(txHash);
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    console.log(chalk.bold.blue("┌──────────────────────────────────────────────┐"));
+    console.log(chalk.bold.blue(`│        BURN COMPLETED (${duration}s)           │`));
+    console.log(chalk.bold.blue("└──────────────────────────────────────────────┘"));
+  } catch (error) {
+    console.log("");
+    printErrorBox("Burn failed");
+    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
+    console.log(chalk.yellow("Check: ownership, balance, or contract burn logic."));
+  }
 };

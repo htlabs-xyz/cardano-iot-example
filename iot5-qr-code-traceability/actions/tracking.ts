@@ -47,7 +47,6 @@ export const getTracking = async ({ unit }: { unit: string }) => {
 
       let action: HistoryEntry["action"] = "Unknown";
       let quantityChange: number | undefined;
-
       if (inputQty === 0 && outputQty > 0) {
         action = "Mint";
         quantityChange = outputQty;
@@ -59,7 +58,7 @@ export const getTracking = async ({ unit }: { unit: string }) => {
         if (quantityChange === 0) {
           action = "Transfer";
         } else {
-          action = "Update"; 
+          action = "Update";
         }
       }
 
@@ -92,10 +91,29 @@ export const getTracking = async ({ unit }: { unit: string }) => {
     }
   }
   histories.sort((a, b) => b.datetime - a.datetime);
+  const filteredHistory: HistoryEntry[] = [];
+  for (const entry of histories) {
+    filteredHistory.push(entry);
+    if (entry.action === "Mint") {
+      break;
+    }
+  }
+
+  if (
+    filteredHistory.length === 0 ||
+    !filteredHistory.some((e) => e.action === "Mint")
+  ) {
+    return {
+      metadata: histories[0]?.metadata || {},
+      transaction_history: histories,
+      message: "Không tìm thấy Mint nào trong lịch sử.",
+    };
+  }
+
   const latestMetadata = histories[0]?.metadata || {};
 
   return {
     metadata: latestMetadata,
-    transaction_history: histories,
+    transaction_history: filteredHistory,
   };
 };

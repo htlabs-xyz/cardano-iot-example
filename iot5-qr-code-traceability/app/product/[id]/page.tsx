@@ -9,13 +9,13 @@ import {
   Check,
   MapPin,
   Truck,
-  Watch,
   Factory,
   Ship,
   Calendar,
   BadgeCheck,
   Loader2,
   AlertCircle,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
@@ -25,12 +25,7 @@ export default function ProductTraceabilityPage() {
   const params = useParams();
   const unit = params.id as string;
 
-  const {
-    data: tracking,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  const { data: tracking, isLoading, isError, error } = useQuery({
     queryKey: ["product-tracking", unit],
     queryFn: () => getTracking({ unit }),
     enabled: !!unit,
@@ -38,56 +33,52 @@ export default function ProductTraceabilityPage() {
 
   const [selectedStep, setSelectedStep] = React.useState(0);
 
+  const normalize = (s: string) => s?.toLowerCase().trim() || "";
+
   const waypoints = React.useMemo(() => {
     const roadmapStr = tracking?.metadata?.roadmap || "";
-    return roadmapStr
+    const list = roadmapStr
       .replace(/[\[\]]/g, "")
       .split(",")
-      .map((w: any) => w.trim())
+      .map((w: string) => w.trim())
       .filter(Boolean);
+    return list.length
+      ? list
+      : ["Origin", "Manufacturing", "Transportation", "Distribution", "Delivery"];
   }, [tracking]);
 
   const transactionLocations = React.useMemo(
-    () =>
-      tracking?.transaction_history
-        .map((t) => t.metadata?.location)
-        .filter(Boolean) || [],
-    [tracking],
+    () => tracking?.transaction_history.map((t: any) => t.metadata?.location).filter(Boolean) || [],
+    [tracking]
   );
 
-  const currentLocation = tracking?.metadata?.location || waypoints[0] || "";
-  const currentIndex = waypoints.indexOf(currentLocation);
+  const currentLocation = tracking?.metadata?.location || waypoints[0];
+  const currentIndex = waypoints.findIndex((loc: any) => normalize(loc) === normalize(currentLocation));
 
   React.useEffect(() => {
-    if (currentIndex >= 0) {
-      setSelectedStep(currentIndex);
-    }
+    if (currentIndex >= 0) setSelectedStep(currentIndex);
   }, [currentIndex]);
 
   const selectedTx = tracking?.transaction_history.find(
-    (tx) => tx.metadata?.location === waypoints[selectedStep],
+    (tx: any) => normalize(tx.metadata?.location) === normalize(waypoints[selectedStep])
   );
 
   const iconForLocation = (loc: string) => {
     const lower = loc.toLowerCase();
-    if (lower.includes("ha noi")) return <Factory className="w-7 h-7" />;
-    if (lower.includes("hung yen") || lower.includes("hai duong"))
-      return <Truck className="w-7 h-7" />;
-    if (lower.includes("hai phong")) return <Ship className="w-7 h-7" />;
-    return <Watch className="w-7 h-7" />;
+    if (lower.includes("ha noi") || lower.includes("hanoi")) return <Factory className="w-6 h-6" />;
+    if (lower.includes("hung yen")) return <Truck className="w-6 h-6" />;
+    if (lower.includes("hai phong")) return <Ship className="w-6 h-6" />;
+    return <Package className="w-6 h-6" />;
   };
 
   const productMeta = tracking?.metadata;
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-        <div className="text-center backdrop-blur-xl bg-white/10 p-8 rounded-3xl border border-white/20">
-          <Loader2 className="w-16 h-16 animate-spin text-blue-400 mx-auto mb-6" />
-          <p className="text-lg text-white font-medium">
-            Đang truy xuất dữ liệu blockchain...
-          </p>
-          <p className="text-sm text-blue-200 mt-2">Vui lòng chờ một chút</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-emerald-50">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
+          <p className="text-gray-600 font-medium">Loading traceability journey...</p>
         </div>
       </div>
     );
@@ -95,344 +86,205 @@ export default function ProductTraceabilityPage() {
 
   if (isError || !tracking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-        <div className="text-center max-w-md p-8 bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20">
-          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-white mb-3">
-            Không thể tải dữ liệu
-          </h2>
-          <p className="text-blue-100 mb-4">
-            {error?.message || "Có lỗi xảy ra khi kết nối với blockchain."}
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-emerald-50 px-6">
+        <div className="bg-white/90 backdrop-blur-xl border border-red-100/50 rounded-3xl p-12 shadow-2xl text-center max-w-lg w-full">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+          <h2 className="text-3xl font-bold mb-4 text-gray-900">Traceability Data Unavailable</h2>
+          <p className="text-gray-600 mb-8 text-lg leading-relaxed">
+            We couldn't retrieve the traceability information for this product. This may be due to a network issue, an invalid product ID, or the data not being recorded on the blockchain yet. Please try again later or contact support if the issue persists.
           </p>
-          <p className="text-sm text-blue-200">
-            Vui lòng thử lại sau hoặc kiểm tra mã sản phẩm.
-          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-emerald-700 transition-all"
+          >
+            Return Home
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-indigo-50 text-gray-800 relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 text-gray-900">
       <Head>
-        <title>Traceability | {productMeta?.model || "Product"}</title>
+        <title>Traceability | {productMeta?.model || "Product Journey"}</title>
       </Head>
 
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-200 rounded-full opacity-20 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-200 rounded-full opacity-20 blur-3xl"></div>
-      </div>
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-16 md:py-24 space-y-20 md:space-y-28">
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 relative z-10">
-        {/* Header */}
-        <div className="text-center mb-20 md:mb-28">
-          <div className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-full mb-8 border border-indigo-200/60 shadow-sm hover:shadow-md transition-shadow">
-            <BadgeCheck className="w-5 h-5 text-indigo-600 animate-pulse" />
-            <span className="text-indigo-700 font-semibold text-sm">
-              Verified on Cardano Blockchain
-            </span>
+        {/* Header – More cinematic */}
+        <header className="text-center space-y-8">
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/70 backdrop-blur-lg border border-blue-100/50 rounded-full shadow-md text-blue-700 font-medium">
+            <BadgeCheck className="w-5 h-5" />
+            Verified on Cardano Blockchain
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight tracking-tight">
-            <span className="block text-gray-900">Product</span>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 block">
-              Traceability
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight">
+            Transparent{" "}
+            <span className="bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
+              Product Journey
             </span>
           </h1>
 
-          <div className="w-24 h-1 bg-gradient-to-r from-transparent via-indigo-400 to-transparent mx-auto mb-8"></div>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            {productMeta?.model || "Product"} — Immutable visibility from origin to delivery
+          </p>
+        </header>
 
-          <div className="mt-8 max-w-3xl mx-auto space-y-4">
-            <p className="text-2xl md:text-3xl text-gray-800 font-bold">
-              {productMeta?.model || "Unknown Model"}
-            </p>
+        {/* Timeline – Enhanced with progress gradient & glow */}
+        <section className="bg-white/70 backdrop-blur-xl border border-blue-100/50 rounded-3xl shadow-xl p-10 md:p-12 relative overflow-hidden">
+          <h2 className="text-xl md:text-2xl font-bold mb-12 text-gray-800 text-center md:text-left">
+            Supply Chain Milestones
+          </h2>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 text-sm md:text-base text-gray-700 font-medium">
-              <span className="inline-flex items-center gap-2.5 px-3 py-1.5 bg-white rounded-full shadow-sm">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-                <span>{waypoints[0] || "Origin"}</span>
-              </span>
-              <span className="hidden sm:inline text-indigo-400 text-lg">
-                →
-              </span>
-              <span className="inline-flex items-center gap-2.5 px-3 py-1.5 bg-white rounded-full shadow-sm ring-2 ring-blue-400/50">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
-                <span className="font-semibold text-gray-900">
-                  {currentLocation}
-                </span>
-              </span>
-              <span className="hidden sm:inline text-indigo-400 text-lg">
-                →
-              </span>
-              <span className="inline-flex items-center gap-2.5 px-3 py-1.5 bg-white rounded-full shadow-sm">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-                <span>{waypoints[waypoints.length - 1] || "Destination"}</span>
-              </span>
+          <div className="relative flex items-center justify-between pt-4 pb-16">
+            {/* Progress line with gradient */}
+            <div className="absolute top-7 left-0 right-0 h-2 bg-blue-100/60 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-1000 ease-out shadow-md"
+                style={{
+                  width: currentIndex >= 0 ? `${(currentIndex / (waypoints.length - 1)) * 100}%` : "0%",
+                }}
+              />
             </div>
-          </div>
-        </div>
 
-        {/* Timeline */}
-        <div className="mb-24 md:mb-32">
-          <div className="text-center mb-10 md:mb-14">
-            <h2 className="text-4xl md:text-5xl font-bold mb-3 text-gray-900">
-              Supply Chain Journey
-            </h2>
-            <p className="text-gray-600 text-lg">
-              Track the product through each checkpoint
-            </p>
-          </div>
+            {waypoints.map((loc: string, index: number) => {
+              const isPast = index < currentIndex;
+              const isCurrent = index === currentIndex;
+              const isClickable = transactionLocations.some((l) => normalize(l) === normalize(loc));
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 md:p-12 shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0 overflow-x-auto pb-4">
-              {waypoints.map((loc: any, index: number) => {
-                const isPast = index < currentIndex;
-                const isCurrent = index === currentIndex;
-                const hasTx = transactionLocations.includes(loc);
-
-                return (
-                  <div
-                    key={loc}
-                    className="relative flex flex-col items-center flex-shrink-0"
-                  >
-                    <div
-                      onClick={() => {
-                        if (hasTx) setSelectedStep(index);
-                      }}
-                      className={cn(
-                        "transition-all duration-300",
-                        hasTx
-                          ? "cursor-pointer"
-                          : "cursor-not-allowed opacity-50",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "w-24 h-24 rounded-full flex items-center justify-center border-2 shadow-lg transition-all duration-300 relative",
-                          isPast
-                            ? "bg-gradient-to-br from-green-400 to-green-500 border-green-300 text-white shadow-green-500/30"
-                            : isCurrent
-                              ? "bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-300 text-white scale-125 shadow-2xl shadow-blue-500/40 ring-4 ring-blue-200/50"
-                              : "bg-gray-50 border-gray-300 text-gray-400 shadow-gray-200/50",
-                          hasTx &&
-                            !isCurrent &&
-                            "hover:scale-110 hover:shadow-2xl",
-                        )}
-                      >
-                        {isPast || isCurrent ? (
-                          <div className="absolute inset-0 rounded-full bg-white/10"></div>
-                        ) : null}
-                        <span className="relative z-10">
-                          {isPast ? (
-                            <Check className="w-10 h-10" />
-                          ) : (
-                            iconForLocation(loc)
-                          )}
-                        </span>
-                      </div>
-
-                      <div className="mt-6 text-center max-w-xs mx-auto">
-                        <p
-                          className={cn(
-                            "font-semibold text-sm leading-tight",
-                            index <= currentIndex
-                              ? "text-gray-900"
-                              : "text-gray-500",
-                          )}
-                        >
-                          {loc}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1.5">
-                          {hasTx ? "✓ Ghi nhận" : "Chờ xác nhận"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {index < waypoints.length - 1 && (
-                      <div
-                        className={cn(
-                          "h-1.5 hidden md:block transition-all duration-300 mx-3 mt-8",
-                          index < currentIndex
-                            ? "w-16 bg-gradient-to-r from-green-400 to-blue-400"
-                            : "w-16 bg-gray-300",
-                        )}
-                      />
+              return (
+                <div key={loc} className="relative z-10 flex flex-col items-center flex-1 group">
+                  <button
+                    onClick={() => isClickable && setSelectedStep(index)}
+                    disabled={!isClickable}
+                    className={cn(
+                      "w-16 h-16 rounded-2xl flex items-center justify-center border-4 shadow-lg transition-all duration-400",
+                      isPast
+                        ? "bg-emerald-500 text-white border-emerald-300 scale-105 group-hover:scale-110"
+                        : isCurrent
+                        ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white border-blue-300 ring-4 ring-blue-200/50 scale-125 animate-pulse"
+                        : "bg-white text-gray-500 border-gray-200 group-hover:border-blue-300 group-hover:text-blue-600 group-hover:scale-110",
+                      isClickable && "cursor-pointer"
                     )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+                  >
+                    {isPast ? <Check className="w-7 h-7" /> : iconForLocation(loc)}
+                  </button>
 
-        {/* Details */}
-        <div className="grid md:grid-cols-2 gap-8 mb-20">
-          {/* Current Stage */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300">
-            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-indigo-600" />
-              </div>
-              Current Stage
+                  <span className="mt-4 text-sm md:text-base font-semibold text-gray-700 text-center leading-tight max-w-[110px] group-hover:text-blue-700 transition-colors">
+                    {loc}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Grid – Cards with lift on hover */}
+        <div className="grid lg:grid-cols-2 gap-10">
+
+          {/* Current Milestone */}
+          <div className="bg-white/80 backdrop-blur-xl border border-blue-100/50 rounded-3xl shadow-xl p-10 space-y-8 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <h3 className="text-xl font-bold flex items-center gap-3 text-gray-800">
+              <MapPin className="w-7 h-7 text-blue-600" />
+              Current Milestone
             </h3>
 
             {selectedTx ? (
-              <div className="space-y-5">
-                <div className="flex gap-3 p-4 bg-gray-50 rounded-xl">
-                  <Calendar className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs text-gray-500 uppercase font-semibold">
-                      Timestamp
-                    </p>
-                    <p className="text-gray-800 font-medium">
-                      {new Date(selectedTx.datetime * 1000).toLocaleString(
-                        "vi-VN",
-                        {
-                          dateStyle: "long",
-                          timeStyle: "short",
-                        },
-                      )}
-                    </p>
-                  </div>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                  {new Intl.DateTimeFormat("en-US", { dateStyle: "long", timeStyle: "short" }).format(
+                    new Date(selectedTx.datetime * 1000)
+                  )}
                 </div>
+
                 <div>
-                  <p className="text-xs text-gray-500 uppercase font-semibold mb-2">
-                    Action
-                  </p>
-                  <p className="text-lg text-gray-800 font-medium">
-                    {selectedTx.action}
-                  </p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Action</p>
+                  <p className="text-lg font-semibold mt-1">{selectedTx.action}</p>
                 </div>
+
                 <div>
-                  <p className="text-xs text-gray-500 uppercase font-semibold mb-2">
-                    Status
-                  </p>
-                  <span className="inline-block px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Status</p>
+                  <span className="inline-flex px-4 py-1.5 mt-1.5 text-sm font-medium bg-emerald-100 text-emerald-800 rounded-full">
                     {selectedTx.status}
                   </span>
                 </div>
-                <div className="pt-2">
-                  <p className="text-xs text-gray-500 uppercase font-semibold mb-2">
-                    Transaction Hash
-                  </p>
-                  <Link href={`https://preprod.cexplorer.io/tx/${selectedTx.txHash}`} target="_blank" className="text-xs text-gray-700 font-mono bg-gray-100 p-3 rounded-lg break-all">
+
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Transaction</p>
+                  <Link
+                    href={`https://preprod.cexplorer.io/tx/${selectedTx.txHash}`}
+                    target="_blank"
+                    className="text-sm font-mono text-blue-700 hover:text-blue-900 break-all hover:underline mt-1 block"
+                  >
                     {selectedTx.txHash}
                   </Link>
                 </div>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8 italic">
-                Chưa có giao dịch nào được ghi nhận cho giai đoạn này.
-              </p>
+              <p className="text-gray-600 italic">No transaction recorded for this stage yet.</p>
             )}
           </div>
 
-          {/* Transaction History */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300">
-            <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Watch className="w-5 h-5 text-blue-600" />
-              </div>
-              Transfer History
-            </h3>
+          {/* History */}
+          <div className="bg-white/80 backdrop-blur-xl border border-blue-100/50 rounded-3xl shadow-xl p-10 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <h3 className="text-xl font-bold mb-8 text-gray-800">Transfer History</h3>
 
-            {tracking.transaction_history.length > 0 ? (
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                {tracking.transaction_history.map((tx, i) => (
-                  <div
-                    key={tx.txHash}
-                    onClick={() => {
-                      setSelectedStep(
-                        waypoints.indexOf(tx.metadata?.location || "")
-                      );
-                    }}
-                    className="p-5 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-md hover:from-gray-50 hover:to-indigo-50 transition-all duration-200 cursor-pointer group"
-                  >
-                    <div className="flex justify-between items-start gap-3 mb-2.5">
-                      <p className="font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors flex-1">
-                        {tx.metadata?.location || "Unknown Location"}
-                      </p>
-                      <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 flex-shrink-0 mt-1 shadow-sm"></span>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-2 font-medium">
-                      {new Date(tx.datetime * 1000).toLocaleString("vi-VN")}
-                    </p>
-                    <p className="text-sm text-gray-700 font-semibold mb-2">
-                      {tx.action}
-                    </p>
-                    <p className="text-xs text-gray-600 font-mono truncate opacity-75">
-                      {tx.txHash.slice(0, 20)}...
-                    </p>
+            <div className="space-y-5 max-h-[480px] overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-50/50">
+              {tracking.transaction_history.map((tx: any) => (
+                <div
+                  key={tx.txHash}
+                  onClick={() => {
+                    const idx = waypoints.findIndex((loc: any) => normalize(loc) === normalize(tx.metadata?.location || ""));
+                    if (idx >= 0) setSelectedStep(idx);
+                  }}
+                  className={cn(
+                    "p-6 border border-gray-200/70 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all duration-300 cursor-pointer",
+                    normalize(tx.metadata?.location) === normalize(waypoints[selectedStep]) && "bg-blue-50/50 border-blue-300"
+                  )}
+                >
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="font-semibold text-gray-900">{tx.metadata?.location || "Unknown"}</span>
+                    <span className="text-sm text-gray-500">
+                      {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(tx.datetime * 1000))}
+                    </span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-8 italic">
-                Chưa có lịch sử giao dịch.
-              </p>
-            )}
+                  <p className="text-gray-700">{tx.action}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
+        {/* Product Details */}
         {productMeta && (
-          <div className="mt-16 mb-12">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-16 shadow-xl border border-gray-100">
-              <h3 className="text-4xl md:text-5xl font-black mb-3 text-center text-gray-900">
-                Product Information
-              </h3>
-              <div className="w-32 h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent mx-auto mb-10"></div>
-              <p className="text-center text-gray-600 mb-12 text-lg">
-                Verified on-chain metadata
-              </p>
+          <section className="bg-white/80 backdrop-blur-xl border border-blue-100/50 rounded-3xl shadow-xl p-10 md:p-12 space-y-10 hover:shadow-2xl transition-shadow duration-300">
+            <h2 className="text-2xl font-bold text-gray-800">Product Details</h2>
 
-              <div className="grid md:grid-cols-2 gap-6 mb-10">
-                <div className="group p-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-indigo-100/50 hover:border-indigo-300 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-                  <p className="text-xs uppercase font-bold text-indigo-600 tracking-wide mb-3">
-                    Brand
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {productMeta.brand || "—"}
-                  </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { label: "Brand", value: productMeta.brand },
+                { label: "Model", value: productMeta.model },
+                { label: "Material", value: productMeta.material },
+                { label: "Battery", value: productMeta.battery },
+              ].map((item, i) => (
+                <div key={i} className="space-y-2">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">{item.label}</p>
+                  <p className="text-lg font-semibold text-gray-900">{item.value || "—"}</p>
                 </div>
-                <div className="group p-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-indigo-100/50 hover:border-indigo-300 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-                  <p className="text-xs uppercase font-bold text-indigo-600 tracking-wide mb-3">
-                    Model
-                  </p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {productMeta.model || "—"}
-                  </p>
-                </div>
-                <div className="group p-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-indigo-100/50 hover:border-indigo-300 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-                  <p className="text-xs uppercase font-bold text-indigo-600 tracking-wide mb-3">
-                    Material
-                  </p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {productMeta.material || "—"}
-                  </p>
-                </div>
-                <div className="group p-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-indigo-100/50 hover:border-indigo-300 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-                  <p className="text-xs uppercase font-bold text-indigo-600 tracking-wide mb-3">
-                    Battery
-                  </p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {productMeta.battery || "—"}
-                  </p>
-                </div>
-              </div>
-
-              {productMeta.description && (
-                <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 rounded-3xl border border-gray-100 shadow-md">
-                  <p className="text-xs uppercase font-bold text-gray-600 tracking-wide mb-4">
-                    Description
-                  </p>
-                  <p className="text-gray-800 leading-relaxed text-base font-medium">
-                    {productMeta.description}
-                  </p>
-                </div>
-              )}
+              ))}
             </div>
-          </div>
+
+            {productMeta.description && (
+              <div className="pt-6 border-t border-gray-200/50">
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-3">Description</p>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  {productMeta.description}
+                </p>
+              </div>
+            )}
+          </section>
         )}
       </div>
     </main>

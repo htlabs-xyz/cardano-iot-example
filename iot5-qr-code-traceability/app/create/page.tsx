@@ -11,7 +11,7 @@ const CIP68_LABEL = "000643b0";
 const MAX_ASSET_NAME_BYTES = 32;
 
 interface FormState {
-  issuer: string;
+  issuers: string;
   productName: string;
 }
 
@@ -24,7 +24,7 @@ interface QRResult {
 
 export default function Create() {
   const [form, setForm] = useState<FormState>({
-    issuer: "",
+    issuers: "",
     productName: "",
   });
   const [qrResult, setQRResult] = useState<QRResult>({
@@ -35,25 +35,35 @@ export default function Create() {
   });
   const [submitted, setSubmitted] = useState(false);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setQRResult({
-      qrCodeUrl: null,
-      productUrl: null,
-      productId: null,
-      error: null,
-    });
-    setSubmitted(false);
-  }, []);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+      const { name, value } = e.target;
+      setForm((prev) => ({ ...prev, [name]: value }));
+      setQRResult({
+        qrCodeUrl: null,
+        productUrl: null,
+        productId: null,
+        error: null,
+      });
+      setSubmitted(false);
+    },
+    [],
+  );
 
-  const trimmedIssuer = useMemo(() => form.issuer.trim(), [form.issuer]);
+  const trimmedIssuers = useMemo(() => {
+    return form.issuers
+      .replace(/\n+/g, ",")
+      .replace(/\s*,\s*/g, ",")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }, [form.issuers]);
+
   const trimmedProductName = useMemo(
     () => form.productName.trim(),
     [form.productName],
   );
 
- 
   const generateQRCode = useCallback(
     async (url: string): Promise<string | null> => {
       try {
@@ -76,13 +86,13 @@ export default function Create() {
     isFetching,
     error: queryError,
   } = useQuery({
-    queryKey: ["product", trimmedIssuer, trimmedProductName],
+    queryKey: ["product", trimmedIssuers, trimmedProductName],
     queryFn: async () =>
       getProduct({
-        owner: trimmedIssuer,
+        owners: trimmedIssuers,
         assetName: trimmedProductName,
       }),
-    enabled: submitted && !!trimmedIssuer && !!trimmedProductName,
+    enabled: submitted && trimmedIssuers.length > 0 && !!trimmedProductName,
     retry: 1,
     staleTime: 300_000,
   });
@@ -91,9 +101,8 @@ export default function Create() {
     if (!product || !submitted) return;
 
     const policyId = product.policyId as string;
+    const assetName = product.assetName as string;
 
-
-    const assetName = product.assetName as string
     const productUrl = `${window.location.origin}/product/${policyId + assetName}`;
 
     generateQRCode(productUrl).then((qrUrl) => {
@@ -101,21 +110,16 @@ export default function Create() {
         qrCodeUrl: qrUrl,
         productUrl,
         productId: policyId + assetName,
-        error: qrUrl ? null : "Lỗi tạo mã QR",
+        error: qrUrl ? null : "Failed to generate QR code",
       });
     });
-  }, [
-    product,
-    submitted,
-    trimmedProductName,
-    generateQRCode,
-  ]);
+  }, [product, submitted, generateQRCode]);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
 
-      if (!trimmedIssuer || !trimmedProductName) return;
+      if (!trimmedIssuers.length || !trimmedProductName) return;
 
       setQRResult({
         qrCodeUrl: null,
@@ -125,7 +129,7 @@ export default function Create() {
       });
       setSubmitted(true);
     },
-    [trimmedIssuer, trimmedProductName],
+    [trimmedIssuers, trimmedProductName],
   );
 
   const isProcessing =
@@ -133,10 +137,10 @@ export default function Create() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 py-12 px-6 relative overflow-hidden">
-      {/* Background decoration giữ nguyên */}
+      {/* Background decoration remains unchanged */}
 
       <div className="max-w-6xl mx-auto relative z-10">
-        {/* Header giữ nguyên */}
+        {/* Header */}
         <div className="text-center mb-12 md:mb-16 animate-in fade-in slide-in-from-top duration-700">
           <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-gradient-to-r from-blue-100 to-emerald-100 rounded-full shadow-sm">
             <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-emerald-600 rounded-full flex items-center justify-center shadow-md">
@@ -157,30 +161,34 @@ export default function Create() {
             verification and build lasting consumer trust.
           </p>
         </div>
+
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Form */}
           <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-8 lg:p-10 border border-white/50">
             <form onSubmit={handleSubmit} className="space-y-7">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Owner <span className="text-red-500">*</span>
+                  Issuer(s) <span className="text-red-500">*</span>
                 </label>
-                <input
-                  name="issuer"
-                  type="text"
+                <textarea
+                  name="issuers"
                   required
-                  value={form.issuer}
+                  value={form.issuers}
                   onChange={handleChange}
+                  rows={4}
                   className={`w-full px-5 py-4 bg-white border ${
                     qrResult.error ? "border-red-500" : "border-slate-200"
-                  } rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all`}
-                  placeholder="Ví dụ: addr_test1234abcd..."
+                  } rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all `}
+                  placeholder="Example: addr_test1q..., addr1q..."
                 />
+                <p className="mt-1.5 text-xs text-slate-500">
+                  One address per line or separated by commas
+                </p>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Name <span className="text-red-500">*</span>
+                  Product Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   name="productName"
@@ -189,7 +197,7 @@ export default function Create() {
                   value={form.productName}
                   onChange={handleChange}
                   className="w-full px-5 py-4 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
-                  placeholder="Ví dụ: Huawei Watch GT 4 Pro"
+                  placeholder="Example: Huawei Watch GT 4 Pro"
                 />
               </div>
 
@@ -205,11 +213,11 @@ export default function Create() {
                 className="w-full py-5 bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-bold text-lg rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
                 {isProcessing ? (
-                  <>Đang xử lý...</>
+                  <>Processing...</>
                 ) : (
                   <>
                     <Sparkles className="w-6 h-6" />
-                    Tạo QR Code
+                    Generate QR Code
                   </>
                 )}
               </button>
@@ -222,14 +230,14 @@ export default function Create() {
               <div className="text-center space-y-6">
                 <div>
                   <p className="text-lg font-medium text-slate-600 mb-2">
-                   {form.productName}
+                    {form.productName}
                   </p>
                 </div>
 
                 <div className="p-6 bg-white rounded-2xl shadow-inner">
                   <img
                     src={qrResult.qrCodeUrl}
-                    alt="QR Code"
+                    alt="Product QR Code"
                     className="w-80 h-80 mx-auto"
                   />
                 </div>
@@ -237,11 +245,11 @@ export default function Create() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link
                     href={qrResult.qrCodeUrl}
-                    download={`QR_${qrResult.productId?.replace(/[^a-zA-Z0-9]/g, "_") || "sanpham"}.png`}
+                    download={`QR_${qrResult.productId?.replace(/[^a-zA-Z0-9]/g, "_") || "product"}.png`}
                     className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                   >
                     <Download className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" />
-                    Tải QR
+                    Download QR
                   </Link>
 
                   {qrResult.productUrl && (
@@ -252,7 +260,7 @@ export default function Create() {
                       className="group inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-slate-700 to-slate-800 text-white font-semibold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                     >
                       <ExternalLink className="w-5 h-5" />
-                      Xem trang sản phẩm
+                      View Product Page
                     </a>
                   )}
                 </div>
@@ -263,17 +271,15 @@ export default function Create() {
                   <QrCode className="w-32 h-32 text-blue-400" />
                 </div>
                 <p className="text-xl font-medium text-slate-600">
-                  Nhập Policy ID và Tên sản phẩm rồi nhấn nút
+                  Enter issuer address(es) and product name, then click Generate
                 </p>
                 <p className="text-slate-500 mt-4">
-                  QR sẽ dẫn trực tiếp đến trang sản phẩm trên website
+                  The QR code will link directly to the product page
                 </p>
 
                 {queryError && (
                   <p className="mt-6 text-red-600 font-medium">
-                    {queryError instanceof Error
-                      ? queryError.message
-                      : "Có lỗi xảy ra"}
+                    Failed to fetch product data - please check the issuer addresses and product name, and ensure the product exists on the blockchain.
                   </p>
                 )}
               </div>
