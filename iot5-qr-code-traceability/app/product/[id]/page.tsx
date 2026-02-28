@@ -2,324 +2,290 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import Head from "next/head";
 import {
   Check,
   MapPin,
-  Package,
   Truck,
-  Leaf,
-  Coffee,
+  Factory,
+  Ship,
   Calendar,
   BadgeCheck,
+  Loader2,
+  AlertCircle,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { getTracking } from "@/actions/tracking";
 
+export default function ProductTraceabilityPage() {
+  const params = useParams();
+  const unit = params.id as string;
 
+  const { data: tracking, isLoading, isError, error } = useQuery({
+    queryKey: ["product-tracking", unit],
+    queryFn: () => getTracking({ unit }),
+    enabled: !!unit,
+  });
 
-const fakeTrackingData = {
-  metadata: {
-    startLocation: "Ea Ktur Coffee Farm, Cư Kuin, Đắk Lắk",
-    waypoints:
-      "Buôn Ma Thuột Processing Plant, Ho Chi Minh City Transit Warehouse, BigC Supermarket Hanoi",
-    endLocation:
-      "Coffee House Store - 123 Lê Lợi, District 1, Ho Chi Minh City",
-    location: "BigC Supermarket Hanoi",
-    productName: "Đắk Lắk Specialty Arabica Coffee - Batch 2025",
-    batchCode: "LO20250101-ABC",
-  },
-  transaction_history: [
-    {
-      metadata: { location: "Ea Ktur Coffee Farm, Cư Kuin, Đắk Lắk" },
-      datetime: 1728979200,
-      action: "Harvested & Origin Recorded",
-      status: "success",
-    },
-    {
-      metadata: { location: "Buôn Ma Thuột Processing Plant" },
-      datetime: 1729238400,
-      action: "Roasted, Ground & Packaged",
-      status: "success",
-    },
-    {
-      metadata: { location: "Ho Chi Minh City Transit Warehouse" },
-      datetime: 1730073600,
-      action: "Received at Transit Warehouse",
-      status: "success",
-    },
-    {
-      metadata: { location: "BigC Supermarket Hanoi" },
-      datetime: 1731283200,
-      action: "Distributed to Retail Point",
-      status: "success",
-    },
-  ],
-  onchain_metadata: {
-    name: "Đắk Lắk Specialty Arabica Coffee - Batch 2025",
-    variety: "Arabica Catimor",
-    altitude: "1200–1500m",
-    origin: "Đắk Lắk, Vietnam",
-    description:
-      "Hand-picked Arabica coffee, wet-processed, medium roast.",
-  },
-};
-
-/* -------------------------------------------------------------------------- */
-/*                                  COMPONENT                                 */
-/* -------------------------------------------------------------------------- */
-
-const Step = ({
-  title,
-  description,
-  icon,
-  isCompleted,
-  isActive,
-  isLast,
-  onClick,
-  clickable,
-}: any) => {
-  return (
-    <div className="relative flex items-center">
-      <div
-        onClick={clickable ? onClick : undefined}
-        className={cn(
-          "flex flex-col items-center transition-all duration-300",
-          clickable ? "cursor-pointer" : "cursor-not-allowed opacity-50"
-        )}
-      >
-        <div
-          className={cn(
-            "w-16 h-16 rounded-2xl flex items-center justify-center border-2 shadow-md transition-all",
-            isCompleted
-              ? "bg-green-500 border-green-400 text-white"
-              : isActive
-              ? "bg-gradient-to-br from-blue-500 to-green-500 border-blue-400 text-white scale-110"
-              : "bg-white border-gray-300 text-gray-400",
-            clickable && "hover:scale-110 hover:shadow-lg"
-          )}
-        >
-          {isCompleted ? <Check className="w-7 h-7" /> : icon}
-        </div>
-
-        <div className="mt-4 text-center max-w-[180px]">
-          <p
-            className={cn(
-              "font-semibold text-sm",
-              isActive || isCompleted
-                ? "text-gray-900"
-                : "text-gray-500"
-            )}
-          >
-            {title}
-          </p>
-          {description && (
-            <p className="text-xs text-gray-400 mt-1 hidden md:block">
-              {description}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {!isLast && (
-        <div
-          className={cn(
-            "w-16 h-1 mx-4 hidden md:block",
-            isCompleted
-              ? "bg-gradient-to-r from-green-400 to-blue-400"
-              : "bg-gray-300"
-          )}
-        />
-      )}
-    </div>
-  );
-};
-
-/* -------------------------------------------------------------------------- */
-/*                                   PAGE                                     */
-/* -------------------------------------------------------------------------- */
-
-export default function ProductTraceabilityTracking() {
-  const data = fakeTrackingData;
   const [selectedStep, setSelectedStep] = React.useState(0);
 
-  const waypoints = React.useMemo(() => {
-    const { startLocation, waypoints, endLocation } = data.metadata;
-    return Array.from(
-      new Set([
-        startLocation,
-        ...(waypoints ? waypoints.split(",").map((w) => w.trim()) : []),
-        endLocation,
-      ])
-    );
-  }, [data]);
+  const normalize = (s: string) => s?.toLowerCase().trim() || "";
 
-  const transactionLocations = data.transaction_history.map(
-    (t) => t.metadata.location
+  const waypoints = React.useMemo(() => {
+    const roadmapStr = tracking?.metadata?.roadmap || "";
+    const list = roadmapStr
+      .replace(/[\[\]]/g, "")
+      .split(",")
+      .map((w: string) => w.trim())
+      .filter(Boolean);
+    return list.length
+      ? list
+      : ["Origin", "Manufacturing", "Transportation", "Distribution", "Delivery"];
+  }, [tracking]);
+
+  const transactionLocations = React.useMemo(
+    () => tracking?.transaction_history.map((t: any) => t.metadata?.location).filter(Boolean) || [],
+    [tracking]
   );
 
-  const currentIndex = waypoints.indexOf(data.metadata.location);
+  const currentLocation = tracking?.metadata?.location || waypoints[0];
+  const currentIndex = waypoints.findIndex((loc: any) => normalize(loc) === normalize(currentLocation));
 
   React.useEffect(() => {
-    setSelectedStep(currentIndex);
+    if (currentIndex >= 0) setSelectedStep(currentIndex);
   }, [currentIndex]);
 
-  const selectedTx = data.transaction_history.find(
-    (tx) => tx.metadata.location === waypoints[selectedStep]
+  const selectedTx = tracking?.transaction_history.find(
+    (tx: any) => normalize(tx.metadata?.location) === normalize(waypoints[selectedStep])
   );
 
   const iconForLocation = (loc: string) => {
-    if (loc.includes("Farm")) return <Leaf className="w-7 h-7" />;
-    if (loc.includes("Processing")) return <Coffee className="w-7 h-7" />;
-    if (loc.includes("Warehouse")) return <Package className="w-7 h-7" />;
-    if (loc.includes("Transit")) return <Truck className="w-7 h-7" />;
-    return <MapPin className="w-7 h-7" />;
+    const lower = loc.toLowerCase();
+    if (lower.includes("ha noi") || lower.includes("hanoi")) return <Factory className="w-6 h-6" />;
+    if (lower.includes("hung yen")) return <Truck className="w-6 h-6" />;
+    if (lower.includes("hai phong")) return <Ship className="w-6 h-6" />;
+    return <Package className="w-6 h-6" />;
   };
 
+  const productMeta = tracking?.metadata;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-emerald-50">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
+          <p className="text-gray-600 font-medium">Loading traceability journey...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError || !tracking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-emerald-50 px-6">
+        <div className="bg-white/90 backdrop-blur-xl border border-red-100/50 rounded-3xl p-12 shadow-2xl text-center max-w-lg w-full">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-6" />
+          <h2 className="text-3xl font-bold mb-4 text-gray-900">Traceability Data Unavailable</h2>
+          <p className="text-gray-600 mb-8 text-lg leading-relaxed">
+            We couldn't retrieve the traceability information for this product. This may be due to a network issue, an invalid product ID, or the data not being recorded on the blockchain yet. Please try again later or contact support if the issue persists.
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-emerald-700 transition-all"
+          >
+            Return Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 text-gray-800">
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 text-gray-900">
       <Head>
-        <title>Traceability | {data.metadata.productName}</title>
+        <title>Traceability | {productMeta?.model || "Product Journey"}</title>
       </Head>
 
-      <div className="max-w-7xl mx-auto px-6 py-20">
-        {/* Header */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 rounded-full mb-6">
-            <BadgeCheck className="w-5 h-5 text-green-600" />
-            <span className="text-green-700 font-semibold">
-              Verified on Blockchain
-            </span>
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-16 md:py-24 space-y-20 md:space-y-28">
+
+        {/* Header – More cinematic */}
+        <header className="text-center space-y-8">
+          <div className="inline-flex items-center gap-3 px-6 py-2.5 bg-white/70 backdrop-blur-lg border border-blue-100/50 rounded-full shadow-md text-blue-700 font-medium">
+            <BadgeCheck className="w-5 h-5" />
+            Verified on Cardano Blockchain
           </div>
 
-          <h1 className="text-5xl font-extrabold mb-6">
-            Product{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-green-600">
-              Traceability
-            </span>{" "}
-            Journey
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight">
+            Transparent{" "}
+            <span className="bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">
+              Product Journey
+            </span>
           </h1>
 
-          <p className="text-xl text-gray-600 mb-4">
-            Batch Code:{" "}
-            <span className="font-semibold">
-              {data.metadata.batchCode}
-            </span>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            {productMeta?.model || "Product"} — Immutable visibility from origin to delivery
           </p>
+        </header>
 
-          <p className="text-lg text-gray-600 max-w-4xl mx-auto">
-            From{" "}
-            <span className="text-green-600 font-medium">
-              {data.metadata.startLocation}
-            </span>{" "}
-            → Currently at{" "}
-            <span className="text-blue-600 font-semibold">
-              {data.metadata.location}
-            </span>{" "}
-            → {data.metadata.endLocation}
-          </p>
-        </div>
-
-        {/* Timeline */}
-        <div className="mb-24">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Supply Chain Journey
+        {/* Timeline – Enhanced with progress gradient & glow */}
+        <section className="bg-white/70 backdrop-blur-xl border border-blue-100/50 rounded-3xl shadow-xl p-10 md:p-12 relative overflow-hidden">
+          <h2 className="text-xl md:text-2xl font-bold mb-12 text-gray-800 text-center md:text-left">
+            Supply Chain Milestones
           </h2>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-0">
-            {waypoints.map((loc, index) => (
-              <Step
-                key={loc}
-                title={loc}
-                description=""
-                icon={iconForLocation(loc)}
-                isCompleted={index < currentIndex}
-                isActive={index === selectedStep}
-                isLast={index === waypoints.length - 1}
-                clickable={transactionLocations.includes(loc)}
-                onClick={() => setSelectedStep(index)}
+          <div className="relative flex items-center justify-between pt-4 pb-16">
+            {/* Progress line with gradient */}
+            <div className="absolute top-7 left-0 right-0 h-2 bg-blue-100/60 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-1000 ease-out shadow-md"
+                style={{
+                  width: currentIndex >= 0 ? `${(currentIndex / (waypoints.length - 1)) * 100}%` : "0%",
+                }}
               />
-            ))}
-          </div>
-        </div>
+            </div>
 
-        {/* Details */}
-        <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-          <div className="p-8 bg-white rounded-3xl shadow-lg border border-gray-200">
-            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
-              <MapPin className="w-6 h-6 text-green-600" />
-              Stage Details
+            {waypoints.map((loc: string, index: number) => {
+              const isPast = index < currentIndex;
+              const isCurrent = index === currentIndex;
+              const isClickable = transactionLocations.some((l) => normalize(l) === normalize(loc));
+
+              return (
+                <div key={loc} className="relative z-10 flex flex-col items-center flex-1 group">
+                  <button
+                    onClick={() => isClickable && setSelectedStep(index)}
+                    disabled={!isClickable}
+                    className={cn(
+                      "w-16 h-16 rounded-2xl flex items-center justify-center border-4 shadow-lg transition-all duration-400",
+                      isPast
+                        ? "bg-emerald-500 text-white border-emerald-300 scale-105 group-hover:scale-110"
+                        : isCurrent
+                        ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white border-blue-300 ring-4 ring-blue-200/50 scale-125 animate-pulse"
+                        : "bg-white text-gray-500 border-gray-200 group-hover:border-blue-300 group-hover:text-blue-600 group-hover:scale-110",
+                      isClickable && "cursor-pointer"
+                    )}
+                  >
+                    {isPast ? <Check className="w-7 h-7" /> : iconForLocation(loc)}
+                  </button>
+
+                  <span className="mt-4 text-sm md:text-base font-semibold text-gray-700 text-center leading-tight max-w-[110px] group-hover:text-blue-700 transition-colors">
+                    {loc}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Grid – Cards with lift on hover */}
+        <div className="grid lg:grid-cols-2 gap-10">
+
+          {/* Current Milestone */}
+          <div className="bg-white/80 backdrop-blur-xl border border-blue-100/50 rounded-3xl shadow-xl p-10 space-y-8 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <h3 className="text-xl font-bold flex items-center gap-3 text-gray-800">
+              <MapPin className="w-7 h-7 text-blue-600" />
+              Current Milestone
             </h3>
 
             {selectedTx ? (
-              <div className="space-y-4 text-gray-700">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-green-600" />
-                  {new Date(
-                    selectedTx.datetime * 1000
-                  ).toLocaleString()}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 text-gray-700">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                  {new Intl.DateTimeFormat("en-US", { dateStyle: "long", timeStyle: "short" }).format(
+                    new Date(selectedTx.datetime * 1000)
+                  )}
                 </div>
-                <p>
-                  <strong>Action:</strong> {selectedTx.action}
-                </p>
-                <span className="inline-block px-4 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
-                  {selectedTx.status.toUpperCase()}
-                </span>
+
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Action</p>
+                  <p className="text-lg font-semibold mt-1">{selectedTx.action}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Status</p>
+                  <span className="inline-flex px-4 py-1.5 mt-1.5 text-sm font-medium bg-emerald-100 text-emerald-800 rounded-full">
+                    {selectedTx.status}
+                  </span>
+                </div>
+
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Transaction</p>
+                  <Link
+                    href={`https://preprod.cexplorer.io/tx/${selectedTx.txHash}`}
+                    target="_blank"
+                    className="text-sm font-mono text-blue-700 hover:text-blue-900 break-all hover:underline mt-1 block"
+                  >
+                    {selectedTx.txHash}
+                  </Link>
+                </div>
               </div>
             ) : (
-              <p className="text-gray-500">
-                No transaction recorded yet.
-              </p>
+              <p className="text-gray-600 italic">No transaction recorded for this stage yet.</p>
             )}
           </div>
 
-          <div className="p-8 bg-white rounded-3xl shadow-lg border border-gray-200">
-            <h3 className="text-2xl font-semibold mb-6 flex items-center gap-3">
-              <Truck className="w-6 h-6 text-blue-600" />
-              Transaction History
-            </h3>
+          {/* History */}
+          <div className="bg-white/80 backdrop-blur-xl border border-blue-100/50 rounded-3xl shadow-xl p-10 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <h3 className="text-xl font-bold mb-8 text-gray-800">Transfer History</h3>
 
-            <div className="space-y-4">
-              {data.transaction_history.map((tx, i) => (
+            <div className="space-y-5 max-h-[480px] overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-blue-50/50">
+              {tracking.transaction_history.map((tx: any) => (
                 <div
-                  key={i}
-                  className="p-4 bg-gray-50 rounded-2xl border"
+                  key={tx.txHash}
+                  onClick={() => {
+                    const idx = waypoints.findIndex((loc: any) => normalize(loc) === normalize(tx.metadata?.location || ""));
+                    if (idx >= 0) setSelectedStep(idx);
+                  }}
+                  className={cn(
+                    "p-6 border border-gray-200/70 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all duration-300 cursor-pointer",
+                    normalize(tx.metadata?.location) === normalize(waypoints[selectedStep]) && "bg-blue-50/50 border-blue-300"
+                  )}
                 >
-                  <p className="font-medium text-gray-800">
-                    {tx.metadata.location}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(
-                      tx.datetime * 1000
-                    ).toLocaleDateString()}
-                  </p>
-                  <p className="text-sm mt-1">{tx.action}</p>
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="font-semibold text-gray-900">{tx.metadata?.location || "Unknown"}</span>
+                    <span className="text-sm text-gray-500">
+                      {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(tx.datetime * 1000))}
+                    </span>
+                  </div>
+                  <p className="text-gray-700">{tx.action}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Product Info */}
-        <div className="mt-20 max-w-4xl mx-auto">
-          <div className="p-10 bg-gradient-to-r from-blue-100 to-green-100 rounded-3xl shadow-xl">
-            <h3 className="text-2xl font-bold mb-6 text-center">
-              On-Chain Product Information
-            </h3>
+        {/* Product Details */}
+        {productMeta && (
+          <section className="bg-white/80 backdrop-blur-xl border border-blue-100/50 rounded-3xl shadow-xl p-10 md:p-12 space-y-10 hover:shadow-2xl transition-shadow duration-300">
+            <h2 className="text-2xl font-bold text-gray-800">Product Details</h2>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {Object.entries(data.onchain_metadata).map(
-                ([key, value]) => (
-                  <div key={key}>
-                    <p className="text-sm text-gray-500 capitalize">
-                      {key.replace("_", " ")}
-                    </p>
-                    <p className="font-medium">{value as string}</p>
-                  </div>
-                )
-              )}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { label: "Brand", value: productMeta.brand },
+                { label: "Model", value: productMeta.model },
+                { label: "Material", value: productMeta.material },
+                { label: "Battery", value: productMeta.battery },
+              ].map((item, i) => (
+                <div key={i} className="space-y-2">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">{item.label}</p>
+                  <p className="text-lg font-semibold text-gray-900">{item.value || "—"}</p>
+                </div>
+              ))}
             </div>
-          </div>
-        </div>
+
+            {productMeta.description && (
+              <div className="pt-6 border-t border-gray-200/50">
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-3">Description</p>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  {productMeta.description}
+                </p>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </main>
   );

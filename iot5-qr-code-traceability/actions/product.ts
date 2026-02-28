@@ -6,10 +6,10 @@ import { blockfrostProvider } from "@/providers/cardano";
 import { CIP68_100, MeshWallet, stringToHex } from "@meshsdk/core";
 
 export const getProduct = async function ({
-  owner,
+  owners,
   assetName,
 }: {
-  owner: string;
+  owners: Array<string>;
   assetName: string;
 }) {
   const wallet = new MeshWallet({
@@ -23,7 +23,7 @@ export const getProduct = async function ({
     },
   });
   const contract = new Contract({
-    owner: owner,
+    owners: owners,
     wallet: wallet,
     provider: blockfrostProvider,
   });
