@@ -2,6 +2,10 @@
 
 Real-time Cardano asset state monitor for ESP32 that tracks lock/unlock status via Blockfrost API and Plutus datum parsing.
 
+## 📹 Demo
+
+[![Watch the video](https://img.youtube.com/vi/79a9eahkA5k/0.jpg)](https://www.youtube.com/watch?v=79a9eahkA5k&feature=youtu.be)
+
 ## Features
 
 - **WiFi Connected**: Monitors Cardano preprod testnet via Blockfrost API

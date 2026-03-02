@@ -1,3 +1,7 @@
-/*
-addr_test1qrrsqzvu048737jnqq7rd3ck07e7cnk75x5wmdlt9zv7ptmqwvk3ckjxl4wcf6ehtynh8lctuu85xxdg9c8v5pfnjn4shn35yc,addr_test1qryamep6l09mtjswn000l3jd79pls9pt5aj0nsf5cyfdp3xmj9k859jpvfpqepllgqn02473mlhttcf3lyujlpzhrk3qcndhyw,addr_test1qrw7yktcc7wsscq46pfamt8t9yd2mlp7dtgjw3mq2hqplgvax05kaj8z5tgvtqd5q4xug4qqdgnzn2l8krm09c85f4psmzum9f,addr_test1qztthppkvnl2k2gk96r6v22qxvwyymh4dr4njclae8wwau8d3tp4cyr8p83gs3vjnhmldj8vzhkx3cvnr80gjdfvdfdqcr2qz4
-*/
+# QR Code Supply Chain Traceability on Cardano
+
+Product tracking and authenticity verification using QR codes with blockchain-backed provenance.
+
+## 📹 Demo
+
+[![Watch the video](https://img.youtube.com/vi/h_saOa3uWoo/0.jpg)](https://www.youtube.com/watch?v=h_saOa3uWoo&feature=youtu.be)

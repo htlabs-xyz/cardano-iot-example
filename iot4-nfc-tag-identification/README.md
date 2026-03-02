@@ -2,6 +2,10 @@
 
 Decentralized student identification system using NFC tags verified against Cardano blockchain NFTs.
 
+## 📹 Demo
+
+[![Watch the video](https://img.youtube.com/vi/L75_IOXbAu0/0.jpg)](https://www.youtube.com/watch?v=L75_IOXbAu0&feature=youtu.be)
+
 ## Features
 
 - **NFT-based Identity**: Each student has a unique NFT on Cardano

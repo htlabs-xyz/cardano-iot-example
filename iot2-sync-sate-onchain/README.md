@@ -1,5 +1,9 @@
 IoT2 is a Cardano smart contract project for managing IoT device lock/unlock states on-chain. It uses Aiken for smart contracts and TypeScript with Mesh SDK for off-chain interactions.
 
+## 📹 Demo
+
+[![Watch the video](https://img.youtube.com/vi/8k02ehV1r7Q/0.jpg)](https://www.youtube.com/watch?v=8k02ehV1r7Q&feature=youtu.be)
+
 ## Commands
 
 ### Smart Contract (Aiken)
