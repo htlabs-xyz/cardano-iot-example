@@ -18,8 +18,8 @@ A collection of IoT projects demonstrating Cardano blockchain integration for re
 |---------|-------|
 | **IoT1** - DHT22 Sensor Data Store | [Watch Demo](https://youtu.be/khH-3ZzBanU) |
 | **IoT2** - Smart Contract Lock/Unlock | [Watch Demo](https://youtu.be/8k02ehV1r7Q) |
-| **IoT3** - Vending Machine Payment | [Watch Demo](https://youtu.be/79a9eahkA5k) |
-| **IoT4** - NFC Tag Identity Verification | [Watch Demo](https://youtu.be/L75_IOXbAu0) |
+| **IoT3** - Vending Machine Payment | [Watch Demo](https://youtu.be/L75_IOXbAu0) |
+| **IoT4** - NFC Tag Identity Verification | [Watch Demo](https://youtu.be/79a9eahkA5k) |
 | **IoT5** - QR Code Supply Chain Traceability | [Watch Demo](https://youtu.be/h_saOa3uWoo) |
 
 ---

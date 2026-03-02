@@ -4,7 +4,7 @@ Real-time Cardano asset state monitor for ESP32 that tracks lock/unlock status v
 
 ## 📹 Demo
 
-[![Watch the video](https://img.youtube.com/vi/79a9eahkA5k/0.jpg)](https://www.youtube.com/watch?v=79a9eahkA5k&feature=youtu.be)
+[![Watch the video](https://img.youtube.com/vi/L75_IOXbAu0/0.jpg)](https://www.youtube.com/watch?v=L75_IOXbAu0&feature=youtu.be)
 
 ## Features
 
