@@ -1,4 +1,4 @@
-# Cardano Asset State Monitor - ESP32
+# Vending Machines
 
 Real-time Cardano asset state monitor for ESP32 that tracks lock/unlock status via Blockfrost API and Plutus datum parsing.
 
