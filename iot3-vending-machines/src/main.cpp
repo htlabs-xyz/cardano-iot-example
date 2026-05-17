@@ -5,32 +5,28 @@
 #include "datum_parser.h"
 
 unsigned long lastPollTime = 0;
-unsigned long unlockLedOnTime = 0;  // When LED turned on for unlock
-bool ledState = false;
+unsigned long pumpOnTime = 0;
+bool pumpState = false;
 bool isLocked = false;
 
-#define UNLOCK_LED_DURATION_MS 3000  // LED on for 3s when unlocked
+#define PUMP_DURATION_MS 3000
 
-// Update LED based on lock state
-void updateLED() {
+void updatePump() {
     if (isLocked) {
-        // LED off when locked
-        if (ledState) {
-            ledState = false;
-            digitalWrite(LED_PIN, LOW);
+        if (pumpState) {
+            pumpState = false;
+            digitalWrite(PUMP_PIN, LOW);
         }
     } else {
-        // LED on for 3s when unlocked
-        if (unlockLedOnTime > 0 && millis() - unlockLedOnTime < UNLOCK_LED_DURATION_MS) {
-            if (!ledState) {
-                ledState = true;
-                digitalWrite(LED_PIN, HIGH);
+        if (pumpOnTime > 0 && millis() - pumpOnTime < PUMP_DURATION_MS) {
+            if (!pumpState) {
+                pumpState = true;
+                digitalWrite(PUMP_PIN, HIGH);
             }
         } else {
-            // Turn off after 3s
-            if (ledState) {
-                ledState = false;
-                digitalWrite(LED_PIN, LOW);
+            if (pumpState) {
+                pumpState = false;
+                digitalWrite(PUMP_PIN, LOW);
             }
         }
     }
@@ -48,11 +44,10 @@ void checkAssetState() {
     DatumResult datum = parseDatum(state.inlineDatum, 0); // 0=testnet
 
     if (datum.success) {
-        // Update lock state for LED control
         if (isLocked != datum.isLocked) {
             isLocked = datum.isLocked;
             if (!isLocked) {
-                unlockLedOnTime = millis();  // Start 3s LED timer
+                pumpOnTime = millis();
             }
             Serial.printf(">>> State changed: %s\n", isLocked ? "LOCKED" : "UNLOCKED");
         }
@@ -68,12 +63,11 @@ void setup() {
     Serial.begin(115200);
     delay(1000);
 
-    // Initialize LED
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, LOW);
+    pinMode(PUMP_PIN, OUTPUT);
+    digitalWrite(PUMP_PIN, LOW);
 
-    Serial.println("\n\n=== ESP32 Cardano Asset Monitor ===");
-    Serial.println("===================================\n");
+    Serial.println("\n\n=== ESP32 Cardano Pump Controller ===");
+    Serial.println("=====================================\n");
 
     Serial.println("Connecting WiFi...");
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -101,8 +95,7 @@ void loop() {
         lastPollTime = millis();
     }
 
-    // Non-blocking LED update
-    updateLED();
+    updatePump();
 
     delay(10);
 }

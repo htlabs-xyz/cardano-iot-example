@@ -13,7 +13,7 @@
 
 #define POLL_INTERVAL_MS 1000
 
-// LED configuration
-#define LED_PIN 2              // GPIO2 (D2)
+// Pump relay/control output
+#define PUMP_PIN 2             // GPIO2 (D2)
 
 #endif

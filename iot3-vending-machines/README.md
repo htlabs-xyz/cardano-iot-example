@@ -1,6 +1,6 @@
 # Vending Machines
 
-Real-time Cardano asset state monitor for ESP32 that tracks lock/unlock status via Blockfrost API and Plutus datum parsing.
+Real-time Cardano-controlled pump template for ESP32. The device tracks lock/unlock status via Blockfrost API and Plutus datum parsing, then drives a pump relay/control output when the on-chain state is unlocked.
 
 ## 📹 Demo
 
@@ -12,11 +12,13 @@ Real-time Cardano asset state monitor for ESP32 that tracks lock/unlock status v
 - **Real-time Detection**: Polls every second for asset state changes
 - **CBOR Parsing**: Decodes Plutus datum using TinyCBOR library
 - **Bech32 Encoding**: Converts pubKeyHash to human-readable Cardano addresses
+- **Pump Control**: Activates pump output for a fixed duration when the monitored state becomes unlocked
 - **Memory Efficient**: Lightweight CBOR parser, ~100KB free heap
 
 ## Hardware Requirements
 
 - **Board**: ESP32 development board (ESP32-DevKit, XIAO ESP32C3, etc.)
+- **Pump/Relay**: Pump relay module or safe output indicator connected to the configured pump pin
 - **Cable**: USB for programming
 - **Network**: 2.4GHz WiFi
 
@@ -46,6 +48,7 @@ Edit `include/config.h`:
 #define BLOCKFROST_API_KEY "preprod..."
 #define ASSET_UNIT "policy_id + hex_asset_name"
 #define POLL_INTERVAL_MS 1000
+#define PUMP_PIN 2
 ```
 
 ### 3. Build & Upload
@@ -67,13 +70,14 @@ pio device monitor
 ### Serial Output Example
 
 ```
-=== ESP32 Cardano Asset Monitor ===
-===================================
+=== ESP32 Cardano Pump Controller ===
+=====================================
 
 Connecting WiFi...
 .........
 WiFi OK!
 Authority: addr_test1qz... | Locked: true
+>>> State changed: UNLOCKED
 Authority: addr_test1qz... | Locked: false
 ```
 
@@ -83,12 +87,12 @@ Authority: addr_test1qz... | Locked: false
 .
 ├── platformio.ini          # PlatformIO config
 ├── include/
-│   ├── config.h            # WiFi, API key, asset unit, timing
+│   ├── config.h            # WiFi, API key, asset unit, timing, pump pin
 │   ├── blockfrost.h        # Blockfrost API client
 │   ├── datum_parser.h      # Plutus datum CBOR parser
 │   └── bech32.h            # Cardano address encoding
 ├── src/
-│   ├── main.cpp            # Entry point, WiFi, polling loop
+│   ├── main.cpp            # Entry point, WiFi, polling loop, pump control
 │   ├── blockfrost.cpp      # HTTPS client, JSON parsing
 │   ├── datum_parser.cpp    # CBOR parsing (TinyCBOR)
 │   └── bech32.cpp          # Bech32 encoding (BIP-173)
