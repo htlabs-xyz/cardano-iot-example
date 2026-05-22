@@ -48,6 +48,7 @@ export class SensorContract extends MeshAdapter {
         temperature: number;
         humidity: number;
     }) => {
+        await this.resetTxBuilderWithLatestParams();
         const { utxos, collateral, walletAddress } =
             await this.getWalletForTx();
         const ownerPaymentKeyHash =
@@ -76,7 +77,12 @@ export class SensorContract extends MeshAdapter {
         } else {
             unsignedTx
                 .spendingPlutusScriptV3()
-                .txIn(utxo.input.txHash, utxo.input.outputIndex)
+                .txIn(
+                    utxo.input.txHash,
+                    utxo.input.outputIndex,
+                    utxo.output.amount,
+                    utxo.output.address,
+                )
                 .txInInlineDatumPresent()
                 .txInRedeemerValue(mConStr0([]))
                 .txInScript(this.sensorScriptCbor)
@@ -100,8 +106,7 @@ export class SensorContract extends MeshAdapter {
                 collateral.input.outputIndex,
                 collateral.output.amount,
                 collateral.output.address,
-            )
-            .setNetwork('preprod');
+            );
         return await unsignedTx.complete();
     };
 
@@ -127,6 +132,7 @@ export class SensorContract extends MeshAdapter {
         title: string;
         value: number;
     }) => {
+        await this.resetTxBuilderWithLatestParams();
         const { utxos, collateral, walletAddress } =
             await this.getWalletForTx();
         const ownerPaymentKeyHash =
@@ -165,8 +171,7 @@ export class SensorContract extends MeshAdapter {
                 collateral.input.outputIndex,
                 collateral.output.amount,
                 collateral.output.address,
-            )
-            .setNetwork('preprod');
+            );
         return await unsignedTx.complete();
     };
 }

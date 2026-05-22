@@ -31,6 +31,7 @@ export class MeshAdapter {
     protected sensorScript: PlutusScript;
     protected sensorScriptCbor: string;
     protected sensorCompileCode: string;
+    protected provider: BlockfrostProvider;
 
     /**
      * @constructor
@@ -44,8 +45,10 @@ export class MeshAdapter {
     constructor({ wallet = null!, provider = null! }: { wallet?: MeshWallet, provider?: BlockfrostProvider }) {
         this.wallet = wallet;
         this.fetcher = provider
+        this.provider = provider;
         this.meshTxBuilder = new MeshTxBuilder({
             fetcher: this.fetcher,
+            evaluator: this.fetcher,
         });
         this.networkId = ((process.env.BLOCKFROST_PROJECT_ID?.slice(0, 7) as Network) || "preprod") === 'mainnet' ? 1 : 0;
         this.sensorCompileCode = this.readValidator(
@@ -87,9 +90,26 @@ export class MeshAdapter {
         collateral: UTxO;
         walletAddress: string;
     }> => {
-        const utxos = await this.wallet.getUtxos();
-        const collaterals = await this.wallet.getCollateral();
         const walletAddress = await this.wallet.getChangeAddress();
+        let utxos = await this.wallet.getUtxos();
+        if (!utxos || utxos.length === 0) {
+            utxos = await this.fetcher.fetchAddressUTxOs(walletAddress);
+        }
+        if (!utxos || utxos.length === 0) {
+            utxos = await this.fetchAddressUtxosFromBlockfrost(walletAddress);
+        }
+
+        let collaterals = await this.wallet.getCollateral();
+        if (!collaterals || collaterals.length === 0) {
+            collaterals = utxos.filter((utxo) => {
+                return (
+                    utxo.output.amount.length === 1 &&
+                    utxo.output.amount[0].unit === 'lovelace' &&
+                    Number(utxo.output.amount[0].quantity) >= 5_000_000
+                );
+            });
+        }
+
         if (!utxos || utxos.length === 0)
             throw new Error('No UTXOs found in getWalletForTx method.');
 
@@ -102,6 +122,32 @@ export class MeshAdapter {
             );
 
         return { utxos, collateral: collaterals[0], walletAddress };
+    };
+
+    private fetchAddressUtxosFromBlockfrost = async (address: string): Promise<UTxO[]> => {
+        const provider = this.fetcher as any;
+        if (!provider._axiosInstance || !provider.toUTxO) {
+            return [];
+        }
+
+        const utxos: UTxO[] = [];
+        let page = 1;
+        while (true) {
+            const response = await provider._axiosInstance.get(
+                `addresses/${address}/utxos?page=${page}`,
+            );
+            const pageUtxos = response.data || [];
+            if (pageUtxos.length === 0) {
+                break;
+            }
+
+            for (const utxo of pageUtxos) {
+                utxos.push(await provider.toUTxO(utxo, utxo.tx_hash));
+            }
+            page += 1;
+        }
+
+        return utxos;
     };
 
     /**
@@ -193,5 +239,19 @@ export class MeshAdapter {
             console.error("Error reading plutus data: ", e);
             return null!;
         }
+    };
+
+    protected resetTxBuilderWithLatestParams = async () => {
+        // Pass network via constructor so cost models from live `params`
+        // (fetched from Blockfrost) remain authoritative. Calling
+        // `setNetwork()` later overrides cost models with Mesh's
+        // bundled-static defaults, which can be stale relative to current
+        // on-chain Plutus V3 cost models and triggers PPViewHashesDontMatch.
+        this.meshTxBuilder = new MeshTxBuilder({
+            fetcher: this.fetcher,
+            evaluator: this.fetcher,
+            params: await this.provider.fetchProtocolParameters(),
+            network: this.networkId === 1 ? 'mainnet' : 'preprod',
+        });
     };
 }

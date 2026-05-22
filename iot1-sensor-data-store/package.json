@@ -5,6 +5,8 @@
   "main": "main.ts",
   "type": "module",
   "scripts": {
+    "start": "tsx main.ts",
+    "batch": "tsx scripts/batch-write.ts",
     "sensor": "tsx main.ts --sensor",
     "write": "tsx main.ts --write",
     "monitor": "tsx main.ts --monitor",
@@ -34,7 +36,7 @@
   },
   "dependencies": {
     "@blockfrost/blockfrost-js": "^6.0.0",
-    "@meshsdk/core": "^1.9.0-beta.86",
+    "@meshsdk/core": "^1.9.0-beta.103",
     "dotenv": "^17.2.3",
     "python-shell": "^5.0.0"
   },
