@@ -32,6 +32,7 @@ import { MeshAdapter } from './mesh';
  */
 export class LockerContract extends MeshAdapter {
     public init = async ({ title }: { title: string }): Promise<string> => {
+        await this.resetTxBuilderWithLatestParams();
         const { utxos, collateral, walletAddress } =
             await this.getWalletForTx();
         const utxo = await this.getAddressUTXOAsset(
@@ -70,7 +71,7 @@ export class LockerContract extends MeshAdapter {
                 collateral.input.outputIndex,
                 collateral.output.amount,
                 collateral.output.address,
-            ).setNetwork("preprod")
+            )
         return await unsignedTx.complete();
     };
 
@@ -93,6 +94,7 @@ export class LockerContract extends MeshAdapter {
      * @returns {Promise<string>} The unsigned transaction ready to be signed and submitted.
      */
     public lock = async ({ title }: { title: string }): Promise<string> => {
+        await this.resetTxBuilderWithLatestParams();
         const { utxos, collateral, walletAddress } =
             await this.getWalletForTx();
         const utxo = await this.getAddressUTXOAsset(
@@ -166,7 +168,7 @@ export class LockerContract extends MeshAdapter {
                 collateral.output.amount,
                 collateral.output.address,
             )
-            .setNetwork("preprod");
+            ;
         return await unsignedTx.complete();
     };
 
@@ -184,6 +186,7 @@ export class LockerContract extends MeshAdapter {
      * @throws {Error} If no UTXOs are found for the provided token.
      */
     public unLock = async ({ title }: { title: string }): Promise<string> => {
+        await this.resetTxBuilderWithLatestParams();
         const { utxos, collateral, walletAddress } =
             await this.getWalletForTx();
 
@@ -235,7 +238,7 @@ export class LockerContract extends MeshAdapter {
                 collateral.output.amount,
                 collateral.output.address,
             )
-            .setNetwork("preprod");
+            ;
         return await unsignedTx.complete();
     }
 
@@ -260,6 +263,7 @@ export class LockerContract extends MeshAdapter {
         title: string;
         authority: string;
     }) => {
+        await this.resetTxBuilderWithLatestParams();
         const { utxos, collateral, walletAddress } =
             await this.getWalletForTx();
         const utxo = await this.getAddressUTXOAsset(
@@ -310,7 +314,7 @@ export class LockerContract extends MeshAdapter {
                 collateral.output.amount,
                 collateral.output.address,
             )
-            .setNetwork("preprod");
+            ;
         return await unsignedTx.complete();
     };
 }

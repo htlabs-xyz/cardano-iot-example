@@ -55,6 +55,7 @@ export class MeshAdapter {
     public policyId!: string;
     protected wallet: MeshWallet
     protected fetcher: IFetcher;
+    protected provider!: BlockfrostProvider;
     protected mintCompileCode: string;
     protected mintScriptCbor!: string;
     protected mintScript!: PlutusScript;
@@ -87,8 +88,10 @@ export class MeshAdapter {
     }) {
         this.wallet = wallet;
         this.fetcher = provider
+        this.provider = provider;
         this.meshTxBuilder = new MeshTxBuilder({
-            fetcher:provider
+            fetcher: provider,
+            network: 'preprod',
         });
         this.lockerCompileCode = this.readValidator(
             blueprint,
@@ -134,6 +137,16 @@ export class MeshAdapter {
 
         this.policyId = resolveScriptHash(this.mintScriptCbor, 'V3');
     }
+
+    // Rebuild MeshTxBuilder with the latest on-chain protocol params (cost models, etc.)
+    // so the script integrity hash matches the node's view (avoid PPViewHashesDontMatch).
+    protected resetTxBuilderWithLatestParams = async () => {
+        this.meshTxBuilder = new MeshTxBuilder({
+            fetcher: this.fetcher,
+            params: await this.provider.fetchProtocolParameters(),
+            network: 'preprod',
+        });
+    };
 
     /**
      * Retrieve wallet information required to build a transaction.
