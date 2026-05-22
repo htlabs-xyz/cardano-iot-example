@@ -97,5 +97,11 @@ void loop() {
 
     updatePump();
 
+    static unsigned long lastHeapLog = 0;
+    if (millis() - lastHeapLog >= 60000) {
+        Serial.printf("[heap] %u bytes free\n", ESP.getFreeHeap());
+        lastHeapLog = millis();
+    }
+
     delay(10);
 }
