@@ -5,6 +5,7 @@ import { monitor } from "./script/monitor";
 
 
 
-const unit = "b6d522ad80c9442b45b3ddfb4b59766c8465212749f76c11e8a619a7" + stringToHex("locker_537")
+// policyId from wallet-derived locker (iot2 init tx b77d733d... on 2026-05-22)
+const unit = "14f654abdb464eda741251bf79cf2b5735b5df571a55008875de5676" + stringToHex("locker_537")
 
 monitor(unit)
