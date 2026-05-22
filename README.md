@@ -101,7 +101,7 @@ pub type Redeemer {
 ### Quick Start
 
 ```bash
-cd iot2-sync-sate-onchain
+cd iot2-sync-state-onchain
 
 # Build smart contracts
 aiken build
@@ -378,7 +378,7 @@ cardano-iot-example/
 │   ├── dht22.py                 # Python GPIO interface
 │   ├── action/                  # Blockchain handlers
 │   └── scripts/                 # Mesh SDK utilities
-├── iot2-sync-sate-onchain/      # Aiken smart contracts
+├── iot2-sync-state-onchain/      # Aiken smart contracts
 │   ├── validators/contract.ak   # Lock/unlock validator
 │   ├── script/                  # Off-chain TypeScript
 │   └── plutus.json             # Compiled contracts

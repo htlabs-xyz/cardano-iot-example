@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 import { readDHT22 } from "./sensor";
-import { writeDataToContract } from "./action/write";
-import { readDataFromContract } from "./action/read";
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -9,6 +7,7 @@ const flags = {
   sensor: args.includes('--sensor'),
   write: args.includes('--write'),
   monitor: args.includes('--monitor'),
+  loop: args.includes('--loop'),
   help: args.includes('--help') || args.includes('-h'),
 };
 
@@ -27,14 +26,16 @@ Usage: npm start [options]
 Options:
   (no flags)        Monitor sensor data only (default mode)
   --once            Read sensor once and exit
-  --write           Monitor sensor + write to blockchain every 2 min
+  --write           Read sensor and write one record to blockchain
+  --write --loop    Write to blockchain every 2 min
   --monitor         Real-time monitoring from blockchain
   --help, -h        Show this help message
 
 Examples:
   npm start                  # Monitor sensor continuously
   npm start --once        # Read sensor one time
-  npm start --write       # Monitor + submit to blockchain
+  npm start --write       # Submit one sensor record to blockchain
+  npm start --write --loop # Submit every 2 minutes
   npm start --monitor     # Monitor blockchain data
 
 Press Ctrl+C to stop any running process.
@@ -72,6 +73,8 @@ async function monitorSensor() {
  * Mode 2: Write to blockchain
  */
 async function write() {
+  const { writeDataToContract } = await import("./action/write");
+
   console.log('========================================');
   console.log('DHT22 Monitor + Blockchain Writer');
   console.log('========================================');
@@ -84,9 +87,12 @@ async function write() {
   console.log('Press Ctrl+C to stop');
   console.log('========================================\n');
 
-  writeDataToContract();
-  const intervalMs = 2 * 60 * 1000; // 2 minutes
-  setInterval(writeDataToContract, intervalMs);
+  await writeDataToContract();
+
+  if (flags.loop) {
+    const intervalMs = 2 * 60 * 1000; // 2 minutes
+    setInterval(writeDataToContract, intervalMs);
+  }
 
 }
 
@@ -96,6 +102,8 @@ async function write() {
  * Mode 3: Monitor blockchain (continuous)
  */
 async function monitorBlockchain() {
+  const { readDataFromContract } = await import("./action/read");
+
   console.log('========================================');
   console.log('Blockchain Real-Time Monitor');
   console.log('========================================');

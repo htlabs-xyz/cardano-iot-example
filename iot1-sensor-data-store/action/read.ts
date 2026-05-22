@@ -30,12 +30,12 @@ export const readDataFromContract = async () => {
       datum_deserialize.fields[0].int &&
       datum_deserialize.fields[1].int
     ) {
-      return {
-        time: new Date(tx.block_time * 1000),
-        temperature: datum_deserialize.fields[0].int,
-        humidity: datum_deserialize.fields[1].int,
-        tx_ref: 'https://preprod.cexplorer.io/tx/' + utxo.inputs[0].tx_hash,
-      };
+        return {
+          time: new Date(tx.block_time * 1000),
+          temperature: datum_deserialize.fields[0].int,
+          humidity: datum_deserialize.fields[1].int,
+          tx_ref: 'https://preprod.cexplorer.io/tx/' + tx.tx_hash,
+        };
     }
   }));
   return listTemperature.filter(item => item !== undefined);
