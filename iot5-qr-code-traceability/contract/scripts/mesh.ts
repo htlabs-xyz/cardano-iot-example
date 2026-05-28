@@ -8,7 +8,6 @@ import {
   mPubKeyAddress,
   type PlutusScript,
   resolveScriptHash,
-  Data,
   serializePlutusScript,
   type UTxO,
   mConStr0,
