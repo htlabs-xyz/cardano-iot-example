@@ -1,7 +1,7 @@
 "use server";
 
 import { Contract } from "@/contract/scripts/offchain";
-import { deserializeDatum } from "@/lib/utils";
+import { convertDatum } from "@/lib/utils";
 import { blockfrostProvider } from "@/providers/cardano";
 import { CIP68_100, MeshWallet, stringToHex } from "@meshsdk/core";
 
@@ -41,7 +41,7 @@ export const getProduct = async function ({
     throw new Error("No Asset Not Found From UTxOs.");
   }
 
-  const metadata = await deserializeDatum(utxo.output.plutusData as string);
+  const metadata = convertDatum(utxo.output.plutusData as string);
 
   return {
     policyId: policyId,
