@@ -10,6 +10,7 @@
     "lint": "eslint",
     "mint": "bun run ./cli/mint.ts",
     "update": "bun run ./cli/update.ts",
+    "burn": "bun run ./cli/burn.ts",
     "contract:fmt": "cd ./contract && aiken fmt",
     "contract:test": "cd ./contract && aiken check",
     "contract:build": "cd ./contract && aiken build"

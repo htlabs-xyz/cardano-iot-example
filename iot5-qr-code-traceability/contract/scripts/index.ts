@@ -16,20 +16,28 @@ const wallet = new MeshWallet({
   },
 });
 
+console.log(await wallet.getChangeAddress());
+
 const owners: Array<string> = [
-  "addr_test1qrrsqzvu048737jnqq7rd3ck07e7cnk75x5wmdlt9zv7ptmqwvk3ckjxl4wcf6ehtynh8lctuu85xxdg9c8v5pfnjn4shn35yc",
-  "addr_test1qryamep6l09mtjswn000l3jd79pls9pt5aj0nsf5cyfdp3xmj9k859jpvfpqepllgqn02473mlhttcf3lyujlpzhrk3qcndhyw",
-  "addr_test1qrw7yktcc7wsscq46pfamt8t9yd2mlp7dtgjw3mq2hqplgvax05kaj8z5tgvtqd5q4xug4qqdgnzn2l8krm09c85f4psmzum9f",
-  "addr_test1qztthppkvnl2k2gk96r6v22qxvwyymh4dr4njclae8wwau8d3tp4cyr8p83gs3vjnhmldj8vzhkx3cvnr80gjdfvdfdqcr2qz4",
+  "addr_test1qrr879mjnxd3gjqjdgjxkwzfcnvcgsve927scqk5fc3gfs2hs03pn7uhujentyhzq3ays72u4xtfrlahyjalujhxufsqdeezc0",
+  "addr_test1qp0fadkx80g75f35g5v3pevqganc40hw4vq8r6tq8g447mt0rkz2wztnaf7rkua8g2u59g350daeygnv64u99zsdke9qeyltl6",
+  "addr_test1qpcfnnmwxhmtu44mzv4y88c6mmzgq9dc7pegdx53j0u4ku2fpl9ex2pe8r74g8twdwgplxgwseqlzctf5m5hfv3r774qk3ths8",
+  "addr_test1qpvwy8auzdjkqlt9rg0t72dvdv2rrgw94m38um4kwnsgs6hp5j4rzy6jy0wg5cfufja7jetwwl50858nerwkf3sxzucsrxycjw",
 ];
 
 const ASSET_NAME_UTF8 = "Huawei Watch GT4 Pro";
 const ASSET_NAME_HEX = Buffer.from(ASSET_NAME_UTF8, "utf8").toString("hex");
 
 const printHeader = (title: string) => {
-  console.log(chalk.bold.blue("┌──────────────────────────────────────────────┐"));
-  console.log(chalk.bold.blue(`│          ${title.padEnd(44 - title.length)}│`));
-  console.log(chalk.bold.blue("└──────────────────────────────────────────────┘"));
+  console.log(
+    chalk.bold.blue("┌──────────────────────────────────────────────┐"),
+  );
+  console.log(
+    chalk.bold.blue(`│          ${title.padEnd(44 - title.length)}  │`),
+  );
+  console.log(
+    chalk.bold.blue("└──────────────────────────────────────────────┘"),
+  );
   console.log("");
 };
 
@@ -50,7 +58,10 @@ const waitForConfirmation = (txHash: string): Promise<void> =>
     provider.onTxConfirmed(txHash, () => {
       console.log("");
       printSuccessBox("Transaction confirmed on-chain!");
-      console.log(chalk.cyan("Explorer:"), chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`));
+      console.log(
+        chalk.cyan("Explorer:"),
+        chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`),
+      );
       resolve();
     });
   });
@@ -81,8 +92,8 @@ export const mint = async () => {
       battery: "Up to 14 days",
       image: "ipfs://QmYourIPFSHashhuaweiwatchgt4frontpng",
       mediaType: "image/png",
-       roadmap: "[Viet Nam, China, American, Russia]",
-      location: "Viet Nam", 
+      roadmap: "[Viet Nam, China, American, Russia]",
+      location: "Viet Nam",
     };
 
     console.log(chalk.green("✓ Metadata prepared"));
@@ -91,8 +102,8 @@ export const mint = async () => {
 
     console.log(chalk.yellow("Building mint transaction..."));
     const unsignedTx = await contract.mint({
-      assetName: ASSET_NAME_UTF8, 
-      metadata: metadata
+      assetName: ASSET_NAME_UTF8,
+      metadata: metadata,
     });
     console.log(chalk.green("✓ Unsigned tx created"));
     console.log("");
@@ -107,21 +118,36 @@ export const mint = async () => {
     console.log(chalk.green("✓ Tx submitted!"));
     console.log("");
     console.log(chalk.bold.magenta("Tx Hash:"), chalk.whiteBright(txHash));
-    console.log(chalk.cyan("Explorer:"), chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`));
+    console.log(
+      chalk.cyan("Explorer:"),
+      chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`),
+    );
     console.log("");
 
     console.log(chalk.yellow("Awaiting confirmation..."));
     await waitForConfirmation(txHash);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(chalk.bold.blue("┌──────────────────────────────────────────────┐"));
-    console.log(chalk.bold.blue(`│         MINT COMPLETED (${duration}s)          │`));
-    console.log(chalk.bold.blue("└──────────────────────────────────────────────┘"));
+    console.log(
+      chalk.bold.blue("┌──────────────────────────────────────────────┐"),
+    );
+    console.log(
+      chalk.bold.blue(`│         MINT COMPLETED (${duration}s)          │`),
+    );
+    console.log(
+      chalk.bold.blue("└──────────────────────────────────────────────┘"),
+    );
   } catch (error) {
     console.log("");
     printErrorBox("Mint failed");
-    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
-    console.log(chalk.yellow("Check: mnemonic, balance, Blockfrost key, or contract logic."));
+    console.error(
+      chalk.red(error instanceof Error ? error.message : String(error)),
+    );
+    console.log(
+      chalk.yellow(
+        "Check: mnemonic, balance, Blockfrost key, or contract logic.",
+      ),
+    );
   }
 };
 
@@ -152,7 +178,7 @@ export const update = async () => {
       image: "ipfs://QmYourIPFSHashhuaweiwatchgt4frontpng",
       mediaType: "image/png",
       roadmap: "[Viet Nam, China, American, Russia]",
-      location: "Russia", 
+      location: "Russia",
     };
 
     console.log(chalk.green("✓ Metadata ready"));
@@ -161,7 +187,7 @@ export const update = async () => {
 
     console.log(chalk.yellow("Building update transaction..."));
     const unsignedTx = await contract.update({
-      assetName: ASSET_NAME_UTF8, 
+      assetName: ASSET_NAME_UTF8,
       metadata: newMetadata,
     });
     console.log(chalk.green("✓ Unsigned tx created"));
@@ -177,21 +203,34 @@ export const update = async () => {
     console.log(chalk.green("✓ Tx submitted!"));
     console.log("");
     console.log(chalk.bold.magenta("Tx Hash:"), chalk.whiteBright(txHash));
-    console.log(chalk.cyan("Explorer:"), chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`));
+    console.log(
+      chalk.cyan("Explorer:"),
+      chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`),
+    );
     console.log("");
 
     console.log(chalk.yellow("Awaiting confirmation..."));
     await waitForConfirmation(txHash);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(chalk.bold.blue("┌──────────────────────────────────────────────┐"));
-    console.log(chalk.bold.blue(`│      UPDATE COMPLETED (${duration}s)           │`));
-    console.log(chalk.bold.blue("└──────────────────────────────────────────────┘"));
+    console.log(
+      chalk.bold.blue("┌──────────────────────────────────────────────┐"),
+    );
+    console.log(
+      chalk.bold.blue(`│      UPDATE COMPLETED (${duration}s)         │`),
+    );
+    console.log(
+      chalk.bold.blue("└──────────────────────────────────────────────┘"),
+    );
   } catch (error) {
     console.log("");
     printErrorBox("Update failed");
-    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
-    console.log(chalk.yellow("Check: ownership, balance, or contract permissions."));
+    console.error(
+      chalk.red(error instanceof Error ? error.message : String(error)),
+    );
+    console.log(
+      chalk.yellow("Check: ownership, balance, or contract permissions."),
+    );
   }
 };
 
@@ -206,7 +245,10 @@ export const burn = async () => {
       owners,
     });
 
-    console.log(chalk.cyan("Asset to burn:"), chalk.whiteBright(ASSET_NAME_UTF8));
+    console.log(
+      chalk.cyan("Asset to burn:"),
+      chalk.whiteBright(ASSET_NAME_UTF8),
+    );
     console.log(chalk.cyan("Asset Name (hex):"), chalk.gray(ASSET_NAME_HEX));
     console.log("");
 
@@ -227,20 +269,33 @@ export const burn = async () => {
     console.log(chalk.green("✓ Tx submitted!"));
     console.log("");
     console.log(chalk.bold.magenta("Tx Hash:"), chalk.whiteBright(txHash));
-    console.log(chalk.cyan("Explorer:"), chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`));
+    console.log(
+      chalk.cyan("Explorer:"),
+      chalk.underline(`https://preprod.cexplorer.io/tx/${txHash}`),
+    );
     console.log("");
 
     console.log(chalk.yellow("Awaiting confirmation..."));
     await waitForConfirmation(txHash);
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(chalk.bold.blue("┌──────────────────────────────────────────────┐"));
-    console.log(chalk.bold.blue(`│        BURN COMPLETED (${duration}s)           │`));
-    console.log(chalk.bold.blue("└──────────────────────────────────────────────┘"));
+    console.log(
+      chalk.bold.blue("┌──────────────────────────────────────────────┐"),
+    );
+    console.log(
+      chalk.bold.blue(`│        BURN COMPLETED (${duration}s)         │`),
+    );
+    console.log(
+      chalk.bold.blue("└──────────────────────────────────────────────┘"),
+    );
   } catch (error) {
     console.log("");
     printErrorBox("Burn failed");
-    console.error(chalk.red(error instanceof Error ? error.message : String(error)));
-    console.log(chalk.yellow("Check: ownership, balance, or contract burn logic."));
+    console.error(
+      chalk.red(error instanceof Error ? error.message : String(error)),
+    );
+    console.log(
+      chalk.yellow("Check: ownership, balance, or contract burn logic."),
+    );
   }
 };
