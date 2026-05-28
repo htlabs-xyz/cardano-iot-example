@@ -11,6 +11,7 @@ import {
   Data,
   serializePlutusScript,
   type UTxO,
+  mConStr0,
 } from "@meshsdk/core";
 import blueprint from "../plutus.json";
 
@@ -219,24 +220,11 @@ export class MeshAdapter {
     return await this.fetcher.fetchAddressUTxOs(address, unit);
   };
 
-  protected metadataToCip68 = (metadata: any): Data => {
-    switch (typeof metadata) {
-      case "object":
-        if (metadata instanceof Array) {
-          return metadata.map((item) => this.metadataToCip68(item));
-        }
-        const metadataMap = new Map();
-        const keys = Object.keys(metadata);
-        keys.forEach((key) => {
-          metadataMap.set(key, this.metadataToCip68(metadata[key]));
-        });
-        return {
-          alternative: 0,
-          fields: [metadataMap, 1],
-        };
+  protected metadataToCip68 = (metadata: Record<string, string>): any => {
+    const results = Object.entries(metadata).map(([key, value]) =>
+      mConStr0([key, value]),
+    );
 
-      default:
-        return metadata;
-    }
+    return mConStr0([results, 1]);
   };
 }
