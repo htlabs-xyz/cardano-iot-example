@@ -1,7 +1,14 @@
 import chalk from "chalk";
-import { BlockfrostProvider, MeshWallet } from "@meshsdk/core";
+import {
+  BlockfrostProvider,
+  CIP68_100,
+  MeshWallet,
+  stringToHex,
+} from "@meshsdk/core";
 
 import { Contract } from "./offchain";
+import { getTracking } from "@/actions/tracking";
+import { getProduct } from "@/actions/product";
 
 const provider = new BlockfrostProvider(process.env.BLOCKFROST_API_KEY || "");
 
@@ -15,6 +22,13 @@ const wallet = new MeshWallet({
     words: process.env.MNEMONIC?.split(" ") || [],
   },
 });
+
+/*
+addr_test1qrr879mjnxd3gjqjdgjxkwzfcnvcgsve927scqk5fc3gfs2hs03pn7uhujentyhzq3ays72u4xtfrlahyjalujhxufsqdeezc0,
+addr_test1qp0fadkx80g75f35g5v3pevqganc40hw4vq8r6tq8g447mt0rkz2wztnaf7rkua8g2u59g350daeygnv64u99zsdke9qeyltl6,
+addr_test1qpcfnnmwxhmtu44mzv4y88c6mmzgq9dc7pegdx53j0u4ku2fpl9ex2pe8r74g8twdwgplxgwseqlzctf5m5hfv3r774qk3ths8,
+addr_test1qpvwy8auzdjkqlt9rg0t72dvdv2rrgw94m38um4kwnsgs6hp5j4rzy6jy0wg5cfufja7jetwwl50858nerwkf3sxzucsrxycjw
+*/
 
 const owners: Array<string> = [
   "addr_test1qrr879mjnxd3gjqjdgjxkwzfcnvcgsve927scqk5fc3gfs2hs03pn7uhujentyhzq3ays72u4xtfrlahyjalujhxufsqdeezc0",
@@ -31,7 +45,7 @@ const printHeader = (title: string) => {
     chalk.bold.blue("┌──────────────────────────────────────────────┐"),
   );
   console.log(
-    chalk.bold.blue(`│          ${title.padEnd(44 - title.length)}  │`),
+    chalk.bold.blue(`│          ${title.padEnd(44 - title.length)}    │`),
   );
   console.log(
     chalk.bold.blue("└──────────────────────────────────────────────┘"),
@@ -178,7 +192,7 @@ export const update = async () => {
       image: "ipfs://QmYourIPFSHashhuaweiwatchgt4frontpng",
       mediaType: "image/png",
       roadmap: "[Viet Nam, China, American, Russia]",
-      location: "Russia",
+      location: "China",
     };
 
     console.log(chalk.green("✓ Metadata ready"));
@@ -298,4 +312,57 @@ export const burn = async () => {
       chalk.yellow("Check: ownership, balance, or contract burn logic."),
     );
   }
+};
+
+export const queryTracking = async function () {
+  printHeader("TRACKING NFT");
+
+  try {
+    const contract = new Contract({
+      wallet,
+      provider,
+      owners,
+    });
+
+    const unit = contract.policyId + CIP68_100(stringToHex(ASSET_NAME_UTF8));
+
+    console.log(chalk.cyan("PolicyId:"), chalk.gray(contract.policyId));
+    console.log(chalk.cyan("Asset:"), chalk.whiteBright(ASSET_NAME_UTF8));
+    console.log(chalk.cyan("Unit:"), chalk.gray(unit));
+    console.log("");
+
+    console.log(chalk.yellow("Fetching tracking data..."));
+
+    const tracking = await getTracking({ unit });
+
+    console.log(chalk.green("✓ Tracking loaded"));
+    console.log("");
+
+    console.log(
+      chalk.bold.blue("┌──────────────────────────────────────────────┐"),
+    );
+    console.log(
+      chalk.bold.blue("│              TRACKING RESULT                 │"),
+    );
+    console.log(
+      chalk.bold.blue("└──────────────────────────────────────────────┘"),
+    );
+
+    console.log(chalk.green(JSON.stringify(tracking, null, 2)));
+  } catch (error) {
+    printErrorBox("Query tracking failed");
+
+    console.error(
+      chalk.red(error instanceof Error ? error.message : String(error)),
+    );
+  }
+};
+
+export const queryProduct = async function () {
+  const product = await getProduct({
+    owners: owners,
+    assetName: ASSET_NAME_UTF8,
+  });
+
+  console.log(product);
 };

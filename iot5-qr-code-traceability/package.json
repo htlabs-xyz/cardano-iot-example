@@ -11,6 +11,8 @@
     "mint": "bun run ./cli/mint.ts",
     "update": "bun run ./cli/update.ts",
     "burn": "bun run ./cli/burn.ts",
+    "product": "bun run ./cli/product.ts",
+    "tracking": "bun run ./cli/tracking.ts",
     "contract:fmt": "cd ./contract && aiken fmt",
     "contract:test": "cd ./contract && aiken check",
     "contract:build": "cd ./contract && aiken build"
