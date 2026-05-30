@@ -10,13 +10,16 @@
     "lint": "eslint",
     "mint": "bun run ./cli/mint.ts",
     "update": "bun run ./cli/update.ts",
+    "burn": "bun run ./cli/burn.ts",
+    "product": "bun run ./cli/product.ts",
+    "tracking": "bun run ./cli/tracking.ts",
     "contract:fmt": "cd ./contract && aiken fmt",
     "contract:test": "cd ./contract && aiken check",
     "contract:build": "cd ./contract && aiken build"
   },
   "dependencies": {
-    "@blockfrost/blockfrost-js": "^6.1.0",
-    "@meshsdk/core": "1.8.14",
+    "@blockfrost/blockfrost-js": "^6.1.1",
+    "@meshsdk/core": "^1.9.0-beta.104",
     "@radix-ui/react-slot": "^1.2.4",
     "@tanstack/react-query": "^5.90.20",
     "@yudiel/react-qr-scanner": "^2.5.1",

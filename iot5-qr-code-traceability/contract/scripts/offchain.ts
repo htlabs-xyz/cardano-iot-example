@@ -4,7 +4,6 @@ import {
   deserializeAddress,
   mConStr0,
   mConStr1,
-  metadataToCip68,
   stringToHex,
 } from "@meshsdk/core";
 import { MeshAdapter } from "./mesh";
@@ -70,7 +69,7 @@ export class Contract extends MeshAdapter {
           quantity: "1",
         },
       ])
-      .txOutInlineDatumValue(metadataToCip68(metadata))
+      .txOutInlineDatumValue(this.metadataToCip68(metadata))
       .txOut(receiver || walletAddress, [
         {
           unit: this.policyId + CIP68_222(stringToHex(assetName)),
@@ -117,7 +116,7 @@ export class Contract extends MeshAdapter {
           quantity: "1",
         },
       ])
-      .txOutInlineDatumValue(metadataToCip68(metadata))
+      .txOutInlineDatumValue(this.metadataToCip68(metadata))
       .changeAddress(walletAddress)
       .requiredSignerHash(deserializeAddress(walletAddress).pubKeyHash)
       .selectUtxosFrom(utxos)

@@ -1,10 +1,45 @@
 import cbor from "cbor";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import axios from 'axios';
+import axios from "axios";
+import { deserializeDatum } from "@meshsdk/core";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function convertDatum(plutusData: string): Record<string, string> {
+  const datum = deserializeDatum(plutusData);
+  const metadata: Record<string, string> = {};
+  try {
+    const list = datum?.fields?.[0]?.list || datum?.fields?.[0];
+
+    if (!Array.isArray(list)) {
+      console.warn("Invalid CIP68 format: list not found");
+      return metadata;
+    }
+
+    list.forEach((item: any) => {
+      const fields = item?.fields || item;
+
+      if (!Array.isArray(fields) || fields.length < 2) return;
+
+      const keyHex = fields[0]?.bytes;
+      const valueHex = fields[1]?.bytes;
+
+      if (!keyHex || !valueHex) return;
+
+      const key = Buffer.from(keyHex, "hex").toString("utf8");
+      const value = Buffer.from(valueHex, "hex").toString("utf8");
+
+      metadata[key] = value;
+    });
+
+    return metadata;
+  } catch (error) {
+    console.error("Error converting CIP68 to metadata:", error);
+    return {};
+  }
 }
 
 /**
@@ -16,7 +51,7 @@ export function cn(...inputs: ClassValue[]) {
  * @param datum
  * @returns metadata
  */
-export async function deserializeDatum(datum: string): Promise<unknown> {
+export async function deserializeInlineDatum(datum: string): Promise<unknown> {
   const cborDatum: Buffer = Buffer.from(datum, "hex");
   const datumMap = (await cbor.decodeFirst(cborDatum)).value[0];
   if (!(datumMap instanceof Map)) {
@@ -68,20 +103,18 @@ export function convertToKeyValue(
   );
 }
 
-
 export const api = axios.create({
-  baseURL: '/api', 
+  baseURL: "/api",
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('Axios error:', error.response?.data || error.message);
+    console.error("Axios error:", error.response?.data || error.message);
     return Promise.reject(error);
-  }
+  },
 );
-

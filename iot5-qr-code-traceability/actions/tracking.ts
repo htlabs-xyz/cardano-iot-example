@@ -1,6 +1,6 @@
 "use server";
 
-import { deserializeDatum } from "@/lib/utils";
+import { convertDatum } from "@/lib/utils";
 import { BlockFrostAPI } from "@blockfrost/blockfrost-js";
 
 interface HistoryEntry {
@@ -72,7 +72,7 @@ export const getTracking = async ({ unit }: { unit: string }) => {
       let metadata: any = {};
       if (rawDatum) {
         try {
-          metadata = await deserializeDatum(rawDatum);
+          metadata = convertDatum(rawDatum);
         } catch (err) {
           console.error(`Deserialize datum failed for tx ${tx_hash}:`, err);
         }
