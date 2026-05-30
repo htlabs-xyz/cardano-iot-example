@@ -16,8 +16,6 @@ const wallet = new MeshWallet({
   },
 });
 
-console.log(await wallet.getChangeAddress());
-
 const owners: Array<string> = [
   "addr_test1qrr879mjnxd3gjqjdgjxkwzfcnvcgsve927scqk5fc3gfs2hs03pn7uhujentyhzq3ays72u4xtfrlahyjalujhxufsqdeezc0",
   "addr_test1qp0fadkx80g75f35g5v3pevqganc40hw4vq8r6tq8g447mt0rkz2wztnaf7rkua8g2u59g350daeygnv64u99zsdke9qeyltl6",
@@ -77,6 +75,7 @@ export const mint = async () => {
       owners,
     });
 
+    console.log(chalk.cyan("PolicyId:"), chalk.gray(contract.policyId));
     console.log(chalk.cyan("Asset:"), chalk.whiteBright(ASSET_NAME_UTF8));
     console.log(chalk.cyan("Asset Name (hex):"), chalk.gray(ASSET_NAME_HEX));
     console.log("");
@@ -162,6 +161,7 @@ export const update = async () => {
       owners,
     });
 
+    console.log(chalk.cyan("PolicyId:"), chalk.gray(contract.policyId));
     console.log(chalk.cyan("Asset:"), chalk.whiteBright(ASSET_NAME_UTF8));
     console.log(chalk.cyan("Asset Name (hex):"), chalk.gray(ASSET_NAME_HEX));
     console.log("");
@@ -244,7 +244,7 @@ export const burn = async () => {
       provider,
       owners,
     });
-
+    console.log(chalk.cyan("PolicyId:"), chalk.gray(contract.policyId));
     console.log(
       chalk.cyan("Asset to burn:"),
       chalk.whiteBright(ASSET_NAME_UTF8),
