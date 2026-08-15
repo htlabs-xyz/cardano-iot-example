@@ -176,6 +176,13 @@ python write_student_tag.py --policy <id> --asset <hex> --id <student_id>
 Scan NFC → Query Blockchain → Validate → ✓/✗
 ```
 
+## Use Cases
+
+- Student identity verification
+- Employee access cards
+- Event ticket validation
+- Membership verification
+
 ## Troubleshooting
 
 | Issue            | Solution                     |
