@@ -1,60 +1,106 @@
-IoT2 is a Cardano smart contract project for managing IoT device lock/unlock states on-chain. It uses Aiken for smart contracts and TypeScript with Mesh SDK for off-chain interactions.
+# IoT2 — Smart Lock State on Cardano
 
-## 📹 Demo
+A Cardano smart contract template for managing IoT lock/unlock state on-chain. Aiken validators enforce the state transition and authority rules; TypeScript and Mesh SDK provide the off-chain transaction operations.
 
-[![Watch the video](https://img.youtube.com/vi/8k02ehV1r7Q/0.jpg)](https://www.youtube.com/watch?v=8k02ehV1r7Q&feature=youtu.be)
+## Demo
 
-## Commands
+[![Watch the video](https://img.youtube.com/vi/8k02ehV1r7Q/0.jpg)](https://www.youtube.com/watch?v=8k02ehV1r7Q)
 
-### Smart Contract (Aiken)
-```sh
-aiken build          # Compile validators to plutus.json
-aiken check          # Run all tests
-aiken check -m foo   # Run tests matching "foo"
+## Features
+
+- Owner-controlled status-token minting.
+- Lock/unlock state stored in an inline datum.
+- Owner or delegated authority can change lock state.
+- Owner-only authority management.
+- Current state lookup through Blockfrost.
+
+## Prerequisites
+
+- [Bun](https://bun.sh/) for the TypeScript operations.
+- [Aiken](https://aiken-lang.org/) compatible with the compiler version in `aiken.toml`.
+- A Cardano preprod [Blockfrost](https://blockfrost.io/) project.
+- A test wallet mnemonic funded with preprod test ADA from the [Cardano faucet](https://docs.cardano.org/cardano-testnets/tools/faucet).
+
+## Quick start
+
+### 1. Install dependencies
+
+```bash
+cd iot2-sync-state-onchain
+bun install
 ```
 
-### Off-chain (TypeScript/npm)
-```sh
-npm install          # Install dependencies
-npm run index.ts     # Execute main script (currently runs unlock())
-npm run monitor.ts   # Monitor locker status by asset unit
+### 2. Configure the environment
+
+Copy the provided environment template to the local environment file loaded by the application. Set:
+
+```text
+BLOCKFROST_API_KEY=your_preprod_blockfrost_project_id
+MNEMONIC="your test wallet mnemonic"
+```
+
+The off-chain implementation currently targets Cardano preprod.
+
+### 3. Build and test the validators
+
+```bash
+aiken build
+aiken check
+```
+
+The compiled blueprint is written to `plutus.json`.
+
+### 4. Run an off-chain operation
+
+The root `index.ts` entrypoint imports `init`, `lock`, `unlock`, and `authority`. Open it and ensure exactly one intended operation call is enabled, then run:
+
+```bash
+bun run index.ts
+```
+
+The selected operation builds, signs, and submits a real preprod transaction using the configured test wallet. Wait for confirmation before submitting another transaction against the same state UTxO.
+
+### 5. Read the current state
+
+Set the `unit` value in the root `monitor.ts` entrypoint to the locker policy ID followed by the hex-encoded asset name, then run:
+
+```bash
+bun run monitor.ts
 ```
 
 ## Architecture
 
-### Smart Contract Layer (`validators/contract.ak`)
-- **Datum**: Stores `authority` (Address) and `is_locked` (Int: 0=unlocked, 1=locked)
-- **Redeemers**:
-  - `Status`: Toggle lock state (requires owner OR authority signature)
-  - `Authorize`: Transfer authority (requires owner signature only)
-- **Validators**:
-  - `locker.mint`: Owner-only minting policy
-  - `locker.spend`: State transition logic with role-based access control
+### Smart contract layer (`validators/contract.ak`)
 
-### Off-chain Layer (`script/`)
-- **MeshAdapter** (`mesh.ts`): Base class that initializes Plutus scripts from `plutus.json`, parameterizes them with owner's pubKeyHash, and provides UTxO utilities
-- **LockerContract** (`offchain.ts`): High-level contract operations:
-  - `init()`: Mint new status token
-  - `lock()`: Set status to locked (is_locked=1)
-  - `unLock()`: Set status to unlocked (is_locked=0)
-  - `authorize()`: Transfer authority to new address
-- **monitor** (`monitor.ts`): Query current locker state via Blockfrost API
+- **Datum:** stores `authority` and `is_locked` (`0` = unlocked, `1` = locked).
+- **`Status` redeemer:** changes lock state and requires the owner or authority signature.
+- **`Authorize` redeemer:** performs the owner-authorized management path.
+- **`locker.mint`:** owner-controlled status-token minting policy.
+- **`locker.spend`:** validates state transitions and authorization.
 
-### Key Dependencies
-- Aiken libs: `aiken-lang/stdlib`, `logical-mechanism/assist`, `sidan-lab/vodka`
-- TypeScript: `@meshsdk/core`, `@blockfrost/blockfrost-js`
+### Off-chain layer (`script/`)
 
-## Configuration
+- `mesh.ts` initializes the Plutus scripts and provides wallet/UTxO helpers.
+- `offchain.ts` implements `init`, `lock`, `unLock`, and `authorize` transaction builders.
+- `script/index.ts` configures the wallet and exports the transaction operations.
+- The root `index.ts` selects and invokes one transaction operation.
+- `script/monitor.ts` queries and decodes the latest locker state through Blockfrost.
+- The root `monitor.ts` supplies the asset unit and invokes the monitor.
 
-Copy `.env.example` to `.env` and set:
-- `BLOCKFROST_API_KEY`: Preprod network API key
-- `MNEMONIC`: Wallet mnemonic phrase
+## Data flow
 
-Network is hardcoded to `preprod` (testnet).
+1. The owner initializes the contract and mints a status token with the initial datum.
+2. The owner or authority spends the current state UTxO and creates its successor with the updated lock state.
+3. The contract validates signatures, token continuity, output address, and datum invariants.
+4. The monitor resolves the latest asset transaction and decodes the resulting inline datum.
 
-## Data Flow
+## Security notes
 
-1. Owner deploys contract → mints status token with initial datum
-2. Owner/Authority calls `lock()` or `unLock()` → spends UTxO, creates new UTxO with updated `is_locked`
-3. Owner calls `authorize()` → transfers control to new authority address
-4. Monitor queries Blockfrost for current state via asset transactions
+- Use only a dedicated preprod wallet for this educational template.
+- Never commit local environment files, API keys, or wallet mnemonics.
+- A physical controller should wait for transaction confirmation and canonical state readback before actuating hardware.
+- Production deployments require secure key custody, resilient indexing, certificate validation, monitoring, and recovery procedures.
+
+## Related hardware template
+
+The ESP32 controller that consumes this lock state is documented in [`iot3-vending-machines`](../iot3-vending-machines/README.md).

@@ -258,6 +258,13 @@ Landing page with two main actions:
 | `contract:test` | `bun run contract:test` | Run Aiken tests |
 | `contract:fmt` | `bun run contract:fmt` | Format Aiken code |
 
+## Use Cases
+
+- Food origin traceability
+- Pharmaceutical supply-chain tracking
+- Luxury goods authentication
+- Electronics warranty and ownership history
+
 ## Security Notes
 
 - Multi-owner authorization: Any address in the `owners` list can sign transactions
